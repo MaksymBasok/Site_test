@@ -16,6 +16,7 @@ const { ensureAdminAccount } = require('./services/userService');
 const pagesRouter = require('./routes/pages');
 const apiRouter = require('./routes/api');
 const adminRouter = require('./routes/admin');
+const authRouter = require('./routes/auth');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandlers');
 
 const app = express();
@@ -73,6 +74,7 @@ app.use((req, res, next) => {
 });
 
 app.use((req, res, next) => {
+  res.locals.currentUser = req.session.user || null;
   res.locals.csrfToken = req.csrfToken ? req.csrfToken() : '';
   res.locals.currentPath = req.path;
   res.locals.flash = req.flash();
@@ -87,6 +89,7 @@ app.use('/api', rateLimit({
 }));
 
 app.use('/', pagesRouter);
+app.use('/auth', authRouter);
 app.use('/api', apiRouter);
 app.use('/admin', adminRouter);
 

@@ -285,6 +285,65 @@ a:hover {
   color: var(--muted);
 }
 
+.review-card {
+  background: #fff;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+  height: 100%;
+}
+
+.review-author {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.review-message {
+  font-style: italic;
+  color: var(--dark);
+}
+
+.list-card {
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 1rem;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+}
+
+.list-card-item {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.list-card-item:last-child {
+  border-bottom: none;
+}
+
+.admin-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  background: #fff;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+}
+
+.admin-nav a {
+  text-decoration: none;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  transition: all 0.2s ease;
+}
+
+.admin-nav a:hover {
+  color: var(--primary);
+  background: rgba(13, 110, 253, 0.1);
+}
+
 .volunteer-list {
   list-style: none;
   margin: 0;

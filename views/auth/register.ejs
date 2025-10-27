@@ -1,0 +1,50 @@
+<%- include('../partials/layout-start') %>
+<section class="page-header">
+  <h1>Заявка на доступ до прямого ефіру</h1>
+  <p class="lead">Заповніть форму, додайте чек про донат і дочекайтесь підтвердження адміністратора.</p>
+</section>
+<section class="mt-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <form method="POST" action="/auth/register" enctype="multipart/form-data" novalidate>
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label" for="full_name">ПІБ</label>
+                <input class="form-control" type="text" id="full_name" name="full_name" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="email">Email</label>
+                <input class="form-control" type="email" id="email" name="email" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="phone">Номер телефону</label>
+                <input class="form-control" type="tel" id="phone" name="phone" placeholder="+380..." required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="password">Пароль</label>
+                <input class="form-control" type="password" id="password" name="password" minlength="8" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="confirm_password">Підтвердити пароль</label>
+                <input class="form-control" type="password" id="confirm_password" name="confirm_password" minlength="8" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="proof">Чек або скриншот переказу (PDF/зображення, до 5 МБ)</label>
+                <input class="form-control" type="file" id="proof" name="proof" accept="image/*,.pdf">
+              </div>
+            </div>
+            <div class="form-check mt-3">
+              <input class="form-check-input" type="checkbox" id="agree" name="agree" required>
+              <label class="form-check-label" for="agree">Погоджуюсь на обробку персональних даних та правила доступу.</label>
+            </div>
+            <button class="btn btn-primary mt-4" type="submit">Подати заявку</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<%- include('../partials/layout-end') %>

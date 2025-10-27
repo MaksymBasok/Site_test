@@ -15,7 +15,24 @@
         <li><a class="<%= currentPath === '/volunteers' ? 'active' : '' %>" href="/volunteers">Волонтерам</a></li>
         <li><a class="<%= currentPath === '/documents' ? 'active' : '' %>" href="/documents">Документи</a></li>
         <li><a class="<%= currentPath === '/contacts' ? 'active' : '' %>" href="/contacts">Контакти</a></li>
-        <li><a class="btn btn-sm btn-warning ms-lg-3" href="/donations">Задонатити</a></li>
+        <% if (currentUser) { %>
+          <li><a class="btn btn-sm btn-warning ms-lg-3" href="/donations">Задонатити</a></li>
+          <li><a class="<%= currentPath === '/live' ? 'active' : '' %>" href="/live">Прямий ефір</a></li>
+          <% if (currentUser.role === 'admin') { %>
+            <li><a class="<%= currentPath.startsWith('/admin') ? 'active' : '' %>" href="/admin/dashboard">Адмінка</a></li>
+          <% } %>
+          <li class="d-lg-flex align-items-center ms-lg-3">
+            <form method="POST" action="/auth/logout" class="d-inline">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <button class="btn btn-sm btn-outline-light" type="submit"><i class="fa-solid fa-right-from-bracket me-1"></i>Вийти</button>
+            </form>
+          </li>
+        <% } else { %>
+          <li><a class="<%= currentPath === '/articles' ? 'active' : '' %>" href="/articles">Новини</a></li>
+          <li><a class="btn btn-sm btn-warning ms-lg-3" href="/donations">Задонатити</a></li>
+          <li><a class="btn btn-sm btn-outline-light ms-lg-2" href="/auth/login">Вхід</a></li>
+          <li><a class="btn btn-sm btn-outline-light ms-lg-2" href="/auth/register">Стати донатером</a></li>
+        <% } %>
       </ul>
     </nav>
   </div>

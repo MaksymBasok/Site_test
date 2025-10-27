@@ -1,0 +1,21 @@
+<%- include('partials/layout-start') %>
+<section class="page-header">
+  <h1>Прямий ефір фонду</h1>
+  <p class="lead">Дякуємо за вашу підтримку! Ви бачите це, бо команда підтвердила ваш донат.</p>
+</section>
+<section class="mt-4">
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="ratio ratio-16x9 mb-3">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UCm1R1" title="Live stream" allowfullscreen></iframe>
+      </div>
+      <% if (liveInfo) { %>
+        <h2 class="h4"><%= liveInfo.title || 'Пояснення' %></h2>
+        <p><%= liveInfo.body %></p>
+      <% } else { %>
+        <p>Трансляція розпочнеться найближчим часом. Слідкуйте за оголошеннями в телеграм-каналі.</p>
+      <% } %>
+    </div>
+  </div>
+</section>
+<%- include('partials/layout-end') %>
