@@ -1,0 +1,22 @@
+<header class="site-header">
+  <div class="container d-flex align-items-center justify-content-between py-3">
+    <a href="/" class="logo d-flex align-items-center text-decoration-none">
+      <span class="logo-icon"><i class="fa-solid fa-hand-holding-heart"></i></span>
+      <span class="logo-text">Фонд <strong>Волонтерка</strong></span>
+    </a>
+    <nav class="main-nav">
+      <button class="nav-toggle" type="button" aria-label="Відкрити меню">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <ul>
+        <li><a class="<%= currentPath === '/' ? 'active' : '' %>" href="/">Головна</a></li>
+        <li><a class="<%= currentPath === '/donations' ? 'active' : '' %>" href="/donations">Підтримати</a></li>
+        <li><a class="<%= currentPath === '/cars' ? 'active' : '' %>" href="/cars">Автопарк</a></li>
+        <li><a class="<%= currentPath === '/volunteers' ? 'active' : '' %>" href="/volunteers">Волонтерам</a></li>
+        <li><a class="<%= currentPath === '/documents' ? 'active' : '' %>" href="/documents">Документи</a></li>
+        <li><a class="<%= currentPath === '/contacts' ? 'active' : '' %>" href="/contacts">Контакти</a></li>
+        <li><a class="btn btn-sm btn-warning ms-lg-3" href="/donations">Задонатити</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>

@@ -1,0 +1,145 @@
+<%- include('../partials/layout-start') %>
+<section class="page-header">
+  <div class="d-flex justify-content-between align-items-center">
+    <div>
+      <h1>Кабінет адміністратора</h1>
+      <p class="text-muted">Керуйте фінансовими записами та переглядайте заявки.</p>
+    </div>
+    <form method="POST" action="/admin/logout">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <button class="btn btn-outline-danger" type="submit"><i class="fa-solid fa-right-from-bracket me-2"></i>Вийти</button>
+    </form>
+  </div>
+</section>
+
+<section class="mt-4">
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="stat-card">
+        <h3>Зібрано</h3>
+        <p class="stat-number"><%= totals.totalRaised.toLocaleString('uk-UA') %> ₴</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="stat-card">
+        <h3>Використано</h3>
+        <p class="stat-number text-danger"><%= totals.totalWithdrawn.toLocaleString('uk-UA') %> ₴</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="stat-card">
+        <h3>Баланс</h3>
+        <p class="stat-number text-success"><%= totals.balance.toLocaleString('uk-UA') %> ₴</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="mt-5">
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h2 class="h4">Додати донат вручну</h2>
+          <form method="POST" action="/admin/donations" class="mt-3">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="mb-3">
+              <label class="form-label" for="donor_name">Ім'я</label>
+              <input class="form-control" type="text" id="donor_name" name="donor_name" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="amount">Сума</label>
+              <input class="form-control" type="number" id="amount" name="amount" min="10" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="currency">Валюта</label>
+              <input class="form-control" type="text" id="currency" name="currency" value="UAH">
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="message">Коментар</label>
+              <textarea class="form-control" id="message" name="message" rows="3"></textarea>
+            </div>
+            <div class="form-check mb-3">
+              <input class="form-check-input" type="checkbox" id="public" name="public" checked>
+              <label class="form-check-label" for="public">Показувати у публічному списку</label>
+            </div>
+            <button class="btn btn-primary" type="submit">Зберегти</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h2 class="h4">Зафіксувати витрати</h2>
+          <form method="POST" action="/admin/withdrawals" class="mt-3">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="mb-3">
+              <label class="form-label" for="withdraw_amount">Сума</label>
+              <input class="form-control" type="number" id="withdraw_amount" name="amount" min="1" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="description">Призначення</label>
+              <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+            </div>
+            <button class="btn btn-outline-primary" type="submit">Додати витрату</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="mt-5">
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <h2 class="h5">Останні донати</h2>
+      <div class="list-card">
+        <% donations.forEach(function(donation) { %>
+          <div class="list-card-item">
+            <div>
+              <strong><%= donation.donor_name %></strong>
+              <p class="mb-0 small text-muted"><%= donation.currency %> <%= donation.amount.toLocaleString('uk-UA') %></p>
+            </div>
+            <span class="text-muted small"><%= new Date(donation.created_at).toLocaleString('uk-UA') %></span>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <h2 class="h5">Заявки волонтерів</h2>
+      <div class="list-card">
+        <% volunteers.forEach(function(volunteer) { %>
+          <div class="list-card-item">
+            <div>
+              <strong><%= volunteer.full_name %></strong>
+              <p class="mb-0 small text-muted"><%= volunteer.phone %> • <%= volunteer.region || 'Не вказано' %></p>
+            </div>
+            <span class="text-muted small"><%= new Date(volunteer.created_at).toLocaleString('uk-UA') %></span>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="mt-5">
+  <h2 class="h5">Останні витрати</h2>
+  <div class="list-card">
+    <% withdrawals.forEach(function(withdrawal) { %>
+      <div class="list-card-item">
+        <div>
+          <strong><%= withdrawal.amount.toLocaleString('uk-UA') %> ₴</strong>
+          <% if (withdrawal.description) { %>
+            <p class="mb-0 small text-muted"><%= withdrawal.description %></p>
+          <% } %>
+        </div>
+        <span class="text-muted small"><%= new Date(withdrawal.created_at).toLocaleString('uk-UA') %></span>
+      </div>
+    <% }) %>
+    <% if (withdrawals.length === 0) { %>
+      <div class="list-card-item">Поки що немає витрат.</div>
+    <% } %>
+  </div>
+</section>
+<%- include('../partials/layout-end') %>

@@ -1,0 +1,126 @@
+<%- include('partials/layout-start') %>
+<section class="hero">
+  <div class="row align-items-center">
+    <div class="col-lg-7">
+      <h1>Автомобілі для перемоги</h1>
+      <p class="lead">Фонд "Волонтерка" закуповує, ремонтує та передає транспорт волонтерам і підрозділам ЗСУ. Ми працюємо прозоро та звітуємо про кожну гривню.</p>
+      <div class="hero-actions">
+        <a class="btn btn-warning btn-lg" href="/donations"><i class="fa-solid fa-heart me-2"></i>Зробити внесок</a>
+        <a class="btn btn-outline-light btn-lg" href="/volunteers"><i class="fa-solid fa-people-carry-box me-2"></i>Стати волонтером</a>
+      </div>
+    </div>
+    <div class="col-lg-5 text-center">
+      <img class="img-fluid hero-illustration" src="/images/png/2.png" alt="Волонтери та автомобіль">
+    </div>
+  </div>
+</section>
+
+<section class="mt-5">
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="stat-card">
+        <h3>Зібрано</h3>
+        <p class="stat-number"><%= totals.totalRaised.toLocaleString('uk-UA') %> ₴</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="stat-card">
+        <h3>Використано</h3>
+        <p class="stat-number text-danger"><%= totals.totalWithdrawn.toLocaleString('uk-UA') %> ₴</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="stat-card">
+        <h3>Залишок</h3>
+        <p class="stat-number text-success"><%= totals.balance.toLocaleString('uk-UA') %> ₴</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="mt-5">
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h2 class="card-title">Актуальна ціль</h2>
+      <% if (goal) { %>
+        <div class="row align-items-center">
+          <div class="col-lg-7">
+            <h3><%= goal.title %></h3>
+            <p><%= goal.description %></p>
+          </div>
+          <div class="col-lg-5">
+            <div class="progress mb-2">
+              <% const progress = Math.min(100, Math.round((totals.totalRaised / goal.target_amount) * 100)); %>
+              <div class="progress-bar" role="progressbar" style="width: <%= progress %>%" aria-valuenow="<%= progress %>" aria-valuemin="0" aria-valuemax="100">
+                <%= progress %>%
+              </div>
+            </div>
+            <p class="mb-1"><strong>Мета:</strong> <%= goal.target_amount.toLocaleString('uk-UA') %> ₴</p>
+            <p class="mb-1"><strong>Оновлено:</strong> <%= new Date(goal.updated_at).toLocaleDateString('uk-UA') %></p>
+            <a class="btn btn-primary" href="/donations">Допомогти виконати ціль</a>
+          </div>
+        </div>
+      <% } else { %>
+        <p>Зараз нова ціль формується. Стежте за оновленнями в наших соціальних мережах.</p>
+      <% } %>
+    </div>
+  </div>
+</section>
+
+<section class="mt-5">
+  <div class="section-header d-flex justify-content-between align-items-center">
+    <h2>Останні донати</h2>
+    <a href="/donations" class="link-arrow">Усі донати</a>
+  </div>
+  <div class="row g-4">
+    <% donations.forEach(function(donation) { %>
+      <div class="col-md-4">
+        <div class="donation-card">
+          <div class="donor-name"><i class="fa-solid fa-user"></i> <%= donation.donor_name %></div>
+          <div class="donation-amount"><%= donation.amount.toLocaleString('uk-UA') %> <%= donation.currency %></div>
+          <% if (donation.message) { %>
+            <p class="donation-message">“<%= donation.message %>”</p>
+          <% } %>
+          <div class="donation-date"><%= new Date(donation.created_at).toLocaleString('uk-UA') %></div>
+        </div>
+      </div>
+    <% }) %>
+    <% if (donations.length === 0) { %>
+      <div class="col-12">
+        <p>Поки що немає публічних донатів. Станьте першим!</p>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<section class="mt-5">
+  <div class="section-header d-flex justify-content-between align-items-center">
+    <h2>Поточні автомобілі та потреби</h2>
+    <a href="/cars" class="link-arrow">Детальніше</a>
+  </div>
+  <div class="row g-4">
+    <% vehicles.slice(0, 3).forEach(function(vehicle) { %>
+      <div class="col-md-4">
+        <div class="vehicle-card">
+          <% if (vehicle.image_path) { %>
+            <img src="/<%= vehicle.image_path %>" alt="<%= vehicle.name %>" class="vehicle-image">
+          <% } %>
+          <div class="vehicle-body">
+            <h3><%= vehicle.name %></h3>
+            <p><%= vehicle.description %></p>
+            <span class="badge status-<%= vehicle.status %>"><%= vehicle.status %></span>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+</section>
+
+<section class="cta-banner mt-5">
+  <div class="cta-content">
+    <h2>Ваш донат — це врятовані життя</h2>
+    <p>Навіть 200 гривень можуть допомогти відремонтувати авто для евакуації та логістики.</p>
+    <a class="btn btn-light btn-lg" href="/donations">Підтримати фонд</a>
+  </div>
+</section>
+<%- include('partials/layout-end') %>
