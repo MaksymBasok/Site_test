@@ -36,23 +36,26 @@
         <span><i class="fa-solid fa-truck-fast"></i> 24/7 на зв'язку</span>
       </div>
     </div>
-    <button class="nav-toggle" type="button" aria-label="Перемкнути головне меню" aria-expanded="false">
+    <button class="nav-toggle" type="button" aria-label="Перемкнути головне меню" aria-expanded="false" data-nav-toggle>
       <span class="nav-toggle__icon"><i class="fa-solid fa-bars"></i></span>
       <span class="nav-toggle__label">Меню</span>
     </button>
-    <div class="nav-panel">
+    <div class="nav-panel" data-nav-panel>
       <div class="nav-panel__inner">
         <nav class="main-nav" aria-label="Головне меню">
           <ul class="main-nav-list">
-            <li><a class="<%= currentPath === '/' ? 'active' : '' %>" href="/" <%= currentPath === '/' ? 'aria-current="page"' : '' %>>Головна</a></li>
+            <li class="nav-dropdown" data-nav-dropdown>
+              <button class="nav-dropdown__toggle <%= ['/about', '/articles', '/documents'].includes(currentPath) ? 'active' : '' %>" type="button" aria-expanded="false">Про фонд</button>
+              <div class="nav-dropdown__menu" role="menu">
+                <a role="menuitem" href="/about" class="<%= currentPath === '/about' ? 'active' : '' %>">Про нас</a>
+                <a role="menuitem" href="/articles" class="<%= currentPath === '/articles' ? 'active' : '' %>">Новини</a>
+                <a role="menuitem" href="/documents" class="<%= currentPath === '/documents' ? 'active' : '' %>">Документи</a>
+              </div>
+            </li>
             <li><a class="<%= currentPath === '/donations' ? 'active' : '' %>" href="/donations" <%= currentPath === '/donations' ? 'aria-current="page"' : '' %>>Підтримати</a></li>
             <li><a class="<%= currentPath === '/cars' ? 'active' : '' %>" href="/cars" <%= currentPath === '/cars' ? 'aria-current="page"' : '' %>>Автопарк</a></li>
             <li><a class="<%= currentPath === '/volunteers' ? 'active' : '' %>" href="/volunteers" <%= currentPath === '/volunteers' ? 'aria-current="page"' : '' %>>Волонтерам</a></li>
-            <li><a class="<%= currentPath === '/documents' ? 'active' : '' %>" href="/documents" <%= currentPath === '/documents' ? 'aria-current="page"' : '' %>>Документи</a></li>
             <li><a class="<%= currentPath === '/contacts' ? 'active' : '' %>" href="/contacts" <%= currentPath === '/contacts' ? 'aria-current="page"' : '' %>>Контакти</a></li>
-            <% if (!currentUser) { %>
-              <li><a class="<%= currentPath === '/articles' ? 'active' : '' %>" href="/articles" <%= currentPath === '/articles' ? 'aria-current=\"page\"' : '' %>>Новини</a></li>
-            <% } %>
             <% if (currentUser) { %>
               <li><a class="<%= currentPath === '/live' ? 'active' : '' %>" href="/live" <%= currentPath === '/live' ? 'aria-current=\"page\"' : '' %>>Прямий ефір</a></li>
               <% if (currentUser.role === 'admin') { %>
@@ -97,5 +100,5 @@
       </div>
     </div>
   </div>
-  <div class="nav-backdrop" aria-hidden="true"></div>
+  <div class="nav-backdrop" aria-hidden="true" data-nav-backdrop></div>
 </header>

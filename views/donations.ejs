@@ -1,99 +1,166 @@
 <%- include('partials/layout-start') %>
-<section class="page-header">
+<%
+  const publicDonations = Array.isArray(donations) ? donations : [];
+  const withdrawalsList = Array.isArray(withdrawals) ? withdrawals : [];
+  const reviewsList = Array.isArray(reviews) ? reviews : [];
+  const bankList = Array.isArray(bankAccounts) ? bankAccounts : [];
+%>
+<section class="page-header" data-reveal>
   <h1>Як підтримати фонд</h1>
-  <p class="lead">Ми прозоро фіксуємо кожен внесок та надаємо публічний звіт. Оберіть зручний спосіб, щоб допомогти нам утримувати автопарк для волонтерів.</p>
+  <p class="lead">Всі реквізити та звіти зібрані на одній сторінці. Скопіюйте зручний рахунок, зафіксуйте донат для публічного реєстру та перегляньте останні витрати.</p>
 </section>
 
-<section class="mt-4">
-  <div class="row g-4">
-    <% bankAccounts.forEach(function(account) { %>
-      <div class="col-md-6">
-        <div class="account-card">
-          <h2><%= account.label %></h2>
-          <ul class="list-unstyled">
-            <li><strong>Отримувач:</strong> <%= account.recipient %></li>
-            <li>
-              <strong>IBAN:</strong> <code><%= account.iban %></code>
-              <button class="copy-to-clipboard ms-2" type="button" data-value="<%= account.iban %>">
-                <i class="fa-solid fa-copy"></i>
-              </button>
-            </li>
+<section class="section" data-reveal>
+  <div class="section__intro">
+    <div>
+      <h2 class="section__title">Реквізити для підтримки</h2>
+      <p class="section__description">Клацніть, щоб скопіювати IBAN, поділитися посиланням або відсканувати QR. Зберігаємо базову палітру першого коміту для впізнаваності.</p>
+    </div>
+  </div>
+  <div class="requisites-grid">
+    <% bankList.forEach(function(account) { %>
+      <article class="requisite-card" data-reveal>
+        <div class="requisite-card__header">
+          <div>
+            <h3><%= account.label %></h3>
+            <p class="text-muted small mb-0">Отримувач: <%= account.recipient %></p>
+          </div>
+          <div class="requisite-card__actions">
+            <button class="copy-to-clipboard" type="button" data-value="<%= account.iban %>"><i class="fa-solid fa-copy"></i> Copy IBAN</button>
+            <button class="btn-share" type="button" data-share-title="<%= account.label %>" data-share-text="Підтримайте фонд «Волонтерка»" data-share-url="<%= account.share_url || '' %>"><i class="fa-solid fa-share-nodes"></i> Share</button>
+          </div>
+        </div>
+        <div class="d-flex gap-3 align-items-center flex-wrap">
+          <div>
+            <p class="mb-1"><strong>IBAN:</strong> <code><%= account.iban %></code></p>
             <% if (account.edrpou) { %>
-              <li><strong>ЄДРПОУ:</strong> <%= account.edrpou %></li>
+              <p class="mb-1"><strong>ЄДРПОУ:</strong> <%= account.edrpou %></p>
             <% } %>
             <% if (account.purpose) { %>
-              <li><strong>Призначення платежу:</strong> <%= account.purpose %></li>
+              <p class="mb-0"><strong>Призначення:</strong> <%= account.purpose %></p>
             <% } %>
-          </ul>
-          <p class="text-muted small">Оновлено <%= new Date(account.updated_at).toLocaleDateString('uk-UA') %></p>
+          </div>
+          <% if (account.qr_path) { %>
+            <img class="requisite-card__qr" src="/<%= account.qr_path %>" alt="QR для <%= account.label %>" loading="lazy">
+          <% } %>
         </div>
-      </div>
+        <p class="requisite-hint"><i class="fa-solid fa-shield-check"></i> Оновлено <%= new Date(account.updated_at).toLocaleDateString('uk-UA') %>. Комісія банку: <%= account.commission || '0%' %></p>
+      </article>
     <% }) %>
   </div>
 </section>
 
-<section class="mt-5">
-  <div class="row g-5">
+<section class="section" data-reveal>
+  <div class="section__intro">
+    <div>
+      <h2 class="section__title">Публічний донат</h2>
+      <p class="section__description">Запис не списує кошти — лише допомагає прозоро показати підтримку. Після модерації донат з'являється у стрічці та на «стіни».</p>
+    </div>
+  </div>
+  <div class="row g-5 align-items-start">
     <div class="col-lg-6">
-      <h2>Залишити публічний донат</h2>
-      <p class="text-muted">Запишіть свій внесок, щоб мотивувати інших. Ми не обробляємо оплату онлайн — лише фіксуємо інформацію для публічного звіту.</p>
-      <form method="POST" action="/donations" class="card p-4 shadow-sm" novalidate>
+      <form method="POST" action="/donations" class="wizard is-active" data-donation-form novalidate>
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <div class="mb-3">
-          <label class="form-label" for="donor_name">Ім'я або назва організації</label>
-          <input class="form-control" type="text" id="donor_name" name="donor_name" required>
+        <div class="wizard-steps">
+          <div class="wizard-step is-active" data-step="1">
+            <div class="wizard-step__number">1</div>
+            <div>Дані донатора</div>
+          </div>
+          <div class="wizard-step" data-step="2">
+            <div class="wizard-step__number">2</div>
+            <div>Повідомлення</div>
+          </div>
+          <div class="wizard-step" data-step="3">
+            <div class="wizard-step__number">3</div>
+            <div>Попередній перегляд</div>
+          </div>
         </div>
-        <div class="mb-3">
-          <label class="form-label" for="amount">Сума, грн</label>
-          <input class="form-control" type="number" id="amount" name="amount" min="10" required>
+        <div class="wizard-forms is-active" data-step-panel="1">
+          <div>
+            <label class="form-label" for="donor_name">Ім'я або організація</label>
+            <input class="form-control" type="text" id="donor_name" name="donor_name" required data-preview-field="name" autocomplete="name">
+            <span class="inline-validation">Вкажіть ім'я — так ми покажемо, кому дякувати.</span>
+          </div>
+          <div>
+            <label class="form-label" for="amount">Сума, грн</label>
+            <input class="form-control" type="number" id="amount" name="amount" min="10" required data-preview-field="amount">
+            <span class="form-hint">Оплату здійснюєте у своєму банку. Мінімальний запис — 10 грн.</span>
+          </div>
         </div>
-        <div class="mb-3">
-          <label class="form-label" for="message">Повідомлення (необов'язково)</label>
-          <textarea class="form-control" id="message" name="message" rows="3" maxlength="300"></textarea>
+        <div class="wizard-forms" data-step-panel="2">
+          <div>
+            <label class="form-label" for="message">Публічне повідомлення</label>
+            <textarea class="form-control" id="message" name="message" rows="4" maxlength="300" data-preview-field="message"></textarea>
+            <span class="form-hint">Поділіться, кому адресуєте допомогу. Максимум 300 символів.</span>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="public" id="public" checked>
+            <label class="form-check-label" for="public">Дозволити показувати ім'я</label>
+          </div>
         </div>
-        <div class="form-check mb-4">
-          <input class="form-check-input" type="checkbox" name="public" id="public" checked>
-          <label class="form-check-label" for="public">Показувати моє ім'я у списку донорів</label>
+        <div class="wizard-forms" data-step-panel="3">
+          <div class="donation-preview" data-donation-preview>
+            <article class="donation-card">
+              <header class="donation-card__header">
+                <span class="donation-card__avatar" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
+                <div class="donation-card__meta">
+                  <span class="donation-card__name" data-preview-output="name">Анонім</span>
+                  <span class="donation-card__date">Очікує модерацію</span>
+                </div>
+              </header>
+              <div class="donation-card__amount" data-preview-output="amount">0 ₴</div>
+              <p class="donation-card__message" data-preview-output="message">Тут буде ваше повідомлення.</p>
+            </article>
+            <p class="form-hint">Модератор перевіряє чеки та скриншоти. За потреби зв'яжеться електронною поштою.</p>
+          </div>
         </div>
-        <button type="submit" class="btn btn-primary">Зберегти донат</button>
+        <div class="d-flex justify-content-between mt-4">
+          <button class="btn btn-outline-primary" type="button" data-prev-step disabled>Назад</button>
+          <button class="btn btn-primary" type="button" data-next-step>Далі</button>
+          <button class="btn btn-success d-none" type="submit" data-submit-step>Надіслати</button>
+        </div>
       </form>
     </div>
     <div class="col-lg-6">
-      <h2>Звіт про донати</h2>
-      <div class="card shadow-sm">
+      <div class="card shadow-soft">
         <div class="card-body">
-          <ul class="timeline">
-            <% donations.forEach(function(donation) { %>
-              <li>
-                <div class="timeline-content">
-                  <div class="timeline-header">
-                    <span class="timeline-amount"><%= donation.amount.toLocaleString('uk-UA') %> <%= donation.currency %></span>
-                    <span class="timeline-date"><%= new Date(donation.created_at).toLocaleString('uk-UA') %></span>
+          <h2 class="h4 mb-3">Стрічка донатів</h2>
+          <div class="timeline" data-timeline>
+            <% publicDonations.forEach(function(donation) { %>
+              <article class="timeline-item">
+                <div class="timeline-item__badge"><i class="fa-solid fa-heart"></i></div>
+                <div class="timeline-item__body">
+                  <div class="timeline-item__header">
+                    <span class="timeline-item__amount"><%= donation.amount.toLocaleString('uk-UA') %> <%= donation.currency %></span>
+                    <time class="timeline-item__date" datetime="<%= new Date(donation.created_at).toISOString() %>"><%= new Date(donation.created_at).toLocaleString('uk-UA') %></time>
                   </div>
-                  <div class="timeline-body">
-                    <strong><%= donation.donor_name %></strong>
-                    <% if (donation.message) { %>
-                      <p><%= donation.message %></p>
-                    <% } %>
+                  <div class="timeline-item__meta">
+                    <span class="badge badge-role badge-role--donor"><%= donation.donor_name %></span>
                   </div>
+                  <% if (donation.message) { %>
+                    <p class="mt-2 mb-0"><%= donation.message %></p>
+                  <% } %>
                 </div>
-              </li>
+              </article>
             <% }) %>
-          </ul>
+            <% if (publicDonations.length === 0) { %>
+              <p class="text-muted">Ще немає записів. Станьте першим та надихніть інших.</p>
+            <% } %>
+          </div>
         </div>
       </div>
-      <div class="card shadow-sm mt-4">
+      <div class="card shadow-soft mt-4">
         <div class="card-body">
           <h3 class="h5">Використання коштів</h3>
-          <ul class="list-unstyled">
-            <% withdrawals.forEach(function(item) { %>
-              <li class="mb-2 d-flex justify-content-between">
-                <span><%= item.description || 'Без опису' %></span>
+          <ul class="list-unstyled mb-0">
+            <% withdrawalsList.forEach(function(item) { %>
+              <li class="d-flex justify-content-between py-2 border-bottom">
+                <span><i class="fa-solid fa-wrench me-2"></i><%= item.description || 'Без опису' %></span>
                 <span><%= item.amount.toLocaleString('uk-UA') %> ₴</span>
               </li>
             <% }) %>
           </ul>
-          <% if (withdrawals.length === 0) { %>
+          <% if (withdrawalsList.length === 0) { %>
             <p class="text-muted mb-0">Ще не було витрат за цією кампанією.</p>
           <% } %>
         </div>
@@ -102,12 +169,61 @@
   </div>
 </section>
 
-<section class="mt-5">
+<section class="section section--surface" data-reveal>
+  <div class="section__intro">
+    <div>
+      <h2 class="section__title">Стіна донаторів</h2>
+      <p class="section__description">Записи після модерації позначені зеленим. Нові заявки очікують підтвердження скриншота або чеку.</p>
+    </div>
+  </div>
+  <div class="donor-wall">
+    <% publicDonations.forEach(function(entry) { %>
+      <% const status = entry.status || (entry.public === false ? 'pending' : 'approved'); %>
+      <article class="donor-card">
+        <header class="d-flex justify-content-between align-items-start gap-2">
+          <div>
+            <h3 class="h5 mb-1"><%= entry.donor_name %></h3>
+            <time class="text-muted small" datetime="<%= new Date(entry.created_at).toISOString() %>"><%= new Date(entry.created_at).toLocaleDateString('uk-UA') %></time>
+          </div>
+          <span class="donor-card__status <%= status === 'approved' ? 'donor-card__status--approved' : status === 'rejected' ? 'donor-card__status--rejected' : 'donor-card__status--pending' %>">
+            <% if (status === 'approved') { %>
+              <i class="fa-solid fa-circle-check"></i> Підтверджено
+            <% } else if (status === 'rejected') { %>
+              <i class="fa-solid fa-ban"></i> Відхилено
+            <% } else { %>
+              <i class="fa-solid fa-hourglass-half"></i> Очікує перевірку
+            <% } %>
+          </span>
+        </header>
+        <div class="donation-card__amount"><%= entry.amount.toLocaleString('uk-UA') %> <%= entry.currency %></div>
+        <% if (entry.message) { %>
+          <p class="mb-0">“<%= entry.message %>”</p>
+        <% } %>
+      </article>
+    <% }) %>
+    <% if (publicDonations.length === 0) { %>
+      <div class="empty-state">
+        <span class="empty-state__icon" aria-hidden="true"><i class="fa-solid fa-seedling"></i></span>
+        <div class="empty-state__content">
+          <h3>Стіна ще порожня</h3>
+          <p>Зробіть перший запис — це мотивує інших долучитись.</p>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<section class="section" data-reveal>
+  <div class="section__intro">
+    <div>
+      <h2 class="section__title">Відгуки спільноти</h2>
+      <p class="section__description">Модератори перевіряють кожен відгук. Уточніть, як фонд допоміг вашому підрозділу чи волонтерському напрямку.</p>
+    </div>
+  </div>
   <div class="row g-4">
     <div class="col-lg-6">
-      <h2>Відгуки спільноти</h2>
       <div class="list-card">
-        <% reviews.forEach(function(review) { %>
+        <% reviewsList.forEach(function(review) { %>
           <div class="list-card-item">
             <div>
               <strong><%= review.author_name %></strong>
@@ -123,29 +239,30 @@
             <p class="mb-0">“<%= review.message %>”</p>
           </div>
         <% }) %>
-        <% if (reviews.length === 0) { %>
+        <% if (reviewsList.length === 0) { %>
           <div class="list-card-item">Станьте першим, хто залишить слова підтримки.</div>
         <% } %>
       </div>
     </div>
     <div class="col-lg-6">
-      <h2>Поділитися враженнями</h2>
-      <form method="POST" action="/reviews" class="card p-4 shadow-sm" novalidate>
+      <form method="POST" action="/reviews" class="wizard" novalidate>
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <div class="mb-3">
-          <label class="form-label" for="review_author">Ваше ім'я</label>
-          <input class="form-control" type="text" id="review_author" name="author_name" required>
+        <div class="wizard-forms is-active">
+          <div class="mb-3">
+            <label class="form-label" for="review_author">Ваше ім'я</label>
+            <input class="form-control" type="text" id="review_author" name="author_name" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="review_rating">Оцінка (1-5)</label>
+            <input class="form-control" type="number" id="review_rating" name="rating" min="1" max="5">
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="review_message">Коментар</label>
+            <textarea class="form-control" id="review_message" name="message" rows="4" required></textarea>
+          </div>
+          <p class="text-muted small mb-3">Відгук пройде модерацію перед публікацією.</p>
+          <button class="btn btn-outline-primary" type="submit">Надіслати</button>
         </div>
-        <div class="mb-3">
-          <label class="form-label" for="review_rating">Оцінка (1-5)</label>
-          <input class="form-control" type="number" id="review_rating" name="rating" min="1" max="5">
-        </div>
-        <div class="mb-3">
-          <label class="form-label" for="review_message">Коментар</label>
-          <textarea class="form-control" id="review_message" name="message" rows="4" required></textarea>
-        </div>
-        <p class="text-muted small mb-3">Відгук пройде модерацію перед публікацією.</p>
-        <button class="btn btn-outline-primary" type="submit">Надіслати</button>
       </form>
     </div>
   </div>

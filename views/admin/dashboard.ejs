@@ -1,13 +1,25 @@
 <%- include('../partials/layout-start') %>
-<section class="page-header">
-  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3">
+<%
+  const donationSparkline = donations.slice(0, 8).reverse().map((item) => Number(item.amount));
+  const withdrawalSparkline = withdrawals.slice(0, 8).reverse().map((item) => Number(item.amount));
+  const volunteerSparkline = volunteers.slice(0, 8).reverse().map(() => 1);
+  const applicantSparkline = applicants.slice(0, 8).reverse().map(() => 1);
+  const activeGoal = goals.find((goal) => goal.status === 'active');
+%>
+<!-- Продовжуємо використання синьо-жовтого градієнта з першого коміту -->
+<section class="page-header page-header--admin" data-reveal>
+  <div class="page-header__content">
     <div>
-      <h1>Кабінет адміністратора</h1>
-      <p class="text-muted mb-0">Керуйте заявками, фінансами, контентом та автопарком безпосередньо на сайті.</p>
+      <p class="page-header__eyebrow">Адмін-панель</p>
+      <h1>Керування фондом</h1>
+      <p class="text-muted mb-0">Оновлюйте фінансові дані, модеруйтесь заявки та тримайте контент у тонусі. Зберігаємо синьо-жовті акценти першого коміту.</p>
     </div>
     <div class="admin-header-actions">
-      <a class="btn btn-outline-light" href="/">Перейти на сайт</a>
-      <a class="btn btn-outline-primary" href="/admin/export/users.pdf"><i class="fa-regular fa-file-pdf me-2"></i>Експорт користувачів</a>
+      <a class="btn btn-outline-light" href="/" target="_blank"><i class="fa-solid fa-up-right-from-square me-2"></i>Переглянути сайт</a>
+      <a class="btn btn-outline-primary" href="/admin/export/users.pdf" data-export-users>
+        <i class="fa-regular fa-file-pdf me-2"></i>Експорт користувачів
+        <span class="btn-progress" aria-hidden="true"></span>
+      </a>
       <form method="POST" action="/admin/logout">
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <button class="btn btn-outline-danger" type="submit"><i class="fa-solid fa-right-from-bracket me-2"></i>Вийти</button>
@@ -16,104 +28,95 @@
   </div>
 </section>
 
-<section class="mt-4">
-  <div class="row g-4">
-    <div class="col-md-4">
-      <div class="stat-card">
-        <h3>Зібрано</h3>
-        <p class="stat-number"><%= totals.totalRaised.toLocaleString('uk-UA') %> ₴</p>
-      </div>
+<section class="dashboard-kpis" data-reveal>
+  <article class="dashboard-kpi-card">
+    <div class="dashboard-kpi-card__header">
+      <span class="dashboard-kpi-card__icon" aria-hidden="true"><i class="fa-solid fa-piggy-bank"></i></span>
+      <span class="dashboard-kpi-card__label">Зібрано</span>
     </div>
-    <div class="col-md-4">
-      <div class="stat-card">
-        <h3>Використано</h3>
-        <p class="stat-number text-danger"><%= totals.totalWithdrawn.toLocaleString('uk-UA') %> ₴</p>
-      </div>
+    <div class="dashboard-kpi-card__value"><%= totals.totalRaised.toLocaleString('uk-UA') %> ₴</div>
+    <div class="dashboard-kpi-card__meta">+<%= donations.length %> транзакцій за період</div>
+    <canvas class="dashboard-kpi-card__chart" data-sparkline data-values='<%- JSON.stringify(donationSparkline) %>' data-color="primary" aria-hidden="true"></canvas>
+  </article>
+  <article class="dashboard-kpi-card">
+    <div class="dashboard-kpi-card__header">
+      <span class="dashboard-kpi-card__icon" aria-hidden="true"><i class="fa-solid fa-receipt"></i></span>
+      <span class="dashboard-kpi-card__label">Використано</span>
     </div>
-    <div class="col-md-4">
-      <div class="stat-card">
-        <h3>Баланс</h3>
-        <p class="stat-number text-success"><%= totals.balance.toLocaleString('uk-UA') %> ₴</p>
-      </div>
+    <div class="dashboard-kpi-card__value text-danger"><%= totals.totalWithdrawn.toLocaleString('uk-UA') %> ₴</div>
+    <div class="dashboard-kpi-card__meta">Останні витрати: <%= withdrawals[0] ? new Date(withdrawals[0].created_at).toLocaleDateString('uk-UA') : '—' %></div>
+    <canvas class="dashboard-kpi-card__chart" data-sparkline data-values='<%- JSON.stringify(withdrawalSparkline) %>' data-color="danger" aria-hidden="true"></canvas>
+  </article>
+  <article class="dashboard-kpi-card">
+    <div class="dashboard-kpi-card__header">
+      <span class="dashboard-kpi-card__icon" aria-hidden="true"><i class="fa-solid fa-vault"></i></span>
+      <span class="dashboard-kpi-card__label">Баланс</span>
     </div>
-  </div>
+    <div class="dashboard-kpi-card__value text-success"><%= totals.balance.toLocaleString('uk-UA') %> ₴</div>
+    <div class="dashboard-kpi-card__meta">Ціль: <%= activeGoal ? activeGoal.target_amount.toLocaleString('uk-UA') + ' ₴' : 'планується' %></div>
+    <canvas class="dashboard-kpi-card__chart" data-sparkline data-values='<%- JSON.stringify(volunteerSparkline) %>' data-color="success" aria-hidden="true"></canvas>
+  </article>
+  <article class="dashboard-kpi-card">
+    <div class="dashboard-kpi-card__header">
+      <span class="dashboard-kpi-card__icon" aria-hidden="true"><i class="fa-solid fa-user-check"></i></span>
+      <span class="dashboard-kpi-card__label">Очікують модерації</span>
+    </div>
+    <div class="dashboard-kpi-card__value"><%= applicants.length %></div>
+    <div class="dashboard-kpi-card__meta">Волонтерів цього тижня: <%= volunteers.length %></div>
+    <canvas class="dashboard-kpi-card__chart" data-sparkline data-values='<%- JSON.stringify(applicantSparkline) %>' data-color="warning" aria-hidden="true"></canvas>
+  </article>
 </section>
 
-<div class="admin-workspace mt-4">
-  <aside class="admin-sidebar">
+<div class="admin-workspace" data-reveal>
+  <aside class="admin-sidebar" aria-label="Навігація панелі">
     <div class="admin-sidebar__card">
       <h2 class="admin-sidebar__title">Розділи</h2>
-      <nav class="admin-nav" aria-label="Розділи адмін-панелі">
-        <a href="#finance">
-          <span class="admin-nav__icon admin-nav__icon--finance"><i class="fa-solid fa-coins"></i></span>
-          <span class="admin-nav__text">
-            <span class="admin-nav__label">Фінанси</span>
-            <span class="admin-nav__hint">донати та витрати</span>
-          </span>
-          <% if (donations.length > 0) { %>
-            <span class="admin-nav__badge"><%= donations.length %></span>
-          <% } %>
+      <nav class="admin-nav" data-admin-nav>
+        <a href="#finance" class="is-active">
+          <span class="admin-nav__icon"><i class="fa-solid fa-chart-line"></i></span>
+          <span class="admin-nav__label">Фінанси</span>
+          <span class="admin-nav__hint">донати, витрати, реквізити</span>
         </a>
         <a href="#users">
-          <span class="admin-nav__icon admin-nav__icon--users"><i class="fa-solid fa-users"></i></span>
-          <span class="admin-nav__text">
-            <span class="admin-nav__label">Користувачі</span>
-            <span class="admin-nav__hint">заявки та ролі</span>
-          </span>
-          <% if (applicants.length > 0) { %>
-            <span class="admin-nav__badge"><%= applicants.length %></span>
-          <% } %>
+          <span class="admin-nav__icon"><i class="fa-solid fa-users-gear"></i></span>
+          <span class="admin-nav__label">Модерація</span>
+          <span class="admin-nav__hint">заявки, ролі, бан</span>
         </a>
         <a href="#vehicles">
-          <span class="admin-nav__icon admin-nav__icon--vehicles"><i class="fa-solid fa-truck"></i></span>
-          <span class="admin-nav__text">
-            <span class="admin-nav__label">Автопарк</span>
-            <span class="admin-nav__hint">техніка та статуси</span>
-          </span>
-          <% if (vehicles.length > 0) { %>
-            <span class="admin-nav__badge"><%= vehicles.length %></span>
-          <% } %>
+          <span class="admin-nav__icon"><i class="fa-solid fa-truck"></i></span>
+          <span class="admin-nav__label">Автопарк</span>
+          <span class="admin-nav__hint">статуси, інвентар</span>
         </a>
         <a href="#content">
-          <span class="admin-nav__icon admin-nav__icon--content"><i class="fa-solid fa-newspaper"></i></span>
-          <span class="admin-nav__text">
-            <span class="admin-nav__label">Контент</span>
-            <span class="admin-nav__hint">сторінки та медіа</span>
-          </span>
-          <% if (articles.length > 0) { %>
-            <span class="admin-nav__badge"><%= articles.length %></span>
-          <% } %>
+          <span class="admin-nav__icon"><i class="fa-solid fa-newspaper"></i></span>
+          <span class="admin-nav__label">Контент</span>
+          <span class="admin-nav__hint">блоки, статті, медіа</span>
         </a>
         <a href="#community">
-          <span class="admin-nav__icon admin-nav__icon--community"><i class="fa-solid fa-people-carry-box"></i></span>
-          <span class="admin-nav__text">
-            <span class="admin-nav__label">Спільнота</span>
-            <span class="admin-nav__hint">відгуки та волонтери</span>
-          </span>
-          <% if (volunteers.length > 0) { %>
-            <span class="admin-nav__badge"><%= volunteers.length %></span>
-          <% } %>
+          <span class="admin-nav__icon"><i class="fa-solid fa-people-carry-box"></i></span>
+          <span class="admin-nav__label">Спільнота</span>
+          <span class="admin-nav__hint">відгуки, волонтери</span>
         </a>
       </nav>
     </div>
     <div class="admin-sidebar__card">
       <h2 class="admin-sidebar__title">Швидкі дії</h2>
       <div class="admin-quick-actions">
-        <a class="btn btn-primary" href="#finance"><i class="fa-solid fa-plus me-2"></i>Новий донат</a>
-        <a class="btn btn-outline-primary" href="#content"><i class="fa-solid fa-pen-to-square me-2"></i>Нова стаття</a>
-        <a class="btn btn-outline-light text-dark" href="/admin/export/users.pdf"><i class="fa-regular fa-file-pdf me-2"></i>Експорт користувачів</a>
+        <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#modalAddDonation"><i class="fa-solid fa-plus me-2"></i>Новий донат</button>
+        <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#modalAddExpense"><i class="fa-solid fa-file-invoice-dollar me-2"></i>Витрата</button>
+        <a class="btn btn-outline-light text-dark" href="#finance"><i class="fa-solid fa-vault me-2"></i>Реквізити</a>
       </div>
     </div>
     <div class="admin-sidebar__card">
       <h2 class="admin-sidebar__title">Пульс команди</h2>
       <div class="admin-sidebar__metrics">
         <div class="admin-sidebar__metric">
-          <span class="admin-sidebar__metric-label">Заявки</span>
-          <span class="admin-sidebar__metric-value"><%= applicants.length %></span>
+          <span class="admin-sidebar__metric-label">Донати (30д)</span>
+          <span class="admin-sidebar__metric-value"><%= donations.length %></span>
         </div>
         <div class="admin-sidebar__metric">
-          <span class="admin-sidebar__metric-label">Донатери</span>
-          <span class="admin-sidebar__metric-value"><%= donors.length %></span>
+          <span class="admin-sidebar__metric-label">Заявки</span>
+          <span class="admin-sidebar__metric-value"><%= applicants.length %></span>
         </div>
         <div class="admin-sidebar__metric">
           <span class="admin-sidebar__metric-label">Волонтери</span>
@@ -124,713 +127,895 @@
   </aside>
 
   <div class="admin-content">
-    <section id="finance" class="admin-section">
-      <details class="admin-accordion" open>
-        <summary class="admin-section__summary">
-          <span class="admin-section__icon"><i class="fa-solid fa-coins"></i></span>
-          <div class="admin-section__text">
-            <h2 class="admin-section__title">Фінанси</h2>
-            <p class="admin-section__subtitle">Донати, витрати, реквізити та цілі</p>
-          </div>
-          <span class="admin-section__chevron"><i class="fa-solid fa-chevron-down"></i></span>
-        </summary>
-        <div class="admin-section__body">
-          <div class="row g-4">
-            <div class="col-lg-6">
-              <div class="card shadow-sm h-100">
-                <div class="card-body">
-                  <h3 class="h4">Додати донат вручну</h3>
-                  <form method="POST" action="/admin/donations" class="mt-3" novalidate>
-                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                    <div class="mb-3">
-                      <label class="form-label" for="donor_name">Ім'я</label>
-                      <input class="form-control" type="text" id="donor_name" name="donor_name" required>
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label" for="amount">Сума</label>
-                      <input class="form-control" type="number" id="amount" name="amount" min="10" required>
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label" for="currency">Валюта</label>
-                      <input class="form-control" type="text" id="currency" name="currency" value="UAH">
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label" for="message">Коментар</label>
-                      <textarea class="form-control" id="message" name="message" rows="3"></textarea>
-                    </div>
-                    <div class="form-check mb-3">
-                      <input class="form-check-input" type="checkbox" id="public" name="public" checked>
-                      <label class="form-check-label" for="public">Показувати у публічному списку</label>
-                    </div>
-                    <button class="btn btn-primary" type="submit">Зберегти</button>
-                  </form>
-                </div>
+    <section id="finance" class="admin-section" data-admin-section>
+      <div class="admin-section__header">
+        <div>
+          <h2 class="admin-section__title">Фінансовий контроль</h2>
+          <p class="admin-section__subtitle">Керуйте донатами, витратами та реквізитами. Принципи верстки з першого коміту збережено: чисті контейнери, акцентні кнопки.</p>
+        </div>
+        <div class="admin-section__actions">
+          <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#modalAddDonation">Додати донат</button>
+          <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#modalAddExpense">Зафіксувати витрату</button>
+        </div>
+      </div>
+      <div class="row g-4">
+        <div class="col-xl-7">
+          <div class="card shadow-soft h-100">
+            <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+              <div>
+                <h3 class="h5 mb-1">Останні донати</h3>
+                <p class="small text-muted mb-0">Сторінка підтримує серверну пагінацію — у таблиці виводиться до 15 записів.</p>
+              </div>
+              <div class="admin-table__controls" data-table="donations">
+                <label class="admin-table__search">
+                  <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                  <input type="search" placeholder="Пошук по імені" data-table-search>
+                </label>
               </div>
             </div>
-            <div class="col-lg-6">
-              <div class="card shadow-sm h-100">
-                <div class="card-body">
-                  <h3 class="h4">Зафіксувати витрати</h3>
-                  <form method="POST" action="/admin/withdrawals" class="mt-3" novalidate>
-                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                    <div class="mb-3">
-                      <label class="form-label" for="withdraw_amount">Сума</label>
-                      <input class="form-control" type="number" id="withdraw_amount" name="amount" min="1" required>
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label" for="description">Призначення</label>
-                      <textarea class="form-control" id="description" name="description" rows="3"></textarea>
-                    </div>
-                    <button class="btn btn-outline-primary" type="submit">Додати витрату</button>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="row g-4">
-            <div class="col-lg-7">
-              <div class="card shadow-sm h-100">
-                <div class="card-body">
-                  <h3 class="h5">Поточні реквізити</h3>
-                  <% bankAccounts.forEach(function(account) { %>
-                    <form method="POST" action="/admin/bank-accounts/<%= account.id %>" class="border rounded p-3 mb-3" novalidate>
-                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                      <div class="row g-2">
-                        <div class="col-md-6">
-                          <label class="form-label">Назва</label>
-                          <input class="form-control" type="text" name="label" value="<%= account.label %>" required>
-                        </div>
-                        <div class="col-md-6">
-                          <label class="form-label">Отримувач</label>
-                          <input class="form-control" type="text" name="recipient" value="<%= account.recipient %>" required>
-                        </div>
-                        <div class="col-md-6">
-                          <label class="form-label">IBAN</label>
-                          <input class="form-control" type="text" name="iban" value="<%= account.iban %>" required>
-                        </div>
-                        <div class="col-md-3">
-                          <label class="form-label">ЄДРПОУ</label>
-                          <input class="form-control" type="text" name="edrpou" value="<%= account.edrpou || '' %>">
-                        </div>
-                        <div class="col-12">
-                          <label class="form-label">Призначення</label>
-                          <textarea class="form-control" name="purpose" rows="2"><%= account.purpose || '' %></textarea>
-                        </div>
-                      </div>
-                      <div class="d-flex justify-content-between align-items-center mt-3">
-                        <small class="text-muted">Оновлено <%= new Date(account.updated_at).toLocaleDateString('uk-UA') %></small>
-                        <button class="btn btn-sm btn-outline-primary" type="submit">Зберегти</button>
-                      </div>
-                    </form>
-                    <form method="POST" action="/admin/bank-accounts/<%= account.id %>/delete" class="mb-4" onsubmit="return confirm('Видалити реквізити?');">
-                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                      <button class="btn btn-sm btn-outline-danger" type="submit">Видалити рахунок</button>
-                    </form>
+            <div class="table-responsive">
+              <table class="table table-hover align-middle admin-table" data-table-body="donations">
+                <thead>
+                  <tr>
+                    <th scope="col">Донатор</th>
+                    <th scope="col">Сума</th>
+                    <th scope="col">Дата</th>
+                    <th scope="col">Публічний</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% donations.forEach(function(donation) { %>
+                    <tr>
+                      <td><strong><%= donation.donor_name %></strong><br><span class="text-muted small"><%= donation.message || 'Без повідомлення' %></span></td>
+                      <td><%= donation.amount.toLocaleString('uk-UA') %> <%= donation.currency %></td>
+                      <td><time datetime="<%= new Date(donation.created_at).toISOString() %>"><%= new Date(donation.created_at).toLocaleString('uk-UA') %></time></td>
+                      <td>
+                        <% if (donation.public) { %>
+                          <span class="badge bg-success-subtle text-success"><i class="fa-solid fa-eye me-1"></i>Так</span>
+                        <% } else { %>
+                          <span class="badge bg-warning-subtle text-warning"><i class="fa-solid fa-eye-slash me-1"></i>Ні</span>
+                        <% } %>
+                      </td>
+                    </tr>
                   <% }) %>
-                  <form method="POST" action="/admin/bank-accounts" class="border rounded p-3" novalidate>
-                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                    <h4 class="h6">Додати новий рахунок</h4>
-                    <div class="row g-2">
-                      <div class="col-md-6">
-                        <label class="form-label">Назва</label>
-                        <input class="form-control" type="text" name="label" required>
-                      </div>
+                  <% if (donations.length === 0) { %>
+                    <tr data-table-empty>
+                      <td colspan="4" class="text-center text-muted">Ще немає даних для відображення.</td>
+                    </tr>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-5">
+          <div class="card shadow-soft h-100">
+            <div class="card-header">
+              <h3 class="h5 mb-1">Витрати</h3>
+              <p class="small text-muted mb-0">Перевірені операції з підтверджуючими документами.</p>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-sm align-middle admin-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Призначення</th>
+                    <th scope="col">Сума</th>
+                    <th scope="col">Дата</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% withdrawals.forEach(function(item) { %>
+                    <tr>
+                      <td><%= item.description || 'Без опису' %></td>
+                      <td><%= item.amount.toLocaleString('uk-UA') %> ₴</td>
+                      <td><time datetime="<%= new Date(item.created_at).toISOString() %>"><%= new Date(item.created_at).toLocaleDateString('uk-UA') %></time></td>
+                    </tr>
+                  <% }) %>
+                  <% if (withdrawals.length === 0) { %>
+                    <tr><td colspan="3" class="text-center text-muted">Витрати не зафіксовано.</td></tr>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4 mt-1">
+        <div class="col-lg-6">
+          <div class="card shadow-soft">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h3 class="h5 mb-0">Банківські реквізити</h3>
+              <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#bankAccountsCollapse" aria-expanded="true">Керувати</button>
+            </div>
+            <div id="bankAccountsCollapse" class="collapse show">
+              <div class="card-body">
+                <% bankAccounts.forEach(function(account) { %>
+                  <div class="admin-form-card">
+                    <div class="admin-form-card__header">
+                      <h4 class="h6 mb-0"><%= account.label %></h4>
+                      <span class="badge bg-light text-dark">Оновлено <%= new Date(account.updated_at).toLocaleDateString('uk-UA') %></span>
+                    </div>
+                    <form method="POST" action="/admin/bank-accounts/<%= account.id %>" class="row g-3" id="bank-form-<%= account.id %>" novalidate>
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                       <div class="col-md-6">
                         <label class="form-label">Отримувач</label>
-                        <input class="form-control" type="text" name="recipient" required>
+                        <input class="form-control" type="text" name="recipient" value="<%= account.recipient %>" required>
                       </div>
                       <div class="col-md-6">
                         <label class="form-label">IBAN</label>
-                        <input class="form-control" type="text" name="iban" required>
+                        <input class="form-control" type="text" name="iban" value="<%= account.iban %>" required>
                       </div>
-                      <div class="col-md-3">
+                      <div class="col-md-6">
                         <label class="form-label">ЄДРПОУ</label>
-                        <input class="form-control" type="text" name="edrpou">
+                        <input class="form-control" type="text" name="edrpou" value="<%= account.edrpou || '' %>">
                       </div>
-                      <div class="col-12">
+                      <div class="col-md-6">
                         <label class="form-label">Призначення</label>
-                        <textarea class="form-control" name="purpose" rows="2"></textarea>
-                      </div>
-                    </div>
-                    <button class="btn btn-sm btn-outline-primary mt-3" type="submit">Додати</button>
-                  </form>
-                </div>
-              </div>
-            </div>
-            <div class="col-lg-5">
-              <div class="card shadow-sm h-100">
-                <div class="card-body">
-                  <h3 class="h5">Цілі зборів</h3>
-                  <% goals.forEach(function(goal) { %>
-                    <form method="POST" action="/admin/goals/<%= goal.id %>" class="border rounded p-3 mb-3" novalidate>
-                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                      <div class="mb-2">
-                        <label class="form-label">Назва</label>
-                        <input class="form-control" type="text" name="title" value="<%= goal.title %>" required>
-                      </div>
-                      <div class="mb-2">
-                        <label class="form-label">Опис</label>
-                        <textarea class="form-control" name="description" rows="2"><%= goal.description || '' %></textarea>
-                      </div>
-                      <div class="mb-2">
-                        <label class="form-label">Сума, ₴</label>
-                        <input class="form-control" type="number" name="target_amount" value="<%= goal.target_amount %>" min="1000" required>
-                      </div>
-                      <div class="mb-2">
-                        <label class="form-label">Статус</label>
-                        <select class="form-select" name="status">
-                          <option value="draft" <%= goal.status === 'draft' ? 'selected' : '' %>>Чернетка</option>
-                          <option value="active" <%= goal.status === 'active' ? 'selected' : '' %>>Активна</option>
-                          <option value="archived" <%= goal.status === 'archived' ? 'selected' : '' %>>Архівована</option>
-                        </select>
-                      </div>
-                      <div class="d-flex justify-content-between align-items-center">
-                        <small class="text-muted">Оновлено <%= new Date(goal.updated_at).toLocaleDateString('uk-UA') %></small>
-                        <button class="btn btn-sm btn-outline-primary" type="submit">Оновити</button>
+                        <input class="form-control" type="text" name="purpose" value="<%= account.purpose || '' %>">
                       </div>
                     </form>
-                  <% }) %>
-                  <form method="POST" action="/admin/goals" class="border rounded p-3" novalidate>
-                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                    <h4 class="h6">Нова ціль</h4>
-                    <div class="mb-2">
+                    <div class="admin-form-card__footer">
+                      <button class="btn btn-sm btn-outline-primary" type="submit" form="bank-form-<%= account.id %>">Оновити</button>
+                      <form method="POST" action="/admin/bank-accounts/<%= account.id %>/delete" class="d-inline" onsubmit="return confirm('Видалити реквізити?');">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button class="btn btn-sm btn-outline-danger" type="submit">Видалити</button>
+                      </form>
+                    </div>
+                  </div>
+                <% }) %>
+                <form method="POST" action="/admin/bank-accounts" class="admin-form-card admin-form-card--inline" novalidate>
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <div class="admin-form-card__header">
+                    <h4 class="h6 mb-0">Новий рахунок</h4>
+                  </div>
+                  <div class="row g-3">
+                    <div class="col-md-6">
                       <label class="form-label">Назва</label>
-                      <input class="form-control" type="text" name="title" required>
+                      <input class="form-control" type="text" name="label" required>
                     </div>
-                    <div class="mb-2">
+                    <div class="col-md-6">
+                      <label class="form-label">Отримувач</label>
+                      <input class="form-control" type="text" name="recipient" required>
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label">IBAN</label>
+                      <input class="form-control" type="text" name="iban" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">ЄДРПОУ</label>
+                      <input class="form-control" type="text" name="edrpou">
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">Призначення</label>
+                      <input class="form-control" type="text" name="purpose">
+                    </div>
+                  </div>
+                  <div class="admin-form-card__footer">
+                    <button class="btn btn-sm btn-primary" type="submit">Додати</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card shadow-soft">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h3 class="h5 mb-0">Фандрейзингові цілі</h3>
+              <span class="badge bg-primary-subtle text-primary"><i class="fa-solid fa-bullseye me-1"></i><%= goals.length %> записів</span>
+            </div>
+            <div class="card-body">
+              <% goals.forEach(function(goal) { %>
+                <form method="POST" action="/admin/goals/<%= goal.id %>" class="admin-form-card" novalidate>
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <div class="admin-form-card__header">
+                    <h4 class="h6 mb-0"><%= goal.title %></h4>
+                    <span class="badge <%= goal.status === 'active' ? 'bg-success-subtle text-success' : 'bg-light text-dark' %>"><%= goal.status %></span>
+                  </div>
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label class="form-label">Заголовок</label>
+                      <input class="form-control" type="text" name="title" value="<%= goal.title %>" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">Сума</label>
+                      <input class="form-control" type="number" name="target_amount" min="1000" value="<%= goal.target_amount %>" required>
+                    </div>
+                    <div class="col-12">
                       <label class="form-label">Опис</label>
-                      <textarea class="form-control" name="description" rows="2"></textarea>
+                      <textarea class="form-control" name="description" rows="2"><%= goal.description || '' %></textarea>
                     </div>
-                    <div class="mb-2">
-                      <label class="form-label">Сума, ₴</label>
-                      <input class="form-control" type="number" name="target_amount" min="1000" required>
-                    </div>
-                    <div class="mb-2">
+                    <div class="col-md-6">
                       <label class="form-label">Статус</label>
-                      <select class="form-select" name="status">
-                        <option value="draft">Чернетка</option>
-                        <option value="active">Активна</option>
-                        <option value="archived">Архівована</option>
+                      <select class="form-select" name="status" required>
+                        <option value="draft" <%= goal.status === 'draft' ? 'selected' : '' %>>Чернетка</option>
+                        <option value="active" <%= goal.status === 'active' ? 'selected' : '' %>>Активна</option>
+                        <option value="archived" <%= goal.status === 'archived' ? 'selected' : '' %>>Архів</option>
                       </select>
                     </div>
-                    <button class="btn btn-sm btn-outline-primary" type="submit">Створити</button>
-                  </form>
+                  </div>
+                  <div class="admin-form-card__footer">
+                    <button class="btn btn-sm btn-outline-primary" type="submit">Оновити</button>
+                  </div>
+                </form>
+              <% }) %>
+              <form method="POST" action="/admin/goals" class="admin-form-card" novalidate>
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <div class="admin-form-card__header">
+                  <h4 class="h6 mb-0">Нова ціль</h4>
                 </div>
-              </div>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label">Заголовок</label>
+                    <input class="form-control" type="text" name="title" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Сума</label>
+                    <input class="form-control" type="number" name="target_amount" min="1000" required>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label">Опис</label>
+                    <textarea class="form-control" name="description" rows="2"></textarea>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Статус</label>
+                    <select class="form-select" name="status" required>
+                      <option value="draft">Чернетка</option>
+                      <option value="active">Активна</option>
+                      <option value="archived">Архів</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="admin-form-card__footer">
+                  <button class="btn btn-sm btn-primary" type="submit">Зберегти</button>
+                </div>
+              </form>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
 
-          <div class="card shadow-sm">
-            <div class="card-body">
-              <h3 class="h5">Свіжі донати</h3>
-              <div class="table-responsive">
-                <table class="table table-sm align-middle admin-table">
-                  <thead>
+    <section id="users" class="admin-section" data-admin-section>
+      <div class="admin-section__header">
+        <div>
+          <h2 class="admin-section__title">Модерація користувачів</h2>
+          <p class="admin-section__subtitle">Підтверджуйте чеки, призначайте ролі, блокуйте порушників. Є чек-лист для кожної заявки.</p>
+        </div>
+      </div>
+      <div class="row g-4">
+        <div class="col-12">
+          <div class="card shadow-soft">
+            <div class="card-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+              <div>
+                <h3 class="h5 mb-1">Нові заявки</h3>
+                <p class="small text-muted mb-0">Переконайтесь, що додані чеки та контакти відповідають вимогам фонду.</p>
+              </div>
+              <div class="admin-table__controls" data-table="applicants">
+                <label class="admin-table__search">
+                  <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                  <input type="search" placeholder="Шукати заявку" data-table-search>
+                </label>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table align-middle admin-table" data-table-body="applicants">
+                <thead>
+                  <tr>
+                    <th scope="col">Користувач</th>
+                    <th scope="col">Контакти</th>
+                    <th scope="col">Докази</th>
+                    <th scope="col">Чек-лист</th>
+                    <th scope="col" class="text-end">Дії</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% applicants.forEach(function(applicant) { %>
                     <tr>
-                      <th>Ім'я</th>
-                      <th>Сума</th>
-                      <th>Дата</th>
+                      <td>
+                        <strong><%= applicant.full_name || '—' %></strong>
+                        <div class="small text-muted"><%= applicant.created_at ? new Date(applicant.created_at).toLocaleString('uk-UA') : '' %></div>
+                        <span class="badge bg-light text-dark"><%= applicant.status %></span>
+                      </td>
+                      <td>
+                        <div class="small"><i class="fa-solid fa-envelope me-1"></i><%= applicant.email %></div>
+                        <% if (applicant.phone) { %>
+                          <div class="small"><i class="fa-solid fa-phone me-1"></i><%= applicant.phone %></div>
+                        <% } %>
+                      </td>
+                      <td>
+                        <% if (applicant.proof_path) { %>
+                          <a class="btn btn-sm btn-outline-secondary" href="/<%= applicant.proof_path %>" target="_blank">Переглянути чек</a>
+                        <% } else { %>
+                          <span class="text-muted small">Не завантажено</span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <ul class="moderation-checklist">
+                          <li><input class="form-check-input" type="checkbox" disabled <%= applicant.proof_path ? 'checked' : '' %>> Доказ оплати</li>
+                          <li><input class="form-check-input" type="checkbox" disabled <%= applicant.phone ? 'checked' : '' %>> Контакт підтверджено</li>
+                          <li><input class="form-check-input" type="checkbox" disabled <%= applicant.notes ? 'checked' : '' %>> Коментар менеджера</li>
+                        </ul>
+                      </td>
+                      <td class="text-end">
+                        <form method="POST" action="/admin/users/<%= applicant.id %>/approve" class="d-inline">
+                          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                          <input type="hidden" name="role" value="donor">
+                          <button class="btn btn-sm btn-success" type="submit"><i class="fa-solid fa-check me-1"></i>Підтвердити</button>
+                        </form>
+                        <form method="POST" action="/admin/users/<%= applicant.id %>/reject" class="d-inline">
+                          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                          <button class="btn btn-sm btn-outline-secondary" type="submit">Відхилити</button>
+                        </form>
+                        <form method="POST" action="/admin/users/<%= applicant.id %>/ban" class="d-inline" onsubmit="return confirm('Заблокувати користувача?');">
+                          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                          <button class="btn btn-sm btn-outline-danger" type="submit">Бан</button>
+                        </form>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    <% donations.forEach(function(donation) { %>
-                      <tr>
-                        <td><%= donation.donor_name %></td>
-                        <td><%= donation.amount.toLocaleString('uk-UA') %> <%= donation.currency %></td>
-                        <td><%= new Date(donation.created_at).toLocaleString('uk-UA') %></td>
-                      </tr>
-                    <% }) %>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      </details>
-    </section>
-
-    <section id="users" class="admin-section">
-      <details class="admin-accordion">
-        <summary class="admin-section__summary">
-          <span class="admin-section__icon"><i class="fa-solid fa-users"></i></span>
-          <div class="admin-section__text">
-            <h2 class="admin-section__title">Користувачі та доступи</h2>
-            <p class="admin-section__subtitle">Модеруйте заявки, керуйте ролями та командами</p>
-          </div>
-          <span class="admin-section__chevron"><i class="fa-solid fa-chevron-down"></i></span>
-        </summary>
-        <div class="admin-section__body">
-          <div class="row g-4">
-            <div class="col-xl-6">
-              <div class="card shadow-sm h-100">
-                <div class="card-body">
-                  <h3 class="h5">Заявки на розгляд</h3>
-                  <div class="table-responsive">
-                    <table class="table table-sm align-middle admin-table">
-                      <thead>
-                        <tr>
-                          <th>ПІБ</th>
-                          <th>Email</th>
-                          <th>Телефон</th>
-                          <th>Статус</th>
-                          <th></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <% applicants.forEach(function(applicant) { %>
-                          <tr>
-                            <td><%= applicant.full_name || '—' %></td>
-                            <td><%= applicant.email %></td>
-                            <td><%= applicant.phone || '—' %></td>
-                            <td><span class="badge bg-light text-dark"><%= applicant.status %></span></td>
-                            <td class="text-end">
-                              <% if (applicant.proof_path) { %>
-                                <a class="btn btn-sm btn-outline-secondary" href="/<%= applicant.proof_path %>" target="_blank">Чек</a>
-                              <% } %>
-                              <form method="POST" action="/admin/users/<%= applicant.id %>/approve" class="d-inline">
-                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                                <input type="hidden" name="role" value="donor">
-                                <button class="btn btn-sm btn-success" type="submit">Прийняти</button>
-                              </form>
-                              <form method="POST" action="/admin/users/<%= applicant.id %>/reject" class="d-inline">
-                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                                <button class="btn btn-sm btn-outline-secondary" type="submit">Відхилити</button>
-                              </form>
-                              <form method="POST" action="/admin/users/<%= applicant.id %>/ban" class="d-inline" onsubmit="return confirm('Заблокувати користувача?');">
-                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                                <button class="btn btn-sm btn-outline-danger" type="submit">Бан</button>
-                              </form>
-                            </td>
-                          </tr>
-                        <% }) %>
-                        <% if (applicants.length === 0) { %>
-                          <tr><td colspan="5" class="text-center text-muted">Немає заявок у черзі.</td></tr>
-                        <% } %>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-xl-6">
-              <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                  <h3 class="h5">Підтверджені донатери</h3>
-                  <div class="table-responsive">
-                    <table class="table table-sm align-middle admin-table">
-                      <thead>
-                        <tr>
-                          <th>ПІБ</th>
-                          <th>Email</th>
-                          <th>Телефон</th>
-                          <th>Роль</th>
-                          <th></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <% donors.forEach(function(donor) { %>
-                          <tr>
-                            <td><%= donor.full_name || '—' %></td>
-                            <td><%= donor.email %></td>
-                            <td><%= donor.phone || '—' %></td>
-                            <td><%= 'donor' %></td>
-                            <td class="text-end">
-                              <form method="POST" action="/admin/users/<%= donor.id %>/role" class="d-inline">
-                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                                <select class="form-select form-select-sm d-inline-block w-auto" name="role" onchange="this.form.submit()">
-                                  <option value="donor" selected>Donor</option>
-                                  <option value="moderator">Moderator</option>
-                                  <option value="admin">Admin</option>
-                                </select>
-                              </form>
-                            </td>
-                          </tr>
-                        <% }) %>
-                        <% if (donors.length === 0) { %>
-                          <tr><td colspan="5" class="text-center text-muted">Ще немає підтверджених донаторів.</td></tr>
-                        <% } %>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-              <div class="card shadow-sm">
-                <div class="card-body">
-                  <h3 class="h5">Адміністратори</h3>
-                  <ul class="admin-list">
-                    <% admins.forEach(function(admin) { %>
-                      <li class="admin-list__item">
-                        <div>
-                          <strong><%= admin.full_name || admin.email %></strong>
-                          <p class="admin-list__meta mb-0"><%= admin.email %></p>
-                        </div>
-                        <span class="admin-list__meta">Вхід: <%= admin.last_login_at ? new Date(admin.last_login_at).toLocaleDateString('uk-UA') : '—' %></span>
-                      </li>
-                    <% }) %>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </details>
-    </section>
-
-    <section id="vehicles" class="admin-section">
-      <details class="admin-accordion">
-        <summary class="admin-section__summary">
-          <span class="admin-section__icon"><i class="fa-solid fa-truck"></i></span>
-          <div class="admin-section__text">
-            <h2 class="admin-section__title">Автопарк</h2>
-            <p class="admin-section__subtitle">Керуйте транспортом і статусами</p>
-          </div>
-          <span class="admin-section__chevron"><i class="fa-solid fa-chevron-down"></i></span>
-        </summary>
-        <div class="admin-section__body">
-          <div class="row g-4">
-            <div class="col-lg-7">
-              <div class="card shadow-sm">
-                <div class="card-body">
-                  <h3 class="h5">Поточні авто</h3>
-                  <% vehicles.forEach(function(vehicle) { %>
-                    <form method="POST" action="/admin/vehicles/<%= vehicle.id %>" class="border rounded p-3 mb-2" novalidate>
-                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                      <div class="mb-2">
-                        <label class="form-label">Назва</label>
-                        <input class="form-control" type="text" name="name" value="<%= vehicle.name %>" required>
-                      </div>
-                      <div class="mb-2">
-                        <label class="form-label">Опис</label>
-                        <textarea class="form-control" name="description" rows="2"><%= vehicle.description || '' %></textarea>
-                      </div>
-                      <div class="row g-2">
-                        <div class="col-md-4">
-                          <label class="form-label">Статус</label>
-                          <input class="form-control" type="text" name="status" value="<%= vehicle.status %>" required>
-                        </div>
-                        <div class="col-md-4">
-                          <label class="form-label">Категорія</label>
-                          <input class="form-control" type="text" name="category" value="<%= vehicle.category || '' %>">
-                        </div>
-                        <div class="col-md-4">
-                          <label class="form-label">Зображення</label>
-                          <input class="form-control" type="text" name="image_path" value="<%= vehicle.image_path || '' %>">
-                        </div>
-                      </div>
-                      <button class="btn btn-sm btn-outline-primary mt-3" type="submit">Зберегти</button>
-                    </form>
-                    <form method="POST" action="/admin/vehicles/<%= vehicle.id %>/delete" class="mb-3" onsubmit="return confirm('Видалити авто?');">
-                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                      <button class="btn btn-sm btn-outline-danger" type="submit">Видалити авто</button>
-                    </form>
                   <% }) %>
-                  <% if (vehicles.length === 0) { %>
-                    <p class="text-muted mb-0">Список авто поки порожній.</p>
+                  <% if (applicants.length === 0) { %>
+                    <tr data-table-empty><td colspan="5" class="text-center text-muted">Заявки відсутні.</td></tr>
                   <% } %>
-                </div>
-              </div>
-            </div>
-            <div class="col-lg-5">
-              <div class="card shadow-sm">
-                <div class="card-body">
-                  <h3 class="h5">Додати / оновити авто</h3>
-                  <form method="POST" action="/admin/vehicles" class="row g-3" novalidate>
-                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                    <div class="col-12">
-                      <label class="form-label" for="vehicle_name">Назва</label>
-                      <input class="form-control" type="text" id="vehicle_name" name="name" required>
-                    </div>
-                    <div class="col-12">
-                      <label class="form-label" for="vehicle_description">Опис</label>
-                      <textarea class="form-control" id="vehicle_description" name="description" rows="3"></textarea>
-                    </div>
-                    <div class="col-md-6">
-                      <label class="form-label" for="vehicle_status">Статус</label>
-                      <input class="form-control" type="text" id="vehicle_status" name="status" placeholder="needs_funding" required>
-                    </div>
-                    <div class="col-md-6">
-                      <label class="form-label" for="vehicle_category">Категорія</label>
-                      <input class="form-control" type="text" id="vehicle_category" name="category" placeholder="suv">
-                    </div>
-                    <div class="col-12">
-                      <label class="form-label" for="vehicle_image">Зображення (шлях)</label>
-                      <input class="form-control" type="text" id="vehicle_image" name="image_path" placeholder="images/img/cars/car1.jpg">
-                    </div>
-                    <div class="col-12">
-                      <button class="btn btn-outline-primary" type="submit">Зберегти</button>
-                    </div>
-                  </form>
-                </div>
-              </div>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
-      </details>
+        <div class="col-xl-6">
+          <div class="card shadow-soft">
+            <div class="card-header">
+              <h3 class="h5 mb-0">Підтверджені донатори</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="table align-middle admin-table">
+                <thead>
+                  <tr>
+                    <th>Ім'я</th>
+                    <th>Контакти</th>
+                    <th>Роль</th>
+                    <th class="text-end">Дії</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% donors.forEach(function(donor) { %>
+                    <tr>
+                      <td><strong><%= donor.full_name || '—' %></strong></td>
+                      <td>
+                        <div class="small"><i class="fa-solid fa-envelope me-1"></i><%= donor.email %></div>
+                        <% if (donor.phone) { %><div class="small"><i class="fa-solid fa-phone me-1"></i><%= donor.phone %></div><% } %>
+                      </td>
+                      <td><span class="badge bg-primary-subtle text-primary"><%= donor.role || 'donor' %></span></td>
+                      <td class="text-end">
+                        <form method="POST" action="/admin/users/<%= donor.id %>/role" class="d-inline-flex align-items-center gap-2">
+                          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                          <select class="form-select form-select-sm" name="role">
+                            <option value="donor" <%= donor.role === 'donor' ? 'selected' : '' %>>Донатор</option>
+                            <option value="moderator" <%= donor.role === 'moderator' ? 'selected' : '' %>>Модератор</option>
+                            <option value="admin" <%= donor.role === 'admin' ? 'selected' : '' %>>Адмін</option>
+                          </select>
+                          <button class="btn btn-sm btn-outline-primary" type="submit">Оновити</button>
+                        </form>
+                      </td>
+                    </tr>
+                  <% }) %>
+                  <% if (donors.length === 0) { %>
+                    <tr><td colspan="4" class="text-center text-muted">Немає підтверджених донаторів.</td></tr>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-6">
+          <div class="card shadow-soft">
+            <div class="card-header">
+              <h3 class="h5 mb-0">Адміністратори</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="table align-middle admin-table">
+                <thead>
+                  <tr>
+                    <th>Ім'я</th>
+                    <th>Email</th>
+                    <th>Статус</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% admins.forEach(function(admin) { %>
+                    <tr>
+                      <td><%= admin.full_name || '—' %></td>
+                      <td><%= admin.email %></td>
+                      <td><span class="badge bg-success-subtle text-success">Адміністратор</span></td>
+                    </tr>
+                  <% }) %>
+                  <% if (admins.length === 0) { %>
+                    <tr><td colspan="3" class="text-center text-muted">Адміністраторів не знайдено.</td></tr>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <section id="content" class="admin-section">
-      <details class="admin-accordion">
-        <summary class="admin-section__summary">
-          <span class="admin-section__icon"><i class="fa-solid fa-newspaper"></i></span>
-          <div class="admin-section__text">
-            <h2 class="admin-section__title">Контент та публікації</h2>
-            <p class="admin-section__subtitle">Оновлюйте сторінки, статті та медіа згадки</p>
-          </div>
-          <span class="admin-section__chevron"><i class="fa-solid fa-chevron-down"></i></span>
-        </summary>
-        <div class="admin-section__body">
-          <div class="row g-4">
-            <div class="col-lg-6">
-              <div class="card shadow-sm">
-                <div class="card-body">
-                  <h3 class="h5">Головні блоки</h3>
-                  <% contentBlocks.forEach(function(block) { %>
-                    <form method="POST" action="/admin/content-blocks/<%= block.slug %>" class="border rounded p-3 mb-3">
-                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                      <h4 class="h6 text-uppercase text-muted"><%= block.slug %></h4>
-                      <div class="mb-2">
-                        <label class="form-label">Заголовок</label>
-                        <input class="form-control" type="text" name="title" value="<%= block.title || '' %>">
-                      </div>
-                      <div class="mb-2">
-                        <label class="form-label">Текст</label>
-                        <textarea class="form-control" name="body" rows="3"><%= block.body || '' %></textarea>
-                      </div>
-                      <button class="btn btn-sm btn-outline-primary" type="submit">Оновити</button>
-                    </form>
-                  <% }) %>
-                </div>
-              </div>
+    <section id="vehicles" class="admin-section" data-admin-section>
+      <div class="admin-section__header">
+        <div>
+          <h2 class="admin-section__title">Автопарк</h2>
+          <p class="admin-section__subtitle">Оновлюйте статуси, додавайте нові авто та керуйте інвентарем.</p>
+        </div>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <div class="card shadow-soft">
+            <div class="card-header">
+              <h3 class="h5 mb-0">Поточні авто</h3>
             </div>
-            <div class="col-lg-6">
-              <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                  <h3 class="h5">Медіа про нас</h3>
-                  <% media.forEach(function(item) { %>
-                    <form method="POST" action="/admin/media/<%= item.id %>" class="border rounded p-3 mb-3" novalidate>
-                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                      <div class="mb-2">
-                        <label class="form-label">Назва</label>
-                        <input class="form-control" type="text" name="title" value="<%= item.title %>" required>
-                      </div>
-                      <div class="mb-2">
-                        <label class="form-label">Коротко</label>
-                        <textarea class="form-control" name="summary" rows="2"><%= item.summary || '' %></textarea>
-                      </div>
-                      <div class="mb-2">
-                        <label class="form-label">Посилання</label>
-                        <input class="form-control" type="url" name="url" value="<%= item.url %>" required>
-                      </div>
-                      <div class="mb-2">
-                        <label class="form-label">Зображення</label>
-                        <input class="form-control" type="text" name="image_path" value="<%= item.image_path || '' %>">
-                      </div>
-                      <button class="btn btn-sm btn-outline-primary" type="submit">Зберегти</button>
-                    </form>
-                    <form method="POST" action="/admin/media/<%= item.id %>/delete" class="mb-3" onsubmit="return confirm('Видалити матеріал?');">
-                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                      <button class="btn btn-sm btn-outline-danger" type="submit">Видалити матеріал</button>
-                    </form>
-                  <% }) %>
-                  <form method="POST" action="/admin/media" class="border rounded p-3" novalidate>
+            <div class="list-card">
+              <% vehicles.forEach(function(vehicle) { %>
+                <article class="list-card-item">
+                  <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
+                    <div>
+                      <strong><%= vehicle.name %></strong>
+                      <div class="small text-muted"><%= vehicle.category || 'Без категорії' %></div>
+                    </div>
+                    <div class="badge bg-light text-dark align-self-start align-self-md-center"><i class="fa-solid fa-gauge-high me-1"></i><%= vehicle.status %></div>
+                  </div>
+                  <% if (vehicle.image_path) { %>
+                    <div class="vehicle-preview">
+                      <img src="/<%= vehicle.image_path %>" alt="<%= vehicle.name %>" loading="lazy">
+                    </div>
+                  <% } %>
+                  <p class="mb-2"><%= vehicle.description %></p>
+                  <form method="POST" action="/admin/vehicles/<%= vehicle.id %>" class="row g-2" id="vehicle-form-<%= vehicle.id %>" novalidate>
                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                    <h4 class="h6">Новий матеріал</h4>
-                    <div class="mb-2">
+                    <div class="col-md-6">
+                      <label class="form-label">Статус</label>
+                      <input class="form-control" type="text" name="status" value="<%= vehicle.status %>" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">Категорія</label>
+                      <input class="form-control" type="text" name="category" value="<%= vehicle.category || '' %>">
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label">Опис</label>
+                      <textarea class="form-control" name="description" rows="2"><%= vehicle.description || '' %></textarea>
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label">Зображення</label>
+                      <input class="form-control" type="text" name="image_path" value="<%= vehicle.image_path || '' %>">
+                    </div>
+                  </form>
+                  <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-primary" type="submit" form="vehicle-form-<%= vehicle.id %>">Оновити</button>
+                    <form method="POST" action="/admin/vehicles/<%= vehicle.id %>/delete" class="d-inline" onsubmit="return confirm('Видалити авто?');">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <button class="btn btn-sm btn-outline-danger" type="submit">Видалити</button>
+                    </form>
+                  </div>
+                </article>
+              <% }) %>
+              <% if (vehicles.length === 0) { %>
+                <div class="list-card-item">Список автівок поки порожній.</div>
+              <% } %>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="card shadow-soft">
+            <div class="card-header">
+              <h3 class="h5 mb-0">Додати авто</h3>
+            </div>
+            <div class="card-body">
+              <form method="POST" action="/admin/vehicles" class="row g-3" novalidate>
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <div class="col-12">
+                  <label class="form-label">Назва</label>
+                  <input class="form-control" type="text" name="name" required>
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Опис</label>
+                  <textarea class="form-control" name="description" rows="3"></textarea>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Статус</label>
+                  <input class="form-control" type="text" name="status" placeholder="needs_funding" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Категорія</label>
+                  <input class="form-control" type="text" name="category" placeholder="suv">
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Зображення (шлях)</label>
+                  <input class="form-control" type="text" name="image_path" placeholder="images/cars/car1.jpg">
+                </div>
+                <div class="col-12">
+                  <button class="btn btn-primary" type="submit">Створити</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="content" class="admin-section" data-admin-section>
+      <div class="admin-section__header">
+        <div>
+          <h2 class="admin-section__title">Контент та медіа</h2>
+          <p class="admin-section__subtitle">Оновлюйте блоки сайту, медіа-публікації та статті. Форми мають превʼю та підказки.</p>
+        </div>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="card shadow-soft">
+            <div class="card-header">
+              <h3 class="h5 mb-0">Головні блоки</h3>
+            </div>
+            <div class="card-body">
+              <% contentBlocks.forEach(function(block) { %>
+                <form method="POST" action="/admin/content-blocks/<%= block.slug %>" class="admin-form-card">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <div class="admin-form-card__header">
+                    <h4 class="h6 mb-0 text-uppercase text-muted"><%= block.slug %></h4>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Заголовок</label>
+                    <input class="form-control" type="text" name="title" value="<%= block.title || '' %>">
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Текст</label>
+                    <textarea class="form-control" name="body" rows="3"><%= block.body || '' %></textarea>
+                  </div>
+                  <div class="admin-form-card__footer">
+                    <button class="btn btn-sm btn-outline-primary" type="submit">Оновити</button>
+                  </div>
+                </form>
+              <% }) %>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card shadow-soft mb-4">
+            <div class="card-header">
+              <h3 class="h5 mb-0">Медіа про нас</h3>
+            </div>
+            <div class="card-body">
+              <% media.forEach(function(item) { %>
+                <div class="admin-form-card">
+                  <div class="admin-form-card__header">
+                    <h4 class="h6 mb-0"><%= item.title %></h4>
+                  </div>
+                  <form method="POST" action="/admin/media/<%= item.id %>" class="admin-form-card__form" id="media-form-<%= item.id %>" novalidate>
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <div class="mb-3">
                       <label class="form-label">Назва</label>
-                      <input class="form-control" type="text" name="title" required>
+                      <input class="form-control" type="text" name="title" value="<%= item.title %>" required>
                     </div>
-                    <div class="mb-2">
+                    <div class="mb-3">
                       <label class="form-label">Коротко</label>
-                      <textarea class="form-control" name="summary" rows="2"></textarea>
+                      <textarea class="form-control" name="summary" rows="2"><%= item.summary || '' %></textarea>
                     </div>
-                    <div class="mb-2">
+                    <div class="mb-3">
                       <label class="form-label">Посилання</label>
-                      <input class="form-control" type="url" name="url" required>
+                      <input class="form-control" type="url" name="url" value="<%= item.url %>" required>
                     </div>
-                    <div class="mb-2">
+                    <div class="mb-3">
                       <label class="form-label">Зображення</label>
-                      <input class="form-control" type="text" name="image_path">
+                      <input class="form-control" type="text" name="image_path" value="<%= item.image_path || '' %>">
                     </div>
-                    <button class="btn btn-sm btn-outline-primary" type="submit">Додати</button>
                   </form>
+                  <div class="admin-form-card__footer d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-primary" type="submit" form="media-form-<%= item.id %>">Зберегти</button>
+                    <form method="POST" action="/admin/media/<%= item.id %>/delete" onsubmit="return confirm('Видалити матеріал?');">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <button class="btn btn-sm btn-outline-danger" type="submit">Видалити</button>
+                    </form>
+                  </div>
                 </div>
-              </div>
-              <div class="card shadow-sm">
-                <div class="card-body">
-                  <h3 class="h5">Статті та новини</h3>
-                  <% articles.forEach(function(article) { %>
-                    <form method="POST" action="/admin/articles/<%= article.id %>" class="border rounded p-3 mb-3" novalidate>
-                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                      <div class="mb-2">
-                        <label class="form-label">Заголовок</label>
-                        <input class="form-control" type="text" name="title" value="<%= article.title %>" required>
-                      </div>
-                      <div class="mb-2">
-                        <label class="form-label">Анонс</label>
-                        <textarea class="form-control" name="excerpt" rows="2"><%= article.excerpt || '' %></textarea>
-                      </div>
-                      <div class="mb-2">
-                        <label class="form-label">Текст</label>
-                        <textarea class="form-control" name="body" rows="3"><%= article.body || '' %></textarea>
-                      </div>
-                      <div class="mb-2">
-                        <label class="form-label">Зображення</label>
-                        <input class="form-control" type="text" name="cover_image" value="<%= article.cover_image || '' %>">
-                      </div>
-                      <div class="mb-2">
-                        <label class="form-label">Дата публікації</label>
-                        <input class="form-control" type="date" name="published_at" value="<%= article.published_at ? article.published_at.substring(0,10) : '' %>">
-                      </div>
-                      <button class="btn btn-sm btn-outline-primary" type="submit">Оновити</button>
-                    </form>
-                    <form method="POST" action="/admin/articles/<%= article.id %>/delete" class="mb-3" onsubmit="return confirm('Видалити статтю?');">
-                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                      <button class="btn btn-sm btn-outline-danger" type="submit">Видалити статтю</button>
-                    </form>
-                  <% }) %>
-                  <form method="POST" action="/admin/articles" class="border rounded p-3" novalidate>
+              <% }) %>
+              <form method="POST" action="/admin/media" class="admin-form-card" novalidate>
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <div class="admin-form-card__header">
+                  <h4 class="h6 mb-0">Новий матеріал</h4>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Назва</label>
+                  <input class="form-control" type="text" name="title" required>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Коротко</label>
+                  <textarea class="form-control" name="summary" rows="2"></textarea>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Посилання</label>
+                  <input class="form-control" type="url" name="url" required>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Зображення</label>
+                  <input class="form-control" type="text" name="image_path">
+                </div>
+                <div class="admin-form-card__footer">
+                  <button class="btn btn-sm btn-primary" type="submit">Додати</button>
+                </div>
+              </form>
+            </div>
+          </div>
+          <div class="card shadow-soft">
+            <div class="card-header">
+              <h3 class="h5 mb-0">Статті та новини</h3>
+            </div>
+            <div class="card-body">
+              <% articles.forEach(function(article) { %>
+                <div class="admin-form-card">
+                  <div class="admin-form-card__header">
+                    <h4 class="h6 mb-0"><%= article.title %></h4>
+                    <span class="badge bg-light text-dark"><%= article.published_at ? new Date(article.published_at).toLocaleDateString('uk-UA') : 'Чернетка' %></span>
+                  </div>
+                  <form method="POST" action="/admin/articles/<%= article.id %>" class="admin-form-card__form" id="article-form-<%= article.id %>" novalidate>
                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                    <h4 class="h6">Нова стаття</h4>
-                    <div class="mb-2">
+                    <div class="mb-3">
                       <label class="form-label">Заголовок</label>
-                      <input class="form-control" type="text" name="title" required>
+                      <input class="form-control" type="text" name="title" value="<%= article.title %>" required>
                     </div>
-                    <div class="mb-2">
+                    <div class="mb-3">
                       <label class="form-label">Анонс</label>
-                      <textarea class="form-control" name="excerpt" rows="2"></textarea>
+                      <textarea class="form-control" name="excerpt" rows="2"><%= article.excerpt || '' %></textarea>
                     </div>
-                    <div class="mb-2">
+                    <div class="mb-3">
                       <label class="form-label">Текст</label>
-                      <textarea class="form-control" name="body" rows="3"></textarea>
+                      <textarea class="form-control" name="body" rows="3"><%= article.body || '' %></textarea>
                     </div>
-                    <div class="mb-2">
+                    <div class="mb-3">
                       <label class="form-label">Зображення</label>
-                      <input class="form-control" type="text" name="cover_image">
+                      <input class="form-control" type="text" name="cover_image" value="<%= article.cover_image || '' %>">
                     </div>
-                    <div class="mb-2">
+                    <div class="mb-3">
                       <label class="form-label">Дата публікації</label>
-                      <input class="form-control" type="date" name="published_at">
+                      <input class="form-control" type="date" name="published_at" value="<%= article.published_at ? article.published_at.substring(0,10) : '' %>">
                     </div>
-                    <button class="btn btn-sm btn-outline-primary" type="submit">Опублікувати</button>
                   </form>
+                  <div class="admin-form-card__footer d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-primary" type="submit" form="article-form-<%= article.id %>">Оновити</button>
+                    <form method="POST" action="/admin/articles/<%= article.id %>/delete" onsubmit="return confirm('Видалити статтю?');">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <button class="btn btn-sm btn-outline-danger" type="submit">Видалити</button>
+                    </form>
+                  </div>
                 </div>
-              </div>
+              <% }) %>
+              <form method="POST" action="/admin/articles" class="admin-form-card" novalidate>
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <div class="admin-form-card__header">
+                  <h4 class="h6 mb-0">Нова стаття</h4>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Заголовок</label>
+                  <input class="form-control" type="text" name="title" required>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Анонс</label>
+                  <textarea class="form-control" name="excerpt" rows="2"></textarea>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Текст</label>
+                  <textarea class="form-control" name="body" rows="3"></textarea>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Зображення</label>
+                  <input class="form-control" type="text" name="cover_image">
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Дата публікації</label>
+                  <input class="form-control" type="date" name="published_at">
+                </div>
+                <div class="admin-form-card__footer">
+                  <button class="btn btn-sm btn-primary" type="submit">Опублікувати</button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
-      </details>
+      </div>
     </section>
 
-    <section id="community" class="admin-section">
-      <details class="admin-accordion">
-        <summary class="admin-section__summary">
-          <span class="admin-section__icon"><i class="fa-solid fa-hand-holding-heart"></i></span>
-          <div class="admin-section__text">
-            <h2 class="admin-section__title">Спільнота та волонтери</h2>
-            <p class="admin-section__subtitle">Керуйте відгуками донаторів та заявками волонтерів</p>
-          </div>
-          <span class="admin-section__chevron"><i class="fa-solid fa-chevron-down"></i></span>
-        </summary>
-        <div class="admin-section__body">
-          <div class="row g-4">
-            <div class="col-lg-6">
-              <div class="card shadow-sm">
-                <div class="card-body">
-                  <h3 class="h5">Відгуки донаторів</h3>
-                  <% reviews.forEach(function(review) { %>
-                    <form method="POST" action="/admin/reviews/<%= review.id %>/toggle" class="border rounded p-3 mb-3">
-                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                      <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                          <strong><%= review.author_name %></strong>
-                          <% if (review.rating) { %>
-                            <span class="ms-2 text-warning">
-                              <% for (let i = 0; i < review.rating; i++) { %>
-                                <i class="fa-solid fa-star"></i>
-                              <% } %>
-                            </span>
-                          <% } %>
-                        </div>
-                        <div class="form-check form-switch">
-                          <input class="form-check-input" type="checkbox" name="public" value="on" <%= review.public ? 'checked' : '' %> onchange="this.form.submit()">
-                        </div>
-                      </div>
-                      <p class="mb-2">“<%= review.message %>”</p>
-                      <p class="small text-muted mb-0">Додано <%= new Date(review.created_at).toLocaleDateString('uk-UA') %></p>
-                    </form>
-                  <% }) %>
-                  <form method="POST" action="/admin/reviews" class="border rounded p-3" novalidate>
-                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                    <h4 class="h6">Новий відгук</h4>
-                    <div class="mb-2">
-                      <label class="form-label">Ім'я</label>
-                      <input class="form-control" type="text" name="author_name" required>
+    <section id="community" class="admin-section" data-admin-section>
+      <div class="admin-section__header">
+        <div>
+          <h2 class="admin-section__title">Спільнота та волонтери</h2>
+          <p class="admin-section__subtitle">Керуйте відгуками донаторів, запитами та останніми зверненнями.</p>
+        </div>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="card shadow-soft">
+            <div class="card-header">
+              <h3 class="h5 mb-0">Відгуки донаторів</h3>
+            </div>
+            <div class="card-body">
+              <% reviews.forEach(function(review) { %>
+                <form method="POST" action="/admin/reviews/<%= review.id %>/toggle" class="admin-form-card">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <div class="admin-form-card__header d-flex justify-content-between align-items-center">
+                    <h4 class="h6 mb-0"><%= review.author_name %></h4>
+                    <div class="admin-switch">
+                      <input type="checkbox" name="public" value="on" <%= review.public ? 'checked' : '' %> onchange="this.form.submit()" aria-label="Показувати відгук">
                     </div>
-                    <div class="mb-2">
-                      <label class="form-label">Оцінка (1-5)</label>
-                      <input class="form-control" type="number" name="rating" min="1" max="5">
+                  </div>
+                  <% if (review.rating) { %>
+                    <div class="review-card__rating" aria-label="Оцінка: <%= review.rating %> з 5">
+                      <% for (let i = 0; i < review.rating; i++) { %>
+                        <i class="fa-solid fa-star"></i>
+                      <% } %>
                     </div>
-                    <div class="mb-2">
-                      <label class="form-label">Повідомлення</label>
-                      <textarea class="form-control" name="message" rows="3" required></textarea>
-                    </div>
-                    <div class="form-check mb-2">
-                      <input class="form-check-input" type="checkbox" id="review_public" name="public" checked>
-                      <label class="form-check-label" for="review_public">Показувати одразу</label>
-                    </div>
-                    <button class="btn btn-sm btn-outline-primary" type="submit">Зберегти</button>
-                  </form>
+                  <% } %>
+                  <p class="mb-2">“<%= review.message %>”</p>
+                  <p class="small text-muted mb-0"><%= new Date(review.created_at).toLocaleDateString('uk-UA') %></p>
+                </form>
+              <% }) %>
+              <form method="POST" action="/admin/reviews" class="admin-form-card" novalidate>
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <div class="admin-form-card__header">
+                  <h4 class="h6 mb-0">Додати відгук</h4>
                 </div>
+                <div class="mb-3">
+                  <label class="form-label">Ім'я</label>
+                  <input class="form-control" type="text" name="author_name" required>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Оцінка (1-5)</label>
+                  <input class="form-control" type="number" name="rating" min="1" max="5">
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Повідомлення</label>
+                  <textarea class="form-control" name="message" rows="3" required></textarea>
+                </div>
+                <div class="form-check mb-3">
+                  <input class="form-check-input" type="checkbox" id="review_public" name="public" checked>
+                  <label class="form-check-label" for="review_public">Показувати одразу</label>
+                </div>
+                <div class="admin-form-card__footer">
+                  <button class="btn btn-sm btn-primary" type="submit">Зберегти</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card shadow-soft mb-4">
+            <div class="card-header">
+              <h3 class="h5 mb-0">Запити волонтерів</h3>
+            </div>
+            <div class="card-body">
+              <div class="list-card">
+                <% feedback.forEach(function(item) { %>
+                  <div class="list-card-item">
+                    <div class="d-flex justify-content-between gap-3">
+                      <strong><%= item.sender_name %></strong>
+                      <span class="small text-muted"><%= new Date(item.created_at).toLocaleString('uk-UA') %></span>
+                    </div>
+                    <p class="mb-1"><%= item.message %></p>
+                    <% if (item.contact) { %>
+                      <p class="small text-muted mb-1"><i class="fa-solid fa-link me-1"></i><%= item.contact %></p>
+                    <% } %>
+                    <% if (item.channel) { %>
+                      <span class="badge bg-light text-dark"><%= item.channel %></span>
+                    <% } %>
+                  </div>
+                <% }) %>
+                <% if (feedback.length === 0) { %>
+                  <div class="list-card-item">Немає нових запитів.</div>
+                <% } %>
               </div>
             </div>
-            <div class="col-lg-6">
-              <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                  <h3 class="h5">Запити волонтерів</h3>
-                  <div class="list-card">
-                    <% feedback.forEach(function(item) { %>
-                      <div class="list-card-item">
-                        <strong><%= item.sender_name %></strong>
-                        <p class="mb-1"><%= item.message %></p>
-                        <% if (item.contact) { %>
-                          <p class="small text-muted"><i class="fa-solid fa-link me-1"></i><%= item.contact %></p>
-                        <% } %>
-                        <% if (item.channel) { %>
-                          <span class="badge bg-light text-dark"><%= item.channel %></span>
-                        <% } %>
+          </div>
+          <div class="card shadow-soft">
+            <div class="card-header">
+              <h3 class="h5 mb-0">Нові волонтери</h3>
+            </div>
+            <div class="card-body">
+              <div class="list-card">
+                <% volunteers.forEach(function(volunteer) { %>
+                  <div class="list-card-item">
+                    <div class="d-flex justify-content-between gap-3">
+                      <div>
+                        <strong><%= volunteer.full_name %></strong>
+                        <p class="mb-0 small text-muted"><%= volunteer.region || 'Регіон не вказано' %></p>
                       </div>
-                    <% }) %>
-                    <% if (feedback.length === 0) { %>
-                      <div class="list-card-item">Немає нових запитів.</div>
+                      <span class="small text-muted"><%= new Date(volunteer.created_at).toLocaleString('uk-UA') %></span>
+                    </div>
+                    <p class="small mb-1"><i class="fa-solid fa-phone me-1"></i><%= volunteer.phone %></p>
+                    <% if (volunteer.skills) { %>
+                      <p class="small text-muted mb-0"><i class="fa-solid fa-toolbox me-1"></i><%= volunteer.skills %></p>
                     <% } %>
                   </div>
-                </div>
-              </div>
-              <div class="card shadow-sm">
-                <div class="card-body">
-                  <h3 class="h5">Нові заявки волонтерів</h3>
-                  <div class="list-card">
-                    <% volunteers.forEach(function(volunteer) { %>
-                      <div class="list-card-item">
-                        <div>
-                          <strong><%= volunteer.full_name %></strong>
-                          <p class="mb-0 small text-muted"><%= volunteer.phone %> • <%= volunteer.region || 'Не вказано' %></p>
-                        </div>
-                        <span class="text-muted small"><%= new Date(volunteer.created_at).toLocaleString('uk-UA') %></span>
-                      </div>
-                    <% }) %>
-                    <% if (volunteers.length === 0) { %>
-                      <div class="list-card-item">Поки що заявок немає.</div>
-                    <% } %>
-                  </div>
-                </div>
+                <% }) %>
+                <% if (volunteers.length === 0) { %>
+                  <div class="list-card-item">Поки що заявок немає.</div>
+                <% } %>
               </div>
             </div>
           </div>
         </div>
-      </details>
+      </div>
     </section>
+  </div>
+</div>
+
+<!-- Модалки для швидкого додавання -->
+<div class="modal fade" id="modalAddDonation" tabindex="-1" aria-labelledby="modalAddDonationLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title fs-5" id="modalAddDonationLabel">Додати донат вручну</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити"></button>
+      </div>
+      <form method="POST" action="/admin/donations" novalidate>
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="modal_donor_name">Ім'я</label>
+              <input class="form-control" type="text" id="modal_donor_name" name="donor_name" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="modal_amount">Сума</label>
+              <input class="form-control" type="number" id="modal_amount" name="amount" min="10" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="modal_currency">Валюта</label>
+              <input class="form-control" type="text" id="modal_currency" name="currency" value="UAH">
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="modal_message">Коментар</label>
+              <textarea class="form-control" id="modal_message" name="message" rows="3"></textarea>
+            </div>
+            <div class="col-12">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="modal_public" name="public" checked>
+                <label class="form-check-label" for="modal_public">Показувати у публічному списку</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Скасувати</button>
+          <button class="btn btn-primary" type="submit">Зберегти</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalAddExpense" tabindex="-1" aria-labelledby="modalAddExpenseLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title fs-5" id="modalAddExpenseLabel">Зафіксувати витрату</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити"></button>
+      </div>
+      <form method="POST" action="/admin/withdrawals" novalidate>
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label" for="modal_withdraw_amount">Сума</label>
+            <input class="form-control" type="number" id="modal_withdraw_amount" name="amount" min="1" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="modal_description">Призначення</label>
+            <textarea class="form-control" id="modal_description" name="description" rows="3"></textarea>
+          </div>
+          <p class="form-hint mb-0">Додайте чек у блок «Заявки» для прозорої модерації.</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Скасувати</button>
+          <button class="btn btn-primary" type="submit">Зафіксувати</button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
 <%- include('../partials/layout-end') %>

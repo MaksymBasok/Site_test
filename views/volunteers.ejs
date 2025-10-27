@@ -1,104 +1,176 @@
 <%- include('partials/layout-start') %>
-<section class="page-header">
+<%
+  const volunteerList = Array.isArray(volunteers) ? volunteers : [];
+  const feedbackList = Array.isArray(feedback) ? feedback : [];
+%>
+<section class="page-header" data-reveal>
   <h1>Долучитися до волонтерської команди</h1>
-  <p class="lead">Ми шукаємо водіїв, механіків, логістів та комунікаційників. Заповніть форму, щоб ми могли швидко з вами зв'язатися.</p>
+  <p class="lead">Команда фонду потребує водіїв, механіків, логістів, SMM та юридичну підтримку. Заповніть форму, щоб координатор зв'язався протягом доби.</p>
 </section>
 
-<section class="mt-4">
-  <div class="row g-5">
-    <div class="col-lg-6">
-      <form method="POST" action="/volunteers" class="card p-4 shadow-sm">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <h2 class="h4 mb-3">Анкета волонтера</h2>
-        <div class="mb-3">
-          <label class="form-label" for="full_name">ПІБ</label>
-          <input class="form-control" type="text" id="full_name" name="full_name" required>
-        </div>
-        <div class="mb-3">
-          <label class="form-label" for="phone">Телефон</label>
-          <input class="form-control" type="tel" id="phone" name="phone" placeholder="+380XXXXXXXXX" required>
-        </div>
-        <div class="mb-3">
-          <label class="form-label" for="email">Email</label>
-          <input class="form-control" type="email" id="email" name="email" placeholder="name@example.com">
-        </div>
-        <div class="mb-3">
-          <label class="form-label" for="region">Місто / область</label>
-          <input class="form-control" type="text" id="region" name="region">
-        </div>
-        <div class="mb-3">
-          <label class="form-label" for="skills">Навички / чим можете допомогти</label>
-          <textarea class="form-control" id="skills" name="skills" rows="3" maxlength="200"></textarea>
-        </div>
-        <div class="mb-3">
-          <label class="form-label" for="comment">Коментар</label>
-          <textarea class="form-control" id="comment" name="comment" rows="3" maxlength="500"></textarea>
-        </div>
-        <button type="submit" class="btn btn-primary">Надіслати анкету</button>
-      </form>
+<section class="section" data-reveal>
+  <div class="section__intro">
+    <div>
+      <h2 class="section__title">Анкета волонтера</h2>
+      <p class="section__description">Форма складається з трьох кроків з inline-валидацією. Ми зберігаємо світлу палітру з першого коміту, додаючи сучасні акценти.</p>
     </div>
-    <div class="col-lg-6">
-      <div class="mb-4">
-        <h2 class="h4 mb-3">Координація</h2>
-        <% if (coordinator) { %>
-          <div class="card shadow-sm">
-            <div class="card-body">
-              <% if (coordinator.title) { %>
-                <h3 class="h5"><%= coordinator.title %></h3>
-              <% } %>
-              <p class="mb-0"><%= coordinator.body %></p>
+  </div>
+  <div class="row g-5 align-items-start">
+    <div class="col-xl-7">
+      <form method="POST" action="/volunteers" class="wizard" data-volunteer-form novalidate>
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="wizard-steps">
+          <div class="wizard-step is-active" data-step="1">
+            <div class="wizard-step__number">1</div>
+            <div>Контакти</div>
+          </div>
+          <div class="wizard-step" data-step="2">
+            <div class="wizard-step__number">2</div>
+            <div>Навички</div>
+          </div>
+          <div class="wizard-step" data-step="3">
+            <div class="wizard-step__number">3</div>
+            <div>Погодження</div>
+          </div>
+        </div>
+        <div class="wizard-forms is-active" data-step-panel="1">
+          <div>
+            <label class="form-label" for="full_name">ПІБ</label>
+            <input class="form-control" type="text" id="full_name" name="full_name" required data-validate="text">
+            <span class="inline-validation">Вкажіть повне ім'я, щоб координатор міг звернутись коректно.</span>
+          </div>
+          <div>
+            <label class="form-label" for="phone">Телефон</label>
+            <input class="form-control" type="tel" id="phone" name="phone" placeholder="+380XXXXXXXXX" required pattern="^\+?380[0-9]{9}$" data-validate="phone">
+            <span class="inline-validation">Введіть номер у форматі +380XXXXXXXXX.</span>
+          </div>
+          <div>
+            <label class="form-label" for="email">Email</label>
+            <input class="form-control" type="email" id="email" name="email" placeholder="name@example.com" data-validate="email">
+          </div>
+          <div>
+            <label class="form-label" for="region">Місто / область</label>
+            <input class="form-control" type="text" id="region" name="region" data-validate="text">
+          </div>
+        </div>
+        <div class="wizard-forms" data-step-panel="2">
+          <div class="mb-3">
+            <label class="form-label" for="skills">Навички та досвід</label>
+            <textarea class="form-control" id="skills" name="skills" rows="3" maxlength="200" required data-validate="text"></textarea>
+            <span class="form-hint">Опишіть, чим можете допомогти: водіння, механіка, логістика, комунікації тощо.</span>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="comment">Додаткові коментарі</label>
+            <textarea class="form-control" id="comment" name="comment" rows="3" maxlength="500"></textarea>
+          </div>
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <label class="form-label" for="availability">Графік</label>
+              <select class="form-select" id="availability" name="availability">
+                <option value="full">Повний день</option>
+                <option value="part">Гнучкий графік</option>
+                <option value="weekend">Тільки вихідні</option>
+              </select>
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label" for="role">Бажана роль</label>
+              <select class="form-select" id="role" name="role">
+                <option value="driver">Водій</option>
+                <option value="mechanic">Механік</option>
+                <option value="logistic">Логіст</option>
+                <option value="comms">Комунікації</option>
+                <option value="legal">Юридична підтримка</option>
+              </select>
             </div>
           </div>
-        <% } else { %>
-          <p class="text-muted">Контактні дані координаторів з'являться найближчим часом.</p>
-        <% } %>
-      </div>
-      <h2 class="h4 mb-3">Останні, хто долучилися</h2>
-      <ul class="volunteer-list">
-        <% volunteers.forEach(function(volunteer) { %>
-          <li>
-            <strong><%= volunteer.full_name %></strong>
-            <span class="volunteer-meta"><i class="fa-solid fa-location-dot"></i> <%= volunteer.region || 'Не вказано' %></span>
-            <span class="volunteer-meta"><i class="fa-solid fa-phone"></i> <%= volunteer.phone %></span>
-            <% if (volunteer.skills) { %>
-              <p><%= volunteer.skills %></p>
+        </div>
+        <div class="wizard-forms" data-step-panel="3">
+          <div class="mb-3">
+            <label class="form-label" for="comment_confirm">Підтвердження участі</label>
+            <textarea class="form-control" id="comment_confirm" rows="3" readonly>Після відправлення анкети координатор фонду зв'яжеться протягом 24 годин. Ми обробляємо персональні дані відповідно до політики конфіденційності.</textarea>
+          </div>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="consent_personal" required>
+            <label class="form-check-label" for="consent_personal">Погоджуюсь на обробку персональних даних</label>
+          </div>
+          <div class="form-check mb-4">
+            <input class="form-check-input" type="checkbox" id="consent_updates" name="consent_updates">
+            <label class="form-check-label" for="consent_updates">Хочу отримувати оновлення про збори</label>
+          </div>
+          <button class="btn btn-primary" type="submit">Надіслати анкету</button>
+        </div>
+        <div class="d-flex justify-content-between mt-4">
+          <button class="btn btn-outline-primary" type="button" data-prev-step disabled>Назад</button>
+          <button class="btn btn-primary" type="button" data-next-step>Далі</button>
+        </div>
+      </form>
+    </div>
+    <div class="col-xl-5">
+      <div class="card shadow-soft mb-4" data-reveal>
+        <div class="card-body">
+          <h3 class="h5">Координація</h3>
+          <% if (coordinator) { %>
+            <% if (coordinator.title) { %>
+              <p class="fw-semibold mb-2"><%= coordinator.title %></p>
             <% } %>
-            <span class="volunteer-date"><%= new Date(volunteer.created_at).toLocaleDateString('uk-UA') %></span>
-          </li>
-        <% }) %>
-        <% if (volunteers.length === 0) { %>
-          <li>Будьте першими, хто заповнить анкету!</li>
-        <% } %>
-      </ul>
-      <div class="mt-4">
-        <h2 class="h4 mb-3">Поточні запити</h2>
-        <div class="list-card">
-          <% feedback.forEach(function(item) { %>
-            <div class="list-card-item">
-              <strong><%= item.sender_name %></strong>
-              <p class="mb-1"><%= item.message %></p>
-              <% if (item.contact) { %>
-                <p class="small text-muted"><i class="fa-solid fa-link me-1"></i><%= item.contact %></p>
-              <% } %>
-              <% if (item.channel) { %>
-                <span class="badge bg-light text-dark"><%= item.channel %></span>
-              <% } %>
-            </div>
-          <% }) %>
-          <% if (feedback.length === 0) { %>
-            <div class="list-card-item">Запитів поки немає.</div>
+            <p class="mb-0"><%= coordinator.body %></p>
+          <% } else { %>
+            <p class="text-muted mb-0">Контактні дані координаторів з'являться найближчим часом.</p>
           <% } %>
+        </div>
+      </div>
+      <div class="card shadow-soft" data-reveal>
+        <div class="card-body">
+          <h3 class="h5">Останні заявки</h3>
+          <ul class="volunteer-list" data-reveal>
+            <% volunteerList.forEach(function(volunteer) { %>
+              <li>
+                <strong><%= volunteer.full_name %></strong>
+                <div class="volunteer-meta"><i class="fa-solid fa-location-dot"></i> <%= volunteer.region || 'Не вказано' %></div>
+                <div class="volunteer-meta"><i class="fa-solid fa-phone"></i> <%= volunteer.phone %></div>
+                <% if (volunteer.skills) { %>
+                  <p class="mb-1"><%= volunteer.skills %></p>
+                <% } %>
+                <div class="volunteer-date"><i class="fa-regular fa-calendar"></i> <%= new Date(volunteer.created_at).toLocaleDateString('uk-UA') %></div>
+              </li>
+            <% }) %>
+            <% if (volunteerList.length === 0) { %>
+              <li>Будьте першими, хто заповнить анкету!</li>
+            <% } %>
+          </ul>
+        </div>
+      </div>
+      <div class="card shadow-soft mt-4" data-reveal>
+        <div class="card-body">
+          <h3 class="h5">Поточні запити</h3>
+          <div class="list-card">
+            <% feedbackList.forEach(function(item) { %>
+              <div class="list-card-item">
+                <strong><%= item.sender_name %></strong>
+                <p class="mb-1"><%= item.message %></p>
+                <% if (item.contact) { %>
+                  <p class="small text-muted"><i class="fa-solid fa-link me-1"></i><%= item.contact %></p>
+                <% } %>
+                <% if (item.channel) { %>
+                  <span class="badge bg-light text-dark"><%= item.channel %></span>
+                <% } %>
+              </div>
+            <% }) %>
+            <% if (feedbackList.length === 0) { %>
+              <div class="list-card-item">Запитів поки немає.</div>
+            <% } %>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="mt-4">
-  <div class="card shadow-sm">
+<section class="section section--surface" data-reveal>
+  <div class="card shadow-soft">
     <div class="card-body">
-      <h2 class="h4">Зворотній зв'язок для координаторів</h2>
-      <p class="text-muted">Якщо маєте питання чи пропозиції — заповніть форму, і координатор зв'яжеться з вами.</p>
+      <h2 class="h4">Зворотний зв'язок для координаторів</h2>
+      <p class="text-muted">Маєте питання або пропозицію? Надішліть форму — відповімо протягом доби.</p>
       <form method="POST" action="/feedback" class="row g-3" novalidate>
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="col-md-4">
