@@ -1889,6 +1889,67 @@ h3 {
   }
 }
 
+/* Header layout: wide screens */
+@media (min-width: 992px) {
+  .nav-container {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 2rem;
+  }
+  .nav-panel {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 2rem;
+  }
+  .main-nav-list {
+    flex-wrap: wrap;
+  }
+  .nav-actions {
+    justify-self: end;
+  }
+}
+
+/* Admin tables and lists */
+.admin-table th {
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--color-muted-strong);
+  border-bottom-color: rgba(148, 163, 184, 0.18) !important;
+}
+
+.admin-table td {
+  vertical-align: middle;
+}
+
+.admin-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: var(--shadow-soft);
+}
+
+.admin-list__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.admin-list__item:last-child {
+  border-bottom: none;
+}
+
+.admin-list__meta {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
 /* Floating back-to-top */
 .back-to-top {
   position: fixed;

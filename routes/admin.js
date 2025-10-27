@@ -524,59 +524,75 @@ router.post('/reviews/:id/toggle', requireAdmin, (req, res, next) => {
   }
 });
 
-router.get('/export/users.pdf', requireAdmin, (req, res) => {
-  const applicants = listApplicants();
-  const donors = listApprovedDonors();
-  const admins = listAdministrators();
+router.get('/export/users.pdf', requireAdmin, (req, res, next) => {
+  try {
+    const applicants = listApplicants();
+    const donors = listApprovedDonors();
+    const admins = listAdministrators();
 
-  res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', 'attachment; filename="volonterka-users-report.pdf"');
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename="volonterka-users-report.pdf"');
 
-  const doc = new PDFDocument({ size: 'A4', margin: 40 });
-  doc.pipe(res);
+    const doc = new PDFDocument({ size: 'A4', margin: 40 });
+    doc.on('error', (err) => {
+      // Ensure stream ends on error to avoid broken download
+      try { res.end(); } catch (_) {}
+      console.error('PDF generation error:', err);
+    });
+    doc.pipe(res);
 
-  const regularFont = path.join(__dirname, '..', 'public', 'fonts', 'Montserrat-Regular.ttf');
-  const semiBoldFont = path.join(__dirname, '..', 'public', 'fonts', 'Montserrat-SemiBold.ttf');
-  doc.registerFont('Montserrat-Regular', regularFont);
-  doc.registerFont('Montserrat-SemiBold', semiBoldFont);
+    const fs = require('fs');
+    const regularFont = path.join(__dirname, '..', 'public', 'fonts', 'Montserrat-Regular.ttf');
+    const semiBoldFont = path.join(__dirname, '..', 'public', 'fonts', 'Montserrat-SemiBold.ttf');
 
-  doc.font('Montserrat-SemiBold').fontSize(18).text('Звіт по користувачах фонду', { align: 'center' });
-  doc.moveDown();
+    const hasRegular = fs.existsSync(regularFont);
+    const hasSemiBold = fs.existsSync(semiBoldFont);
+    if (hasRegular) doc.registerFont('Montserrat-Regular', regularFont);
+    if (hasSemiBold) doc.registerFont('Montserrat-SemiBold', semiBoldFont);
 
-  doc.font('Montserrat-SemiBold').fontSize(14).text('Адміністратори', { underline: true });
-  admins.forEach((admin) => {
-    doc.font('Montserrat-Regular').fontSize(11).text(`${admin.full_name || admin.email} — ${admin.email}`);
-    if (admin.last_login_at) {
-      doc.fontSize(9).fillColor('gray').text(`Останній вхід: ${admin.last_login_at}`, { indent: 20 });
+    const titleFont = hasSemiBold ? 'Montserrat-SemiBold' : 'Helvetica-Bold';
+    const textFont = hasRegular ? 'Montserrat-Regular' : 'Helvetica';
+
+    doc.font(titleFont).fontSize(18).text('Звіт по користувачах фонду', { align: 'center' });
+    doc.moveDown();
+
+    doc.font(titleFont).fontSize(14).text('Адміністратори', { underline: true });
+    admins.forEach((admin) => {
+      doc.font(textFont).fontSize(11).text(`${admin.full_name || admin.email} — ${admin.email}`);
+      if (admin.last_login_at) {
+        doc.fontSize(9).fillColor('gray').text(`Останній вхід: ${admin.last_login_at}`, { indent: 20 });
+        doc.fillColor('black');
+      }
+    });
+    doc.moveDown();
+
+    doc.font(titleFont).fontSize(14).text('Підтверджені донатери', { underline: true });
+    donors.forEach((donor) => {
+      doc.font(textFont).fontSize(11).text(`${donor.full_name || donor.email} — ${donor.email}`);
+      if (donor.phone) {
+        doc.fontSize(9).fillColor('gray').text(`Телефон: ${donor.phone}`, { indent: 20 });
+      }
+      if (donor.approved_at) {
+        doc.fontSize(9).fillColor('gray').text(`З нами з: ${donor.approved_at}`, { indent: 20 });
+      }
       doc.fillColor('black');
-    }
-  });
-  doc.moveDown();
+    });
+    doc.moveDown();
 
-  doc.font('Montserrat-SemiBold').fontSize(14).text('Підтверджені донатери', { underline: true });
-  donors.forEach((donor) => {
-    doc.font('Montserrat-Regular').fontSize(11).text(`${donor.full_name || donor.email} — ${donor.email}`);
-    if (donor.phone) {
-      doc.fontSize(9).fillColor('gray').text(`Телефон: ${donor.phone}`, { indent: 20 });
-    }
-    if (donor.approved_at) {
-      doc.fontSize(9).fillColor('gray').text(`З нами з: ${donor.approved_at}`, { indent: 20 });
-    }
-    doc.fillColor('black');
-  });
-  doc.moveDown();
+    doc.font(titleFont).fontSize(14).text('Заявки на розгляд', { underline: true });
+    applicants.forEach((applicant) => {
+      doc.font(textFont).fontSize(11).text(`${applicant.full_name || applicant.email} — ${applicant.email}`);
+      if (applicant.phone) {
+        doc.fontSize(9).fillColor('gray').text(`Телефон: ${applicant.phone}`, { indent: 20 });
+      }
+      doc.fontSize(9).fillColor('gray').text(`Статус: ${applicant.status}`, { indent: 20 });
+      doc.fillColor('black');
+    });
 
-  doc.font('Montserrat-SemiBold').fontSize(14).text('Заявки на розгляд', { underline: true });
-  applicants.forEach((applicant) => {
-    doc.font('Montserrat-Regular').fontSize(11).text(`${applicant.full_name || applicant.email} — ${applicant.email}`);
-    if (applicant.phone) {
-      doc.fontSize(9).fillColor('gray').text(`Телефон: ${applicant.phone}`, { indent: 20 });
-    }
-    doc.fontSize(9).fillColor('gray').text(`Статус: ${applicant.status}`, { indent: 20 });
-    doc.fillColor('black');
-  });
-
-  doc.end();
+    doc.end();
+  } catch (err) {
+    return next(err);
+  }
 });
 
 module.exports = router;
