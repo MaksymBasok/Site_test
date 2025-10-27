@@ -13,6 +13,7 @@ const hpp = require('hpp');
 const rateLimit = require('express-rate-limit');
 
 const { ensureAdminAccount } = require('./services/userService');
+const { listVehicles } = require('./services/vehicleService');
 const pagesRouter = require('./routes/pages');
 const apiRouter = require('./routes/api');
 const adminRouter = require('./routes/admin');
@@ -78,6 +79,12 @@ app.use((req, res, next) => {
   res.locals.csrfToken = req.csrfToken ? req.csrfToken() : '';
   res.locals.currentPath = req.path;
   res.locals.flash = req.flash();
+  try {
+    res.locals.vehiclesCount = listVehicles().length;
+  } catch (error) {
+    res.locals.vehiclesCount = res.locals.vehiclesCount || 0;
+    console.warn('Unable to read vehicles count', error);
+  }
   next();
 });
 

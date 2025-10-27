@@ -1,17 +1,21 @@
 <header class="site-header">
+  <div class="site-header__glow" aria-hidden="true"></div>
   <div class="top-bar">
-    <div class="container d-flex flex-column flex-lg-row align-items-center justify-content-between gap-2">
-      <div class="top-bar__tagline"><i class="fa-solid fa-truck-medical me-2"></i>Працюємо для фронту та волонтерів 24/7</div>
-      <div class="top-bar__links d-flex align-items-center flex-wrap justify-content-center gap-2">
-        <a class="top-bar__link" href="mailto:info@volonterka.org" aria-label="Email">
+    <div class="container top-bar__inner">
+      <div class="top-bar__tagline">
+        <span class="top-bar__pulse" aria-hidden="true"></span>
+        <span>Фонд «Волонтерка» — допомагаємо фронту щодня</span>
+      </div>
+      <div class="top-bar__links" role="list">
+        <a class="top-bar__link" href="mailto:info@volonterka.org" aria-label="Написати на info@volonterka.org">
           <i class="fa-solid fa-envelope"></i>
           <span>info@volonterka.org</span>
         </a>
-        <a class="top-bar__link" href="https://t.me/volonterka" target="_blank" rel="noopener" aria-label="Telegram">
+        <a class="top-bar__link" href="https://t.me/volonterka" target="_blank" rel="noopener" aria-label="Перейти у Telegram">
           <i class="fa-brands fa-telegram"></i>
           <span>Telegram</span>
         </a>
-        <a class="top-bar__link" href="tel:+380931234567" aria-label="Телефон">
+        <a class="top-bar__link" href="tel:+380931234567" aria-label="Подзвонити +38 (093) 123 45 67">
           <i class="fa-solid fa-phone"></i>
           <span>+38 (093) 123 45 67</span>
         </a>
@@ -19,69 +23,77 @@
     </div>
   </div>
   <div class="container nav-container">
-    <a href="/" class="logo d-flex align-items-center text-decoration-none">
-      <span class="logo-icon"><i class="fa-solid fa-hand-holding-heart"></i></span>
-      <span class="logo-title">
-        <span class="logo-text">Фонд <strong>Волонтерка</strong></span>
-        <span class="logo-tagline">Разом наближаємо перемогу</span>
-      </span>
-    </a>
+    <div class="nav-brand">
+      <a href="/" class="logo">
+        <span class="logo-icon" aria-hidden="true"><i class="fa-solid fa-hand-holding-heart"></i></span>
+        <span class="logo-title">
+          <span class="logo-text">Фонд <strong>Волонтерка</strong></span>
+          <span class="logo-tagline">Разом наближаємо перемогу</span>
+        </span>
+      </a>
+      <div class="nav-brand__meta">
+        <span><i class="fa-solid fa-shield-heart"></i> 100% прозорі звіти</span>
+        <span><i class="fa-solid fa-truck-fast"></i> 24/7 на зв'язку</span>
+      </div>
+    </div>
     <button class="nav-toggle" type="button" aria-label="Перемкнути головне меню" aria-expanded="false">
       <span class="nav-toggle__icon"><i class="fa-solid fa-bars"></i></span>
       <span class="nav-toggle__label">Меню</span>
     </button>
     <div class="nav-panel">
-      <nav class="main-nav" aria-label="Головне меню">
-        <ul class="main-nav-list">
-          <li><a class="<%= currentPath === '/' ? 'active' : '' %>" href="/" <%= currentPath === '/' ? 'aria-current="page"' : '' %>>Головна</a></li>
-          <li><a class="<%= currentPath === '/donations' ? 'active' : '' %>" href="/donations" <%= currentPath === '/donations' ? 'aria-current="page"' : '' %>>Підтримати</a></li>
-          <li><a class="<%= currentPath === '/cars' ? 'active' : '' %>" href="/cars" <%= currentPath === '/cars' ? 'aria-current="page"' : '' %>>Автопарк</a></li>
-          <li><a class="<%= currentPath === '/volunteers' ? 'active' : '' %>" href="/volunteers" <%= currentPath === '/volunteers' ? 'aria-current="page"' : '' %>>Волонтерам</a></li>
-          <li><a class="<%= currentPath === '/documents' ? 'active' : '' %>" href="/documents" <%= currentPath === '/documents' ? 'aria-current="page"' : '' %>>Документи</a></li>
-          <li><a class="<%= currentPath === '/contacts' ? 'active' : '' %>" href="/contacts" <%= currentPath === '/contacts' ? 'aria-current="page"' : '' %>>Контакти</a></li>
-          <% if (!currentUser) { %>
-            <li><a class="<%= currentPath === '/articles' ? 'active' : '' %>" href="/articles" <%= currentPath === '/articles' ? 'aria-current=\"page\"' : '' %>>Новини</a></li>
-          <% } %>
-          <% if (currentUser) { %>
-            <li><a class="<%= currentPath === '/live' ? 'active' : '' %>" href="/live" <%= currentPath === '/live' ? 'aria-current=\"page\"' : '' %>>Прямий ефір</a></li>
-            <% if (currentUser.role === 'admin') { %>
-              <li><a class="<%= currentPath.startsWith('/admin') ? 'active' : '' %>" href="/admin/dashboard" <%= currentPath.startsWith('/admin') ? 'aria-current=\"page\"' : '' %>>Адмінка</a></li>
+      <div class="nav-panel__inner">
+        <nav class="main-nav" aria-label="Головне меню">
+          <ul class="main-nav-list">
+            <li><a class="<%= currentPath === '/' ? 'active' : '' %>" href="/" <%= currentPath === '/' ? 'aria-current="page"' : '' %>>Головна</a></li>
+            <li><a class="<%= currentPath === '/donations' ? 'active' : '' %>" href="/donations" <%= currentPath === '/donations' ? 'aria-current="page"' : '' %>>Підтримати</a></li>
+            <li><a class="<%= currentPath === '/cars' ? 'active' : '' %>" href="/cars" <%= currentPath === '/cars' ? 'aria-current="page"' : '' %>>Автопарк</a></li>
+            <li><a class="<%= currentPath === '/volunteers' ? 'active' : '' %>" href="/volunteers" <%= currentPath === '/volunteers' ? 'aria-current="page"' : '' %>>Волонтерам</a></li>
+            <li><a class="<%= currentPath === '/documents' ? 'active' : '' %>" href="/documents" <%= currentPath === '/documents' ? 'aria-current="page"' : '' %>>Документи</a></li>
+            <li><a class="<%= currentPath === '/contacts' ? 'active' : '' %>" href="/contacts" <%= currentPath === '/contacts' ? 'aria-current="page"' : '' %>>Контакти</a></li>
+            <% if (!currentUser) { %>
+              <li><a class="<%= currentPath === '/articles' ? 'active' : '' %>" href="/articles" <%= currentPath === '/articles' ? 'aria-current=\"page\"' : '' %>>Новини</a></li>
             <% } %>
-          <% } %>
-        </ul>
-      </nav>
-      <div class="nav-actions">
-        <a class="btn btn-warning nav-donate" href="/donations"><i class="fa-solid fa-heart me-2"></i>Зробити внесок</a>
-        <% if (currentUser) { %>
-          <div class="nav-account">
-            <div class="nav-user" role="group" aria-label="Поточний користувач">
-              <span class="nav-user__avatar"><i class="fa-solid fa-circle-user"></i></span>
-              <div class="nav-user__details">
-                <span class="nav-user__name"><%= currentUser.full_name || currentUser.email %></span>
-                <span class="nav-user__role-badge">
-                  <% if (currentUser.role === 'admin') { %>
-                    Адміністратор
-                  <% } else if (currentUser.role === 'moderator') { %>
-                    Модератор
-                  <% } else { %>
-                    Донатор
-                  <% } %>
-                </span>
+            <% if (currentUser) { %>
+              <li><a class="<%= currentPath === '/live' ? 'active' : '' %>" href="/live" <%= currentPath === '/live' ? 'aria-current=\"page\"' : '' %>>Прямий ефір</a></li>
+              <% if (currentUser.role === 'admin') { %>
+                <li><a class="<%= currentPath.startsWith('/admin') ? 'active' : '' %>" href="/admin/dashboard" <%= currentPath.startsWith('/admin') ? 'aria-current=\"page\"' : '' %>>Адмінка</a></li>
+              <% } %>
+            <% } %>
+          </ul>
+        </nav>
+        <div class="nav-actions">
+          <a class="btn btn-warning nav-donate" href="/donations"><i class="fa-solid fa-heart me-2"></i>Зробити внесок</a>
+          <% if (currentUser) { %>
+            <div class="nav-account">
+              <div class="nav-user" role="group" aria-label="Поточний користувач">
+                <span class="nav-user__avatar"><i class="fa-solid fa-circle-user"></i></span>
+                <div class="nav-user__details">
+                  <span class="nav-user__name"><%= currentUser.full_name || currentUser.email %></span>
+                  <span class="nav-user__role-badge">
+                    <% if (currentUser.role === 'admin') { %>
+                      Адміністратор
+                    <% } else if (currentUser.role === 'moderator') { %>
+                      Модератор
+                    <% } else { %>
+                      Донатор
+                    <% } %>
+                  </span>
+                </div>
               </div>
+              <form method="POST" action="/auth/logout" class="nav-logout" title="Вийти">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <button class="btn btn-icon" type="submit" aria-label="Вийти">
+                  <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+              </form>
             </div>
-            <form method="POST" action="/auth/logout" class="nav-logout" title="Вийти">
-              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-              <button class="btn btn-icon" type="submit" aria-label="Вийти">
-                <i class="fa-solid fa-right-from-bracket"></i>
-              </button>
-            </form>
-          </div>
-        <% } else { %>
-          <div class="nav-actions__row">
-            <a class="btn btn-outline-light nav-secondary" href="/auth/login"><i class="fa-solid fa-right-to-bracket me-2"></i>Вхід</a>
-            <a class="btn btn-outline-light nav-secondary" href="/auth/register"><i class="fa-solid fa-user-plus me-2"></i>Стати донатором</a>
-          </div>
-        <% } %>
+          <% } else { %>
+            <div class="nav-actions__row">
+              <a class="btn btn-outline-light nav-secondary" href="/auth/login"><i class="fa-solid fa-right-to-bracket me-2"></i>Вхід</a>
+              <a class="btn btn-outline-light nav-secondary" href="/auth/register"><i class="fa-solid fa-user-plus me-2"></i>Стати донатором</a>
+            </div>
+          <% } %>
+        </div>
       </div>
     </div>
   </div>
