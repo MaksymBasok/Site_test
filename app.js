@@ -22,6 +22,7 @@ const { notFoundHandler, errorHandler } = require('./middleware/errorHandlers');
 
 const app = express();
 const port = process.env.PORT || 3000;
+const isProd = process.env.NODE_ENV === 'production';
 
 ensureAdminAccount().catch((error) => {
   console.error('Failed to ensure admin account exists', error);
@@ -43,7 +44,7 @@ app.use(morgan('combined'));
 
 app.use(express.static(path.join(__dirname, 'public'), {
   extensions: ['html'],
-  maxAge: '7d'
+  maxAge: isProd ? '7d' : 0
 }));
 
 app.use(session({
@@ -79,6 +80,13 @@ app.use((req, res, next) => {
   res.locals.csrfToken = req.csrfToken ? req.csrfToken() : '';
   res.locals.currentPath = req.path;
   res.locals.flash = req.flash();
+  // Cache-busting for static assets
+  try {
+    const pkg = require('./package.json');
+    res.locals.assetVersion = isProd ? pkg.version : Date.now();
+  } catch (e) {
+    res.locals.assetVersion = Date.now();
+  }
   try {
     res.locals.vehiclesCount = listVehicles().length;
   } catch (error) {
