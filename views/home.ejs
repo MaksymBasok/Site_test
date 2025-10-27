@@ -167,7 +167,7 @@
   <div class="row g-4">
     <% articles.forEach(function(article) { %>
       <div class="col-md-4">
-        <div class="card h-100 shadow-sm">
+        <div class="card h-100 shadow-sm article-card">
           <% if (article.cover_image) { %>
             <img src="/<%= article.cover_image %>" class="card-img-top" alt="<%= article.title %>">
           <% } %>

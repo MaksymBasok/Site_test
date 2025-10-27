@@ -6,7 +6,7 @@
 <section class="mt-4">
   <div class="article-body">
     <% if (article.cover_image) { %>
-      <img class="img-fluid rounded mb-4" src="/<%= article.cover_image %>" alt="<%= article.title %>">
+      <img class="article-body__cover" src="/<%= article.cover_image %>" alt="<%= article.title %>">
     <% } %>
     <p class="lead"><%= article.excerpt %></p>
     <p><%= article.body %></p>
