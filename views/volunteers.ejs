@@ -1,0 +1,61 @@
+<%- include('partials/layout-start') %>
+<section class="page-header">
+  <h1>Долучитися до волонтерської команди</h1>
+  <p class="lead">Ми шукаємо водіїв, механіків, логістів та комунікаційників. Заповніть форму, щоб ми могли швидко з вами зв'язатися.</p>
+</section>
+
+<section class="mt-4">
+  <div class="row g-5">
+    <div class="col-lg-6">
+      <form method="POST" action="/volunteers" class="card p-4 shadow-sm">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <h2 class="h4 mb-3">Анкета волонтера</h2>
+        <div class="mb-3">
+          <label class="form-label" for="full_name">ПІБ</label>
+          <input class="form-control" type="text" id="full_name" name="full_name" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="phone">Телефон</label>
+          <input class="form-control" type="tel" id="phone" name="phone" placeholder="+380XXXXXXXXX" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="email">Email</label>
+          <input class="form-control" type="email" id="email" name="email" placeholder="name@example.com">
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="region">Місто / область</label>
+          <input class="form-control" type="text" id="region" name="region">
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="skills">Навички / чим можете допомогти</label>
+          <textarea class="form-control" id="skills" name="skills" rows="3" maxlength="200"></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="comment">Коментар</label>
+          <textarea class="form-control" id="comment" name="comment" rows="3" maxlength="500"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Надіслати анкету</button>
+      </form>
+    </div>
+    <div class="col-lg-6">
+      <h2 class="h4 mb-3">Останні, хто долучилися</h2>
+      <ul class="volunteer-list">
+        <% volunteers.forEach(function(volunteer) { %>
+          <li>
+            <strong><%= volunteer.full_name %></strong>
+            <span class="volunteer-meta"><i class="fa-solid fa-location-dot"></i> <%= volunteer.region || 'Не вказано' %></span>
+            <span class="volunteer-meta"><i class="fa-solid fa-phone"></i> <%= volunteer.phone %></span>
+            <% if (volunteer.skills) { %>
+              <p><%= volunteer.skills %></p>
+            <% } %>
+            <span class="volunteer-date"><%= new Date(volunteer.created_at).toLocaleDateString('uk-UA') %></span>
+          </li>
+        <% }) %>
+        <% if (volunteers.length === 0) { %>
+          <li>Будьте першими, хто заповнить анкету!</li>
+        <% } %>
+      </ul>
+    </div>
+  </div>
+</section>
+<%- include('partials/layout-end') %>

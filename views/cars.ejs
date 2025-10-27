@@ -1,0 +1,34 @@
+<%- include('partials/layout-start') %>
+<section class="page-header">
+  <h1>Автопарк та нагальні потреби</h1>
+  <p class="lead">Ми закуповуємо та ремонтуємо пікапи, позашляховики й мікроавтобуси. Нижче — актуальний стан кожного авто.</p>
+</section>
+
+<section class="mt-4">
+  <div class="row g-4">
+    <% vehicles.forEach(function(vehicle) { %>
+      <div class="col-md-4">
+        <div class="vehicle-card">
+          <% if (vehicle.image_path) { %>
+            <img src="/<%= vehicle.image_path %>" alt="<%= vehicle.name %>" class="vehicle-image">
+          <% } %>
+          <div class="vehicle-body">
+            <span class="badge status-<%= vehicle.status %>"><%= vehicle.status %></span>
+            <h3><%= vehicle.name %></h3>
+            <p><%= vehicle.description %></p>
+            <p class="vehicle-meta">Категорія: <%= vehicle.category %></p>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+</section>
+
+<section class="mt-5">
+  <div class="info-banner">
+    <h2>Якщо можете допомогти з авто або деталями</h2>
+    <p>Напишіть нам у Telegram або залиште заявку у формі для волонтерів. Будь-яка технічна допомога суттєво прискорює ремонт.</p>
+    <a class="btn btn-warning" href="/contacts">Зв'язатися з нами</a>
+  </div>
+</section>
+<%- include('partials/layout-end') %>

@@ -1,0 +1,51 @@
+<%- include('partials/layout-start') %>
+<section class="page-header">
+  <h1>Документи та відкриті дані</h1>
+  <p class="lead">Ми дотримуємося принципів прозорості. Тут ви знайдете статутні документи, посвідчення та посилання на публікації у ЗМІ.</p>
+</section>
+
+<section class="mt-4">
+  <h2 class="h4 mb-3">Публікації у медіа</h2>
+  <div class="row g-4">
+    <% media.forEach(function(item) { %>
+      <div class="col-md-6">
+        <article class="media-card">
+          <% if (item.image_path) { %>
+            <img src="/<%= item.image_path %>" alt="<%= item.title %>">
+          <% } %>
+          <div class="media-body">
+            <h3><a href="<%= item.url %>" target="_blank" rel="noopener"><%= item.title %></a></h3>
+            <% if (item.summary) { %>
+              <p><%= item.summary %></p>
+            <% } %>
+            <a class="link-arrow" href="<%= item.url %>" target="_blank" rel="noopener">Читати у джерелі</a>
+          </div>
+        </article>
+      </div>
+    <% }) %>
+  </div>
+</section>
+
+<section class="mt-5">
+  <h2 class="h4 mb-3">Офіційні документи</h2>
+  <div class="row g-4">
+    <% documents.forEach(function(doc) { %>
+      <div class="col-md-4">
+        <div class="document-card">
+          <% if (doc.file_type === 'image') { %>
+            <img src="/<%= doc.file_path %>" alt="<%= doc.title %>">
+          <% } else if (doc.file_type === 'video') { %>
+            <video controls preload="metadata" src="/<%= doc.file_path %>"></video>
+          <% } %>
+          <div class="document-body">
+            <h3><%= doc.title %></h3>
+            <% if (doc.description) { %>
+              <p><%= doc.description %></p>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+</section>
+<%- include('partials/layout-end') %>

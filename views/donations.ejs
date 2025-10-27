@@ -1,0 +1,84 @@
+<%- include('partials/layout-start') %>
+<section class="page-header">
+  <h1>Як підтримати фонд</h1>
+  <p class="lead">Ми прозоро фіксуємо кожен внесок та надаємо публічний звіт. Оберіть зручний спосіб, щоб допомогти нам утримувати автопарк для волонтерів.</p>
+</section>
+
+<section class="mt-4">
+  <div class="row g-4">
+    <% bankAccounts.forEach(function(account) { %>
+      <div class="col-md-6">
+        <div class="account-card">
+          <h2><%= account.label %></h2>
+          <ul class="list-unstyled">
+            <li><strong>Отримувач:</strong> <%= account.recipient %></li>
+            <li>
+              <strong>IBAN:</strong> <code><%= account.iban %></code>
+              <button class="copy-to-clipboard ms-2" type="button" data-value="<%= account.iban %>">
+                <i class="fa-solid fa-copy"></i>
+              </button>
+            </li>
+            <% if (account.edrpou) { %>
+              <li><strong>ЄДРПОУ:</strong> <%= account.edrpou %></li>
+            <% } %>
+            <% if (account.purpose) { %>
+              <li><strong>Призначення платежу:</strong> <%= account.purpose %></li>
+            <% } %>
+          </ul>
+          <p class="text-muted small">Оновлено <%= new Date(account.updated_at).toLocaleDateString('uk-UA') %></p>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+</section>
+
+<section class="mt-5">
+  <div class="row g-5">
+    <div class="col-lg-6">
+      <h2>Залишити публічний донат</h2>
+      <p class="text-muted">Запишіть свій внесок, щоб мотивувати інших. Ми не обробляємо оплату онлайн — лише фіксуємо інформацію для публічного звіту.</p>
+      <form method="POST" action="/donations" class="card p-4 shadow-sm">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="mb-3">
+          <label class="form-label" for="donor_name">Ім'я або назва організації</label>
+          <input class="form-control" type="text" id="donor_name" name="donor_name" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="amount">Сума, грн</label>
+          <input class="form-control" type="number" id="amount" name="amount" min="10" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="message">Повідомлення (необов'язково)</label>
+          <textarea class="form-control" id="message" name="message" rows="3" maxlength="300"></textarea>
+        </div>
+        <div class="form-check mb-4">
+          <input class="form-check-input" type="checkbox" name="public" id="public" checked>
+          <label class="form-check-label" for="public">Показувати моє ім'я у списку донорів</label>
+        </div>
+        <button type="submit" class="btn btn-primary">Зберегти донат</button>
+      </form>
+    </div>
+    <div class="col-lg-6">
+      <h2>Звіт про донати</h2>
+      <ul class="timeline">
+        <% donations.forEach(function(donation) { %>
+          <li>
+            <div class="timeline-content">
+              <div class="timeline-header">
+                <span class="timeline-amount"><%= donation.amount.toLocaleString('uk-UA') %> <%= donation.currency %></span>
+                <span class="timeline-date"><%= new Date(donation.created_at).toLocaleString('uk-UA') %></span>
+              </div>
+              <div class="timeline-body">
+                <strong><%= donation.donor_name %></strong>
+                <% if (donation.message) { %>
+                  <p><%= donation.message %></p>
+                <% } %>
+              </div>
+            </div>
+          </li>
+        <% }) %>
+      </ul>
+    </div>
+  </div>
+</section>
+<%- include('partials/layout-end') %>
