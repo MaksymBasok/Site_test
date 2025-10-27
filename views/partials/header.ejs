@@ -24,19 +24,19 @@
     <div class="nav-panel">
       <nav class="main-nav" aria-label="Головне меню">
         <ul class="main-nav-list">
-          <li><a class="<%= currentPath === '/' ? 'active' : '' %>" href="/">Головна</a></li>
-          <li><a class="<%= currentPath === '/donations' ? 'active' : '' %>" href="/donations">Підтримати</a></li>
-          <li><a class="<%= currentPath === '/cars' ? 'active' : '' %>" href="/cars">Автопарк</a></li>
-          <li><a class="<%= currentPath === '/volunteers' ? 'active' : '' %>" href="/volunteers">Волонтерам</a></li>
-          <li><a class="<%= currentPath === '/documents' ? 'active' : '' %>" href="/documents">Документи</a></li>
-          <li><a class="<%= currentPath === '/contacts' ? 'active' : '' %>" href="/contacts">Контакти</a></li>
+          <li><a class="<%= currentPath === '/' ? 'active' : '' %>" href="/" <%= currentPath === '/' ? 'aria-current="page"' : '' %>>Головна</a></li>
+          <li><a class="<%= currentPath === '/donations' ? 'active' : '' %>" href="/donations" <%= currentPath === '/donations' ? 'aria-current="page"' : '' %>>Підтримати</a></li>
+          <li><a class="<%= currentPath === '/cars' ? 'active' : '' %>" href="/cars" <%= currentPath === '/cars' ? 'aria-current="page"' : '' %>>Автопарк</a></li>
+          <li><a class="<%= currentPath === '/volunteers' ? 'active' : '' %>" href="/volunteers" <%= currentPath === '/volunteers' ? 'aria-current="page"' : '' %>>Волонтерам</a></li>
+          <li><a class="<%= currentPath === '/documents' ? 'active' : '' %>" href="/documents" <%= currentPath === '/documents' ? 'aria-current="page"' : '' %>>Документи</a></li>
+          <li><a class="<%= currentPath === '/contacts' ? 'active' : '' %>" href="/contacts" <%= currentPath === '/contacts' ? 'aria-current="page"' : '' %>>Контакти</a></li>
           <% if (!currentUser) { %>
-            <li><a class="<%= currentPath === '/articles' ? 'active' : '' %>" href="/articles">Новини</a></li>
+            <li><a class="<%= currentPath === '/articles' ? 'active' : '' %>" href="/articles" <%= currentPath === '/articles' ? 'aria-current=\"page\"' : '' %>>Новини</a></li>
           <% } %>
           <% if (currentUser) { %>
-            <li><a class="<%= currentPath === '/live' ? 'active' : '' %>" href="/live">Прямий ефір</a></li>
+            <li><a class="<%= currentPath === '/live' ? 'active' : '' %>" href="/live" <%= currentPath === '/live' ? 'aria-current=\"page\"' : '' %>>Прямий ефір</a></li>
             <% if (currentUser.role === 'admin') { %>
-              <li><a class="<%= currentPath.startsWith('/admin') ? 'active' : '' %>" href="/admin/dashboard">Адмінка</a></li>
+              <li><a class="<%= currentPath.startsWith('/admin') ? 'active' : '' %>" href="/admin/dashboard" <%= currentPath.startsWith('/admin') ? 'aria-current=\"page\"' : '' %>>Адмінка</a></li>
             <% } %>
           <% } %>
         </ul>

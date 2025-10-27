@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const navPanel = document.querySelector('.nav-panel');
   const navBackdrop = document.querySelector('.nav-backdrop');
   const siteHeader = document.querySelector('.site-header');
+  const navToggleLabel = document.querySelector('.nav-toggle__label');
 
   if (navToggle && navPanel) {
     const closeNav = () => {
@@ -15,6 +16,10 @@ document.addEventListener('DOMContentLoaded', () => {
     navToggle.addEventListener('click', () => {
       const isOpen = navPanel.classList.toggle('is-open');
       navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      if (navToggleLabel) {
+        navToggleLabel.textContent = isOpen ? 'Закрити' : 'Меню';
+      }
+      navToggle.setAttribute('aria-label', isOpen ? 'Закрити головне меню' : 'Перемкнути головне меню');
       siteHeader && siteHeader.classList.toggle('nav-open', isOpen);
       navBackdrop && navBackdrop.classList.toggle('is-visible', isOpen);
     });
@@ -121,6 +126,20 @@ document.addEventListener('DOMContentLoaded', () => {
         window.scrollTo({ top: targetOffset, behavior: 'smooth' });
         setActiveLink(targetId.slice(1));
       });
+    });
+  }
+
+  // Back-to-top button
+  const backToTop = document.querySelector('.back-to-top');
+  if (backToTop) {
+    const toggleBackToTop = () => {
+      const show = window.scrollY > 600;
+      backToTop.classList.toggle('is-visible', show);
+    };
+    window.addEventListener('scroll', toggleBackToTop, { passive: true });
+    toggleBackToTop();
+    backToTop.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   }
 });
