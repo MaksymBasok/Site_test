@@ -1,27 +1,78 @@
 <%- include('../partials/layout-start') %>
 <section class="page-header">
-  <h1>Вхід до кабінету донатора</h1>
-  <p class="lead">Отримайте доступ до прямого ефіру та внутрішніх оновлень команди.</p>
+  <h1>Вхід до кабінету фонду</h1>
+  <p class="lead">Отримайте доступ до прямого ефіру, внутрішніх оновлень та інструментів адміністрування.</p>
 </section>
-<section class="mt-4">
-  <div class="row justify-content-center">
-    <div class="col-lg-6">
-      <div class="card shadow-sm">
-        <div class="card-body">
+
+<section class="auth-section mt-4">
+  <div class="row g-4 align-items-stretch">
+    <div class="col-lg-5">
+      <div class="card shadow-sm h-100 auth-card">
+        <div class="card-body d-flex flex-column">
           <h2 class="h4 mb-3">Авторизація</h2>
-          <form method="POST" action="/auth/login" novalidate>
+          <p class="text-muted small mb-4">Використовуйте email, який було підтверджено адміністратором. Доступ відкривається миттєво після входу.</p>
+          <form method="POST" action="/auth/login" class="mt-auto" novalidate>
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <div class="mb-3">
               <label class="form-label" for="email">Email</label>
-              <input class="form-control" type="email" id="email" name="email" required autocomplete="email">
+              <input class="form-control" type="email" id="email" name="email" required autocomplete="email" placeholder="name@example.com">
             </div>
             <div class="mb-3">
               <label class="form-label" for="password">Пароль</label>
-              <input class="form-control" type="password" id="password" name="password" required autocomplete="current-password">
+              <input class="form-control" type="password" id="password" name="password" required autocomplete="current-password" placeholder="Ваш пароль">
             </div>
-            <button class="btn btn-primary w-100" type="submit">Увійти</button>
+            <button class="btn btn-primary w-100" type="submit"><i class="fa-solid fa-right-to-bracket me-2"></i>Увійти</button>
           </form>
-          <p class="mt-3 mb-0 text-muted">Ще не з нами? <a href="/auth/register">Подайте заявку на доступ</a>.</p>
+          <div class="mt-4 auth-extra-links">
+            <p class="mb-1 text-muted">Ще не маєте доступу?</p>
+            <a class="btn btn-outline-secondary w-100" href="/auth/register"><i class="fa-solid fa-user-plus me-2"></i>Подати заявку на доступ</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-7">
+      <div class="auth-info h-100">
+        <div class="auth-info__header">
+          <span class="auth-badge">Прозоро та безпечно</span>
+          <h2>Що дає особистий кабінет</h2>
+          <p>Зареєстровані донатори та адміністратори отримують доступ до закритих розділів, оперативних оновлень та прямого ефіру штабу.</p>
+        </div>
+        <ul class="icon-list">
+          <li>
+            <i class="fa-solid fa-video"></i>
+            <div>
+              <h3>Прямі трансляції</h3>
+              <p class="mb-0">Спостерігайте за роботою команди у реальному часі та отримуйте оперативні новини з місця подій.</p>
+            </div>
+          </li>
+          <li>
+            <i class="fa-solid fa-clipboard-check"></i>
+            <div>
+              <h3>Підтверджені звіти</h3>
+              <p class="mb-0">Кожен донат супроводжується документами та фотофіксацією. Адміністратори публікують звіти одразу після перевірки.</p>
+            </div>
+          </li>
+          <li>
+            <i class="fa-solid fa-people-group"></i>
+            <div>
+              <h3>Комунікація з координаторами</h3>
+              <p class="mb-0">Учасники бачать контакти відповідальних осіб та швидко вирішують питання щодо транспорту та логістики.</p>
+            </div>
+          </li>
+        </ul>
+        <div class="admin-hint">
+          <h3><i class="fa-solid fa-user-shield me-2"></i>Вхід для адміністратора</h3>
+          <% const adminEmail = loginHints && loginHints.adminEmail; %>
+          <% if (adminEmail) { %>
+            <p class="mb-1">Використайте email <code><%= adminEmail %></code> та пароль, який визначено у змінній <code>ADMIN_PASSWORD</code> файлу <code>.env</code>.</p>
+            <% if (!loginHints.adminPasswordSet) { %>
+              <p class="text-warning small mb-0"><i class="fa-solid fa-triangle-exclamation me-1"></i>Задайте значення <code>ADMIN_PASSWORD</code> перед запуском, щоб увімкнути безпечний доступ.</p>
+            <% } else { %>
+              <p class="text-muted small mb-0">Не передавайте ці дані стороннім: доступ відкриває адмін-панель та модерацію заявок.</p>
+            <% } %>
+          <% } else { %>
+            <p class="mb-0">Задайте змінні <code>ADMIN_EMAIL</code> та <code>ADMIN_PASSWORD</code> у файлі <code>.env</code>, після чого перезапустіть застосунок. Обліковий запис адміністратора створиться автоматично.</p>
+          <% } %>
         </div>
       </div>
     </div>

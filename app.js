@@ -88,10 +88,10 @@ app.use('/api', rateLimit({
   legacyHeaders: false
 }));
 
-app.use('/', pagesRouter);
 app.use('/auth', authRouter);
-app.use('/api', apiRouter);
 app.use('/admin', adminRouter);
+app.use('/api', apiRouter);
+app.use('/', pagesRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

@@ -47,9 +47,15 @@ router.get('/login', (req, res) => {
   if (req.session.user) {
     return res.redirect(req.session.user.role === 'admin' ? '/admin/dashboard' : '/live');
   }
+  const loginHints = {
+    adminEmail: process.env.ADMIN_EMAIL || null,
+    adminPasswordSet: Boolean(process.env.ADMIN_PASSWORD)
+  };
+
   res.render('auth/login', {
     title: 'Вхід до кабінету',
-    csrfToken: res.locals.csrfToken
+    csrfToken: res.locals.csrfToken,
+    loginHints
   });
 });
 

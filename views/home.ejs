@@ -99,6 +99,14 @@
     <a href="/cars" class="link-arrow">Детальніше</a>
   </div>
   <div class="row g-4">
+    <% const vehicleStatusLabels = {
+      needs_funding: 'Збір коштів',
+      in_progress: 'У процесі',
+      funded: 'Передано',
+      repairing: 'На ремонті',
+      ready_for_mission: 'Готове до виїзду',
+      scouting: 'У пошуку'
+    }; %>
     <% vehicles.slice(0, 3).forEach(function(vehicle) { %>
       <div class="col-md-4">
         <div class="vehicle-card">
@@ -108,7 +116,7 @@
           <div class="vehicle-body">
             <h3><%= vehicle.name %></h3>
             <p><%= vehicle.description %></p>
-            <span class="badge status-<%= vehicle.status %>"><%= vehicle.status %></span>
+            <span class="badge status-<%= vehicle.status %>"><%= vehicleStatusLabels[vehicle.status] || vehicle.status %></span>
           </div>
         </div>
       </div>
