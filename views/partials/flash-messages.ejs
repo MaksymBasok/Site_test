@@ -1,18 +1,18 @@
 <% if (flash && (flash.error || flash.success)) { %>
-  <div class="flash-messages">
+  <div class="toast-container" data-toast-container>
     <% if (flash.success) { %>
       <% flash.success.forEach(function(message) { %>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-          <i class="fa-solid fa-circle-check"></i> <%= message %>
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрити"></button>
+        <div class="toast-message toast-message--success" role="status">
+          <strong><i class="fa-solid fa-circle-check me-2"></i>Успіх</strong>
+          <span><%= message %></span>
         </div>
       <% }) %>
     <% } %>
     <% if (flash.error) { %>
       <% flash.error.forEach(function(message) { %>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-          <i class="fa-solid fa-circle-exclamation"></i> <%= message %>
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрити"></button>
+        <div class="toast-message toast-message--error" role="alert">
+          <strong><i class="fa-solid fa-triangle-exclamation me-2"></i>Помилка</strong>
+          <span><%= message %></span>
         </div>
       <% }) %>
     <% } %>

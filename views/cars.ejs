@@ -4,7 +4,7 @@
   <p class="lead">Ми закуповуємо та ремонтуємо пікапи, позашляховики й мікроавтобуси. Нижче — актуальний стан кожного авто.</p>
 </section>
 
-<section class="mt-4">
+<section class="section" data-reveal>
   <% const vehicleStatusLabels = {
     needs_funding: 'Збір коштів',
     in_progress: 'У процесі',
@@ -20,29 +20,76 @@
     crossover: 'Кросовер',
     truck: 'Вантажівка'
   }; %>
-  <div class="row g-4">
+  <% const vehicleProgress = {
+    needs_funding: 0.2,
+    scouting: 0.3,
+    in_progress: 0.55,
+    repairing: 0.72,
+    ready_for_mission: 0.88,
+    funded: 1
+  }; %>
+  <div class="section__intro">
+    <div>
+      <h2 class="section__title">Каталог техніки</h2>
+      <p class="section__description">Фільтруйте за статусом чи типом авто, щоб знайти, куди спрямувати підтримку або відстежити прогрес ремонту.</p>
+    </div>
+  </div>
+  <div class="vehicle-filters" data-vehicle-filters>
+    <button class="filter-chip is-active" type="button" data-filter-group="status" data-filter-value="all">Усі статуси</button>
+    <% Object.entries(vehicleStatusLabels).forEach(([statusKey, statusLabel]) => { %>
+      <button class="filter-chip" type="button" data-filter-group="status" data-filter-value="<%= statusKey %>"><%= statusLabel %></button>
+    <% }); %>
+    <button class="filter-chip" type="button" data-filter-group="category" data-filter-value="all"><i class="fa-solid fa-layer-group"></i> Усі категорії</button>
+    <% Object.entries(vehicleCategoryLabels).forEach(([categoryKey, categoryLabel]) => { %>
+      <button class="filter-chip" type="button" data-filter-group="category" data-filter-value="<%= categoryKey %>"><%= categoryLabel %></button>
+    <% }); %>
+  </div>
+  <div class="card-grid card-grid--vehicles" data-vehicles-grid data-pagination-source data-skeleton>
     <% vehicles.forEach(function(vehicle) { %>
-      <div class="col-md-4">
-        <div class="vehicle-card">
-          <% if (vehicle.image_path) { %>
-            <img src="/<%= vehicle.image_path %>" alt="<%= vehicle.name %>" class="vehicle-image">
-          <% } %>
-          <div class="vehicle-body">
-            <span class="badge status-<%= vehicle.status %>"><%= vehicleStatusLabels[vehicle.status] || vehicle.status %></span>
+      <% const progressValue = vehicleProgress[vehicle.status] || 0.4; %>
+      <article class="vehicle-card is-skeleton" data-status="<%= vehicle.status %>" data-category="<%= vehicle.category || 'unknown' %>">
+        <% if (vehicle.image_path) { %>
+          <div class="vehicle-card__media">
+            <img src="/<%= vehicle.image_path %>" alt="<%= vehicle.name %>" loading="lazy">
+            <span class="vehicle-card__badge"><i class="fa-solid fa-bolt"></i> Priority</span>
+          </div>
+        <% } %>
+        <div class="vehicle-card__body">
+          <div class="vehicle-card__header">
             <h3><%= vehicle.name %></h3>
-            <p><%= vehicle.description %></p>
-            <p class="vehicle-meta">Категорія: <%= vehicleCategoryLabels[vehicle.category] || vehicle.category || 'Не вказано' %></p>
+            <span class="vehicle-card__status status-<%= vehicle.status %>"><%= vehicleStatusLabels[vehicle.status] || vehicle.status %></span>
+          </div>
+          <p><%= vehicle.description %></p>
+          <div class="vehicle-progress" data-progress style="--progress-value: <%= progressValue %>">
+            <div class="vehicle-progress__bar"></div>
+          </div>
+          <div class="vehicle-card__meta">
+            <span><i class="fa-solid fa-tag"></i> <%= vehicleCategoryLabels[vehicle.category] || vehicle.category || 'Не вказано' %></span>
+            <span><i class="fa-solid fa-signal"></i> Прогрес <%= Math.round(progressValue * 100) %>%</span>
           </div>
         </div>
-      </div>
+      </article>
     <% }) %>
+  </div>
+  <div class="vehicle-pagination" data-pagination>
+    <button class="btn btn-outline-primary" type="button" data-page-prev disabled><i class="fa-solid fa-arrow-left"></i> Попередні</button>
+    <span data-pagination-status>1 / 1</span>
+    <button class="btn btn-outline-primary" type="button" data-page-next>Наступні <i class="fa-solid fa-arrow-right"></i></button>
   </div>
 </section>
 
-<section class="mt-5">
+<section class="section section--surface" data-reveal>
+  <div class="section__intro">
+    <div>
+      <h2 class="section__title">Маєте авто чи деталі?</h2>
+      <p class="section__description">Напишіть у штаб — координатор підкаже, як найшвидше передати техніку або комплектуючі. Допомога з ремонтом так само важлива, як і донати.</p>
+    </div>
+  </div>
   <div class="info-banner">
-    <h2>Якщо можете допомогти з авто або деталями</h2>
-    <p>Напишіть нам у Telegram або залиште заявку у формі для волонтерів. Будь-яка технічна допомога суттєво прискорює ремонт.</p>
+    <div>
+      <p><i class="fa-solid fa-screwdriver-wrench"></i> Отримаєте чек-лист техніки і контакт майстра</p>
+      <p><i class="fa-solid fa-location-dot"></i> Штаб у Вінниці працює щодня 09:00–21:00</p>
+    </div>
     <a class="btn btn-warning" href="/contacts">Зв'язатися з нами</a>
   </div>
 </section>

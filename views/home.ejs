@@ -19,8 +19,17 @@
     ready_for_mission: 'Готове до виїзду',
     scouting: 'У пошуку'
   };
+  const vehicleProgress = {
+    needs_funding: 0.2,
+    scouting: 0.3,
+    in_progress: 0.55,
+    repairing: 0.7,
+    ready_for_mission: 0.9,
+    funded: 1
+  };
 %>
-<section class="hero hero--spotlight">
+<!-- Зберігаємо композицію першого коміту: контрастна синьо-жовта героїчна секція -->
+<section class="hero hero--spotlight" data-reveal>
   <div class="hero__inner">
     <div class="hero__content">
       <span class="hero__eyebrow">Благодійний фонд</span>
@@ -60,31 +69,69 @@
     </div>
   </div>
   <div class="hero__metrics">
-    <article class="hero-metric">
+    <article class="hero-metric" aria-live="polite">
       <span class="hero-metric__icon" aria-hidden="true"><i class="fa-solid fa-piggy-bank"></i></span>
       <div class="hero-metric__label">Зібрано</div>
       <div class="hero-metric__value"><%= totals.totalRaised.toLocaleString('uk-UA') %> ₴</div>
     </article>
-    <article class="hero-metric">
+    <article class="hero-metric" aria-live="polite">
+      <span class="hero-metric__icon" aria-hidden="true"><i class="fa-solid fa-bullseye"></i></span>
+      <div class="hero-metric__label">Актуальна мета</div>
+      <div class="hero-metric__value"><%= goal ? goal.target_amount.toLocaleString('uk-UA') + ' ₴' : 'Оголошується' %></div>
+    </article>
+    <article class="hero-metric" aria-live="polite">
       <span class="hero-metric__icon" aria-hidden="true"><i class="fa-solid fa-screwdriver-wrench"></i></span>
       <div class="hero-metric__label">Використано</div>
-      <div class="hero-metric__value text-danger"><%= totals.totalWithdrawn.toLocaleString('uk-UA') %> ₴</div>
+      <div class="hero-metric__value"><%= totals.totalWithdrawn.toLocaleString('uk-UA') %> ₴</div>
     </article>
-    <article class="hero-metric">
+    <article class="hero-metric" aria-live="polite">
       <span class="hero-metric__icon" aria-hidden="true"><i class="fa-solid fa-circle-check"></i></span>
       <div class="hero-metric__label">Залишок</div>
-      <div class="hero-metric__value text-success"><%= totals.balance.toLocaleString('uk-UA') %> ₴</div>
+      <div class="hero-metric__value"><%= totals.balance.toLocaleString('uk-UA') %> ₴</div>
     </article>
   </div>
 </section>
 
-<section class="section section--goal">
+<section class="section section--surface" data-reveal>
+  <div class="section__intro">
+    <div>
+      <h2 class="section__title">Фінансові показники</h2>
+      <p class="section__description">Live-дані про збір, витрати та залишок. Цифри оновлюються автоматично на основі підтверджених операцій.</p>
+    </div>
+    <a href="/donations" class="section__link">Історія донатів</a>
+  </div>
+  <div class="kpi-grid" role="list">
+    <article class="kpi-card" role="listitem">
+      <div class="kpi-card__label">Собрано</div>
+      <div class="kpi-card__value"><%= totals.totalRaised.toLocaleString('uk-UA') %> ₴</div>
+      <div class="kpi-card__trend"><i class="fa-solid fa-arrow-trend-up"></i> +<%= donationsList.length %> донатів тиждень</div>
+    </article>
+    <article class="kpi-card" role="listitem">
+      <div class="kpi-card__label">Ціль</div>
+      <div class="kpi-card__value"><%= goal ? goal.target_amount.toLocaleString('uk-UA') + ' ₴' : 'Оголошується' %></div>
+      <div class="kpi-card__trend text-muted"><i class="fa-regular fa-clock"></i> Оновлено <%= goal ? new Date(goal.updated_at).toLocaleDateString('uk-UA') : 'сьогодні' %></div>
+    </article>
+    <article class="kpi-card" role="listitem">
+      <div class="kpi-card__label">Расходы</div>
+      <div class="kpi-card__value"><%= totals.totalWithdrawn.toLocaleString('uk-UA') %> ₴</div>
+      <div class="kpi-card__trend" style="color: var(--color-danger);"><i class="fa-solid fa-receipt"></i> Враховано акти та чеки</div>
+    </article>
+    <article class="kpi-card" role="listitem">
+      <div class="kpi-card__label">Остаток</div>
+      <div class="kpi-card__value"><%= totals.balance.toLocaleString('uk-UA') %> ₴</div>
+      <div class="kpi-card__trend"><i class="fa-solid fa-sparkles"></i> Заплановано на техніку</div>
+    </article>
+  </div>
+</section>
+
+<section class="section section--goal" data-reveal>
   <div class="section__intro">
     <h2 class="section__title">Актуальна ціль</h2>
     <p class="section__description">Щодня ремонтуємо та готуємо авто до виїзду. Остання ціль — забезпечити підрозділ новим транспортом.</p>
   </div>
   <% if (goal) { %>
     <% const progress = Math.min(100, Math.round((totals.totalRaised / goal.target_amount) * 100)); %>
+    <% const progressScale = Math.max(0, Math.min(1, progress / 100)); %>
     <article class="goal-card">
       <div class="goal-card__content">
         <h3><%= goal.title %></h3>
@@ -95,8 +142,8 @@
         </ul>
       </div>
       <div class="goal-card__progress">
-        <div class="goal-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<%= progress %>">
-          <div class="goal-progress__bar" style="width: <%= progress %>%"></div>
+        <div class="goal-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<%= progress %>" data-progress style="--progress-value: <%= progressScale %>">
+          <div class="goal-progress__bar"></div>
         </div>
         <div class="goal-progress__value"><%= progress %>%</div>
         <a class="btn btn-primary" href="/donations">Допомогти виконати ціль</a>
@@ -113,7 +160,7 @@
   <% } %>
 </section>
 
-<section class="section">
+<section class="section" data-reveal>
   <div class="section__intro">
     <div>
       <h2 class="section__title">Останні донати</h2>
@@ -122,22 +169,24 @@
     <a href="/donations" class="section__link">Усі донати</a>
   </div>
   <% if (donationsList.length > 0) { %>
-    <div class="card-grid card-grid--donations">
-      <% donationsList.forEach((donation) => { %>
-        <article class="donation-card">
-          <header class="donation-card__header">
-            <span class="donation-card__avatar" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
-            <div class="donation-card__meta">
-              <span class="donation-card__name"><%= donation.donor_name %></span>
-              <time class="donation-card__date" datetime="<%= new Date(donation.created_at).toISOString() %>"><%= new Date(donation.created_at).toLocaleString('uk-UA') %></time>
-            </div>
-          </header>
-          <div class="donation-card__amount"><%= donation.amount.toLocaleString('uk-UA') %> <%= donation.currency %></div>
-          <% if (donation.message) { %>
-            <p class="donation-card__message">“<%= donation.message %>”</p>
-          <% } %>
-        </article>
-      <% }) %>
+    <div class="donation-ticker" data-ticker data-reveal>
+      <div class="donation-ticker__track" data-ticker-track>
+        <% donationsList.forEach((donation) => { %>
+          <article class="donation-card">
+            <header class="donation-card__header">
+              <span class="donation-card__avatar" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
+              <div class="donation-card__meta">
+                <span class="donation-card__name"><%= donation.donor_name %></span>
+                <time class="donation-card__date" datetime="<%= new Date(donation.created_at).toISOString() %>"><%= new Date(donation.created_at).toLocaleString('uk-UA') %></time>
+              </div>
+            </header>
+            <div class="donation-card__amount"><%= donation.amount.toLocaleString('uk-UA') %> <%= donation.currency %></div>
+            <% if (donation.message) { %>
+              <p class="donation-card__message">“<%= donation.message %>”</p>
+            <% } %>
+          </article>
+        <% }) %>
+      </div>
     </div>
   <% } else { %>
     <div class="empty-state">
@@ -150,7 +199,7 @@
   <% } %>
 </section>
 
-<section class="section section--surface">
+<section class="section section--surface" data-reveal>
   <div class="section__intro">
     <div>
       <h2 class="section__title">Поточні автомобілі та потреби</h2>
@@ -160,12 +209,17 @@
   </div>
   <% const featuredVehicles = vehiclesList.slice(0, 3); %>
   <% if (featuredVehicles.length > 0) { %>
-    <div class="card-grid card-grid--vehicles">
+    <div class="card-grid card-grid--vehicles" data-skeleton>
       <% featuredVehicles.forEach((vehicle) => { %>
-        <article class="vehicle-card">
+        <% const vehicleProgressValue = vehicleProgress[vehicle.status] || 0.35; %>
+        <article class="vehicle-card is-skeleton">
           <% if (vehicle.image_path) { %>
             <div class="vehicle-card__media">
               <img src="/<%= vehicle.image_path %>" alt="<%= vehicle.name %>" loading="lazy">
+              <span class="vehicle-card__badge">
+                <i class="fa-solid fa-gauge-high"></i>
+                <%= vehicleStatusLabels[vehicle.status] || 'У роботі' %>
+              </span>
             </div>
           <% } %>
           <div class="vehicle-card__body">
@@ -174,6 +228,14 @@
               <span class="vehicle-card__status status-<%= vehicle.status %>"><%= vehicleStatusLabels[vehicle.status] || vehicle.status %></span>
             </div>
             <p><%= vehicle.description %></p>
+            <div class="vehicle-progress" data-progress style="--progress-value: <%= vehicleProgressValue %>">
+              <div class="vehicle-progress__bar"></div>
+            </div>
+            <div class="vehicle-card__meta">
+              <span><i class="fa-solid fa-tag"></i> <%= vehicle.category || 'Спецпроєкт' %></span>
+              <% const updatedAt = vehicle.updated_at || (goal ? goal.updated_at : Date.now()); %>
+              <span><i class="fa-solid fa-clock-rotate-left"></i> Оновлено <%= new Date(updatedAt).toLocaleDateString('uk-UA') %></span>
+            </div>
           </div>
         </article>
       <% }) %>
@@ -189,7 +251,7 @@
   <% } %>
 </section>
 
-<section class="section">
+<section class="section" data-reveal>
   <div class="section__intro">
     <div>
       <h2 class="section__title">Відгуки донаторів</h2>
@@ -234,7 +296,7 @@
   <% } %>
 </section>
 
-<section class="section">
+<section class="section" data-reveal>
   <div class="section__intro">
     <div>
       <h2 class="section__title">Свіжі новини</h2>
@@ -274,7 +336,7 @@
   <% } %>
 </section>
 
-<section class="section section--cta">
+<section class="section section--cta" data-reveal>
   <div class="cta-banner">
     <div class="cta-banner__content">
       <h2>Ваш донат — це врятовані життя</h2>

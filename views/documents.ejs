@@ -1,51 +1,120 @@
 <%- include('partials/layout-start') %>
-<section class="page-header">
+<%
+  const mediaList = Array.isArray(media) ? media : [];
+  const documentsList = Array.isArray(documents) ? documents : [];
+  const tags = [...new Set(documentsList.flatMap((doc) => (doc.tags ? doc.tags.split(',').map((tag) => tag.trim()) : [])))];
+%>
+<section class="page-header" data-reveal>
   <h1>Документи та відкриті дані</h1>
-  <p class="lead">Ми дотримуємося принципів прозорості. Тут ви знайдете статутні документи, посвідчення та посилання на публікації у ЗМІ.</p>
+  <p class="lead">Використовуємо принципи прозорості з першого коміту: синьо-жовта палітра, чітка типографіка та відкриті посилання на статутні документи і публікації.</p>
 </section>
 
-<section class="mt-4">
-  <h2 class="h4 mb-3">Публікації у медіа</h2>
-  <div class="row g-4">
-    <% media.forEach(function(item) { %>
-      <div class="col-md-6">
-        <article class="media-card">
+<section class="section" data-reveal>
+  <div class="section__intro">
+    <div>
+      <h2 class="section__title">Публікації у медіа</h2>
+      <p class="section__description">Оновлюємо добірку матеріалів про фонд: інтерв'ю, звіти та згадки у ЗМІ. Використовуйте сортування за датою або популярністю.</p>
+    </div>
+    <div class="media-controls">
+      <label class="form-label mb-0" for="media-sort">Сортування</label>
+      <select class="form-select" id="media-sort" data-media-sort>
+        <option value="recent">Спочатку нові</option>
+        <option value="oldest">Спочатку старі</option>
+        <option value="title">За назвою</option>
+      </select>
+    </div>
+  </div>
+  <div class="media-grid" data-media-grid>
+    <% mediaList.forEach(function(item) { %>
+      <article class="media-card" data-reveal data-media-date="<%= item.published_at || '' %>" data-media-title="<%= item.title %>">
+        <div class="media-card__thumb">
           <% if (item.image_path) { %>
-            <img src="/<%= item.image_path %>" alt="<%= item.title %>">
+            <img src="/<%= item.image_path %>" alt="<%= item.title %>" loading="lazy">
+          <% } else { %>
+            <i class="fa-solid fa-newspaper fa-2x text-muted"></i>
           <% } %>
-          <div class="media-body">
-            <h3><a href="<%= item.url %>" target="_blank" rel="noopener"><%= item.title %></a></h3>
-            <% if (item.summary) { %>
-              <p><%= item.summary %></p>
-            <% } %>
-            <a class="link-arrow" href="<%= item.url %>" target="_blank" rel="noopener">Читати у джерелі</a>
+          <span class="media-card__type">Стаття</span>
+        </div>
+        <div class="media-card__body">
+          <h3><a href="<%= item.url %>" target="_blank" rel="noopener"><%= item.title %></a></h3>
+          <% if (item.summary) { %>
+            <p><%= item.summary %></p>
+          <% } %>
+          <div class="media-card__meta">
+            <span><i class="fa-regular fa-calendar"></i> <%= item.published_at ? new Date(item.published_at).toLocaleDateString('uk-UA') : 'Без дати' %></span>
+            <a class="section__link" href="<%= item.url %>" target="_blank" rel="noopener">Читати</a>
           </div>
-        </article>
-      </div>
+        </div>
+      </article>
     <% }) %>
+    <% if (mediaList.length === 0) { %>
+      <div class="empty-state">
+        <span class="empty-state__icon"><i class="fa-solid fa-newspaper"></i></span>
+        <div class="empty-state__content">
+          <h3>Матеріали готуються</h3>
+          <p>Скоро додамо публікації з медіа та соціальних мереж.</p>
+        </div>
+      </div>
+    <% } %>
   </div>
 </section>
 
-<section class="mt-5">
-  <h2 class="h4 mb-3">Офіційні документи</h2>
-  <div class="row g-4">
-    <% documents.forEach(function(doc) { %>
-      <div class="col-md-4">
-        <div class="document-card">
+<section class="section section--surface" data-reveal>
+  <div class="section__intro">
+    <div>
+      <h2 class="section__title">Офіційні документи</h2>
+      <p class="section__description">Статут, реєстраційні документи, посвідчення волонтерів і відео-звіти. Фільтруйте за тегами або типом файлу.</p>
+    </div>
+    <div class="media-controls">
+      <button class="filter-chip is-active" type="button" data-doc-filter="all">Усі</button>
+      <button class="filter-chip" type="button" data-doc-filter="image">Зображення</button>
+      <button class="filter-chip" type="button" data-doc-filter="video">Відео</button>
+      <% tags.forEach(function(tag) { %>
+        <button class="filter-chip" type="button" data-doc-tag="<%= tag %>"><%= tag %></button>
+      <% }) %>
+    </div>
+  </div>
+  <div class="media-grid" data-documents-grid>
+    <% documentsList.forEach(function(doc) { %>
+      <% const docTags = doc.tags ? doc.tags.split(',').map((tag) => tag.trim()) : []; %>
+      <article class="media-card" data-reveal data-doc-type="<%= doc.file_type %>" data-doc-tags="<%= docTags.join(' ') %>">
+        <div class="media-card__thumb">
           <% if (doc.file_type === 'image') { %>
-            <img src="/<%= doc.file_path %>" alt="<%= doc.title %>">
+            <img src="/<%= doc.file_path %>" alt="<%= doc.title %>" loading="lazy">
           <% } else if (doc.file_type === 'video') { %>
             <video controls preload="metadata" src="/<%= doc.file_path %>"></video>
+          <% } else { %>
+            <i class="fa-solid fa-file-lines fa-2x text-muted"></i>
           <% } %>
-          <div class="document-body">
-            <h3><%= doc.title %></h3>
-            <% if (doc.description) { %>
-              <p><%= doc.description %></p>
+          <span class="media-card__type"><%= doc.file_type === 'video' ? 'Відео' : 'Документ' %></span>
+        </div>
+        <div class="media-card__body">
+          <h3><%= doc.title %></h3>
+          <% if (doc.description) { %>
+            <p><%= doc.description %></p>
+          <% } %>
+          <div class="media-card__meta">
+            <span><i class="fa-regular fa-calendar"></i> <%= doc.created_at ? new Date(doc.created_at).toLocaleDateString('uk-UA') : 'Без дати' %></span>
+            <% if (docTags.length > 0) { %>
+              <span>
+                <% docTags.forEach(function(tag) { %>
+                  <span class="tag"><i class="fa-solid fa-tag"></i> <%= tag %></span>
+                <% }) %>
+              </span>
             <% } %>
           </div>
         </div>
-      </div>
+      </article>
     <% }) %>
+    <% if (documentsList.length === 0) { %>
+      <div class="empty-state">
+        <span class="empty-state__icon"><i class="fa-solid fa-file"></i></span>
+        <div class="empty-state__content">
+          <h3>Документи готуються</h3>
+          <p>Зараз цифровізуємо архів. Слідкуйте за оновленнями.</p>
+        </div>
+      </div>
+    <% } %>
   </div>
 </section>
 <%- include('partials/layout-end') %>
