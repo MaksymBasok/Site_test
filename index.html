@@ -19,8 +19,13 @@
                 </div>
                 <nav>
                     <ul>
+                        <li><a href="#fundraising">Збір коштів</a></li>
                         <li><a href="#nkppk">НКППК</a></li>
+                        <li><a href="#account">Кабінет</a></li>
                         <li><a href="#cars">Автомобілі</a></li>
+                        <li><a href="#donations">Донати</a></li>
+                        <li><a href="#reviews">Відгуки</a></li>
+                        <li><a href="#volunteers">Волонтери</a></li>
                         <li><a href="#docs">Документи</a></li>
                         <li><a href="#contacts">Контакти</a></li>
                     </ul>
@@ -34,11 +39,51 @@
         <div class="hero-content">
             <h1>Автомобілі для волонтерської діяльності ЗСУ</h1>
             <p>Ми надаємо транспортні засоби для волонтерів, які беруть участь у благодійних акціях та підтримці ЗСУ</p>
-            <a href="#" class="cta-button">Долучитися</a>
+            <a href="#donations" class="cta-button">Долучитися</a>
         </div>
     </section>
 
-<section class="organization" id="nkppk">
+<!-- Fundraising Status -->
+    <section class="fundraising" id="fundraising">
+        <div class="container">
+            <div class="fundraising-grid">
+                <div class="fundraising-card">
+                    <h2 class="section-title">Ціль збору</h2>
+                    <div class="fundraising-body">
+                        <h3 id="goalTitle">Позашляховик для волонтерів</h3>
+                        <div class="progress-wrapper">
+                            <div class="progress-text">
+                                <span>Зібрано: <strong id="totalRaised">0 ₴</strong></span>
+                                <span>Мета: <strong id="goalTarget">0 ₴</strong></span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" id="goalProgress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+                            </div>
+                            <div class="progress-footnote">
+                                <span>Виведено: <strong id="totalWithdrawn">0 ₴</strong></span>
+                                <span>Залишок: <strong id="balance">0 ₴</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="fundraising-card">
+                    <h2 class="section-title">Актуальні реквізити</h2>
+                    <div class="fundraising-body">
+                        <ul class="donation-details">
+                            <li><strong>Отримувач:</strong> <span id="cardRecipient">Roleders Aleksandrs</span></li>
+                            <li><strong>IBAN:</strong> <span id="cardIban">UA443077700000026204016710032</span></li>
+                            <li><strong>ІПН/ЄДРПОУ:</strong> <span id="cardEdrpou">—</span></li>
+                            <li><strong>Призначення платежу:</strong> <span id="cardPurpose">Для поповнення картки 4323347377472482, Roleders Aleksandrs</span></li>
+                        </ul>
+                        <p class="fundraising-note">Оновлено: <span id="cardUpdated">—</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <section class="organization" id="nkppk">
   <div class="container">
     <h2 class="section-title">НКППК</h2>
 
@@ -61,10 +106,10 @@
 
             <h4 style="margin:18px 0 8px;">Дані для донату на ЗСУ </h4>
             <ul>
-              <li><strong>Отримувач:</strong> Roleders Aleksandrs</li>
-              <li><strong>IBAN:</strong> UA443077700000026204016710032</li>
-              <li><strong>ІПН/ЄДРПОУ:</strong> —</li>
-              <li><strong>Призначення платежу:</strong> Для поповнення картки 4323347377472482, Roleders Aleksandrs</li>
+              <li><strong>Отримувач:</strong> <span class="card-recipient">Roleders Aleksandrs</span></li>
+              <li><strong>IBAN:</strong> <span class="card-iban">UA443077700000026204016710032</span></li>
+              <li><strong>ІПН/ЄДРПОУ:</strong> <span class="card-edrpou">—</span></li>
+              <li><strong>Призначення платежу:</strong> <span class="card-purpose">Для поповнення картки 4323347377472482, Roleders Aleksandrs</span></li>
             </ul>
 
             <h4 style="margin:18px 0 8px;">Організації</h4>
@@ -122,8 +167,84 @@
 </section>
 
 
+    <!-- Account Section -->
+    <section class="account" id="account">
+        <div class="container">
+            <h2 class="section-title">Особистий кабінет</h2>
+            <div class="account-grid">
+                <div class="account-card">
+                    <h3>Вхід</h3>
+                    <form id="loginForm" class="stacked-form">
+                        <div class="form-row">
+                            <label for="loginRole">Роль</label>
+                            <select id="loginRole">
+                                <option value="donor">Донор / волонтер</option>
+                                <option value="admin">Адміністратор</option>
+                            </select>
+                        </div>
+                        <div class="form-row donor-field">
+                            <label for="loginName">ПІБ</label>
+                            <input type="text" id="loginName" placeholder="Наприклад, Іваненко Іван" autocomplete="name">
+                        </div>
+                        <div class="form-row donor-field">
+                            <label for="loginPhone">Номер телефону</label>
+                            <input type="tel" id="loginPhone" placeholder="+380XXXXXXXXX" autocomplete="tel">
+                        </div>
+                        <div class="form-row admin-field" hidden>
+                            <label for="loginEmail">Email</label>
+                            <input type="email" id="loginEmail" placeholder="admin@volunteer.ua" autocomplete="email">
+                        </div>
+                        <div class="form-row admin-field" hidden>
+                            <label for="loginPassword">Пароль</label>
+                            <input type="password" id="loginPassword" placeholder="Введіть пароль" autocomplete="current-password">
+                        </div>
+                        <button type="submit" class="primary-btn">Увійти</button>
+                    </form>
+                    <div class="form-feedback" id="loginMessage"></div>
+                    <p class="form-hint"><strong>Підказка:</strong> для доступу адміністратора використовуйте email <code>admin@volunteer.ua</code>.</p>
+                </div>
+                <div class="account-card">
+                    <h3>Статус</h3>
+                    <div class="account-status" id="accountStatus">
+                        <p>Увійдіть, щоб відстежувати стан заявок та отримати доступ до прямого ефіру.</p>
+                    </div>
+                    <div class="role-badges" id="roleBadges"></div>
+                    <button type="button" class="secondary-btn" id="logoutBtn" hidden>Вийти</button>
+                </div>
+                <div class="account-card live-card" id="liveWrapper">
+                    <h3>Прямий ефір</h3>
+                    <div class="live-placeholder" id="livePlaceholder">
+                        <i class="fas fa-lock"></i>
+                        <p>Доступ до трансляції відкривається після підтвердження донату або для адміністратора.</p>
+                    </div>
+                    <div class="live-player" id="livePlayer" hidden>
+                        <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="Прямий ефір" allowfullscreen loading="lazy"></iframe>
+                    </div>
+                </div>
+            </div>
+            <div class="account-card" id="userDonationsCard" hidden>
+                <h3>Ваші заявки</h3>
+                <div class="table-responsive">
+                    <table class="table custom-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Дата</th>
+                                <th>Сума</th>
+                                <th>Статус</th>
+                                <th>Коментар</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userDonations"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
     <!-- Categories Section -->
-    <section class="categories" id="cars">>
+    <section class="categories" id="cars">
         <div class="container">
             <h2 class="section-title">Наш автопарк</h2>
             
@@ -232,6 +353,263 @@
   </div>
 </div>
 
+        </div>
+    </section>
+
+    <!-- Donation Intake -->
+    <section class="donation-intake" id="donations">
+        <div class="container">
+            <h2 class="section-title">Підтвердження донату</h2>
+            <div class="intake-grid">
+                <div class="form-card">
+                    <h3>Надіслати заявку</h3>
+                    <form id="donationForm" class="stacked-form" enctype="multipart/form-data">
+                        <div class="form-row">
+                            <label for="donationName">ПІБ</label>
+                            <input type="text" id="donationName" placeholder="Вкажіть ваше повне ім'я" required>
+                        </div>
+                        <div class="form-row">
+                            <label for="donationPhone">Номер телефону</label>
+                            <input type="tel" id="donationPhone" placeholder="+380XXXXXXXXX" required>
+                        </div>
+                        <div class="form-row">
+                            <label for="donationAmount">Сума, ₴</label>
+                            <input type="number" id="donationAmount" min="0" step="1" placeholder="Сума переказу" required>
+                        </div>
+                        <div class="form-row">
+                            <label for="donationComment">Коментар або призначення (необов'язково)</label>
+                            <textarea id="donationComment" rows="3" placeholder="Додайте коментар, якщо потрібно"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <label for="donationReceipt">Завантажити чек / скриншот</label>
+                            <input type="file" id="donationReceipt" accept="image/*" required>
+                            <small class="form-hint">Завантажте підтвердження переказу у форматі JPG, PNG або WebP.</small>
+                        </div>
+                        <button type="submit" class="primary-btn">Надіслати на перевірку</button>
+                    </form>
+                    <div class="form-feedback" id="donationMessage"></div>
+                </div>
+                <div class="info-card">
+                    <h3>Як відбувається перевірка</h3>
+                    <ol>
+                        <li>Волонтер залишає заявку з контактами та чеком.</li>
+                        <li>Команда фонду перевіряє платіж та призначення.</li>
+                        <li>Після підтвердження волонтер отримує доступ до прямого ефіру та відзначається як донатор.</li>
+                    </ol>
+                    <p class="info-note">Ви отримаєте сповіщення у кабінеті про статус заявки. Стежте за оновленнями та залишайте відгуки після підтвердження.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Admin Panel -->
+    <section class="admin-panel" id="adminPanel" hidden>
+        <div class="container">
+            <h2 class="section-title">Адміністративна панель</h2>
+            <div class="admin-grid">
+                <div class="admin-card admin-card-wide">
+                    <h3>Заявки донаторів</h3>
+                    <div class="table-responsive">
+                        <table class="table custom-table" id="requestsTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>ПІБ</th>
+                                    <th>Телефон</th>
+                                    <th>Сума</th>
+                                    <th>Чек</th>
+                                    <th>Статус</th>
+                                    <th>Дії</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminRequests"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="admin-card">
+                    <h3>Оновити реквізити</h3>
+                    <form id="cardForm" class="stacked-form">
+                        <div class="form-row">
+                            <label for="cardFormRecipient">Отримувач</label>
+                            <input type="text" id="cardFormRecipient" required>
+                        </div>
+                        <div class="form-row">
+                            <label for="cardFormIban">IBAN</label>
+                            <input type="text" id="cardFormIban" required>
+                        </div>
+                        <div class="form-row">
+                            <label for="cardFormEdrpou">ІПН / ЄДРПОУ</label>
+                            <input type="text" id="cardFormEdrpou">
+                        </div>
+                        <div class="form-row">
+                            <label for="cardFormPurpose">Призначення платежу</label>
+                            <textarea id="cardFormPurpose" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="primary-btn">Зберегти реквізити</button>
+                    </form>
+                    <div class="form-feedback" id="cardMessage"></div>
+                </div>
+                <div class="admin-card">
+                    <h3>Мета та прогрес</h3>
+                    <form id="goalForm" class="stacked-form">
+                        <div class="form-row">
+                            <label for="goalFormTitle">Назва цілі</label>
+                            <input type="text" id="goalFormTitle" required>
+                        </div>
+                        <div class="form-row">
+                            <label for="goalFormTarget">Мета, ₴</label>
+                            <input type="number" id="goalFormTarget" min="0" step="1" required>
+                        </div>
+                        <button type="submit" class="primary-btn">Оновити ціль</button>
+                    </form>
+                    <div class="form-feedback" id="goalMessage"></div>
+                </div>
+                <div class="admin-card admin-card-wide">
+                    <h3>Виведення коштів</h3>
+                    <form id="payoutForm" class="stacked-form inline-on-desktop">
+                        <div class="form-row">
+                            <label for="payoutAmount">Сума, ₴</label>
+                            <input type="number" id="payoutAmount" min="0" step="1" required>
+                        </div>
+                        <div class="form-row">
+                            <label for="payoutNote">Коментар</label>
+                            <input type="text" id="payoutNote" placeholder="Наприклад, паливо, ремонт, запчастини" required>
+                        </div>
+                        <button type="submit" class="primary-btn">Додати запис</button>
+                    </form>
+                    <div class="form-feedback" id="payoutMessage"></div>
+                    <div class="table-responsive">
+                        <table class="table custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Дата</th>
+                                    <th>Сума</th>
+                                    <th>Призначення</th>
+                                </tr>
+                            </thead>
+                            <tbody id="payoutTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="admin-card admin-card-wide">
+                    <h3>Звернення до волонтерів</h3>
+                    <div class="table-responsive">
+                        <table class="table custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Дата</th>
+                                    <th>Ім'я</th>
+                                    <th>Контакт</th>
+                                    <th>Повідомлення</th>
+                                </tr>
+                            </thead>
+                            <tbody id="messagesTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Check preview modal -->
+    <div id="checkModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" data-modal-target="checkModal">&times;</span>
+            <img id="checkImage" src="" alt="Підтвердження донату">
+            <div class="modal-actions">
+                <a href="#" class="modal-download-btn" id="checkDownload" download>
+                    <i class="fas fa-download"></i> Завантажити чек
+                </a>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Reviews Section -->
+    <section class="reviews" id="reviews">
+        <div class="container">
+            <h2 class="section-title">Відгуки донаторів</h2>
+            <div class="review-list" id="reviewsList"></div>
+            <div class="form-card" id="reviewFormWrapper">
+                <h3>Залишити відгук</h3>
+                <form id="reviewForm" class="stacked-form">
+                    <div class="form-row">
+                        <label for="reviewText">Ваш відгук</label>
+                        <textarea id="reviewText" rows="3" placeholder="Поділіться враженнями після допомоги" required></textarea>
+                    </div>
+                    <div class="form-row">
+                        <label for="reviewRating">Оцінка</label>
+                        <select id="reviewRating" required>
+                            <option value="5">5 - Чудово</option>
+                            <option value="4">4 - Добре</option>
+                            <option value="3">3 - Задовільно</option>
+                            <option value="2">2 - Потрібні покращення</option>
+                            <option value="1">1 - Незадоволений</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="primary-btn">Надіслати</button>
+                </form>
+                <div class="form-feedback" id="reviewMessage"></div>
+            </div>
+            <div class="info-note" id="reviewRestriction" hidden>Відгуки можуть залишати лише підтверджені донатори.</div>
+        </div>
+    </section>
+
+    <!-- Volunteer Contacts -->
+    <section class="volunteer-contacts" id="volunteers">
+        <div class="container">
+            <h2 class="section-title">Зв'язок з волонтерами</h2>
+            <div class="volunteer-grid">
+                <div class="volunteer-card">
+                    <img src="img/org/founder.jpg" alt="Олександр" class="volunteer-photo">
+                    <h3>Олександр Роледерс</h3>
+                    <p class="volunteer-role">Керівник фонду</p>
+                    <ul class="volunteer-contacts-list">
+                        <li><i class="fas fa-phone"></i> +380 (67) 000-00-00</li>
+                        <li><i class="fas fa-telegram"></i> @roleders_support</li>
+                        <li><i class="fas fa-envelope"></i> alex@volonterka.org</li>
+                    </ul>
+                </div>
+                <div class="volunteer-card">
+                    <img src="img/cars/car7.jpg" alt="Марія" class="volunteer-photo">
+                    <h3>Марія Коваль</h3>
+                    <p class="volunteer-role">Координатор донорів</p>
+                    <ul class="volunteer-contacts-list">
+                        <li><i class="fas fa-phone"></i> +380 (63) 123-45-67</li>
+                        <li><i class="fab fa-viber"></i> +380 (63) 123-45-67</li>
+                        <li><i class="fas fa-envelope"></i> donors@volonterka.org</li>
+                    </ul>
+                </div>
+                <div class="volunteer-card">
+                    <img src="img/cars/car10.jpg" alt="Ігор" class="volunteer-photo">
+                    <h3>Ігор Савчук</h3>
+                    <p class="volunteer-role">Волонтер-водій</p>
+                    <ul class="volunteer-contacts-list">
+                        <li><i class="fas fa-phone"></i> +380 (95) 765-43-21</li>
+                        <li><i class="fab fa-facebook-messenger"></i> @igor.volunteer</li>
+                        <li><i class="fas fa-envelope"></i> transport@volonterka.org</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="form-card">
+                <h3>Залишити звернення</h3>
+                <form id="contactForm" class="stacked-form">
+                    <div class="form-row">
+                        <label for="contactName">Ваше ім'я</label>
+                        <input type="text" id="contactName" placeholder="Як до вас звертатись?" required>
+                    </div>
+                    <div class="form-row">
+                        <label for="contactDetails">Зручний спосіб зв'язку</label>
+                        <input type="text" id="contactDetails" placeholder="Телефон, email або Telegram" required>
+                    </div>
+                    <div class="form-row">
+                        <label for="contactMessage">Повідомлення</label>
+                        <textarea id="contactMessage" rows="3" placeholder="Опишіть питання чи пропозицію" required></textarea>
+                    </div>
+                    <button type="submit" class="primary-btn">Надіслати волонтерам</button>
+                </form>
+                <div class="form-feedback" id="contactMessageFeedback"></div>
+            </div>
         </div>
     </section>
 
@@ -444,100 +822,6 @@
         </div>
     </footer>
 
-    <script>
-        // Car filtering functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const tabs = document.querySelectorAll('.tab');
-            const carCards = document.querySelectorAll('.car-card');
-            
-            tabs.forEach(tab => {
-                tab.addEventListener('click', function() {
-                    tabs.forEach(t => t.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    const category = this.getAttribute('data-category');
-                    
-                    carCards.forEach(card => {
-                        if (category === 'all' || card.getAttribute('data-category') === category) {
-                            card.style.display = 'block';
-                        } else {
-                            card.style.display = 'none';
-                        }
-                    });
-                });
-            });
-        });
-		
-// Modal functionality
-function openModal(button) {
-  const modal = document.getElementById('docModal');
-  const modalImg = document.getElementById('modalImage');
-  const docImage = button.closest('.document-preview').querySelector('.doc-image');
-  const download = document.querySelector('.modal-download-btn');
-
-  modal.style.display = 'block';
-  modalImg.src = docImage.src;
-  download.href = docImage.src;
-}
-
-document.querySelector('.close-modal').addEventListener('click', function () {
-    document.getElementById('docModal').style.display = 'none';
-  });
-  
-  window.addEventListener('keydown', e => {
-  if (e.key === 'Escape') document.getElementById('docModal').style.display = 'none';
-});
-
-// Close modal
-document.addEventListener('DOMContentLoaded', function () {
-  document.querySelector('.doc-tab[data-category="all"]').click();
-});
-
-
-// Close modal when clicking outside
-window.addEventListener('click', function(event) {
-    const modal = document.getElementById('docModal');
-    if (event.target === modal) {
-        modal.style.display = 'none';
-    }
-});
-
-// Document filtering functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const docTabs = document.querySelectorAll('.doc-tab');
-    const docItems = document.querySelectorAll('.document-item');
-    
-    docTabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            docTabs.forEach(t => t.classList.remove('active'));
-            this.classList.add('active');
-            
-            const category = this.getAttribute('data-category');
-            
-            docItems.forEach(item => {
-                if (category === 'all' || item.getAttribute('data-category') === category) {
-                    item.style.display = 'block';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-        });
-    });
-});
-
-document.addEventListener('DOMContentLoaded', function () {
-  const orgTabs = document.querySelectorAll('#nkppk .doc-tab');
-  const panes = document.querySelectorAll('#org-panes .pane');
-  orgTabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      orgTabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      const key = tab.getAttribute('data-pane');
-      panes.forEach(p => p.style.display = (p.getAttribute('data-pane') === key) ? 'block' : 'none');
-    });
-  });
-});
-
-    </script>
+    <script src="js/app.js"></script>
 </body>
 </html>
