@@ -2,10 +2,19 @@
   <div class="top-bar">
     <div class="container d-flex flex-column flex-lg-row align-items-center justify-content-between gap-2">
       <div class="top-bar__tagline"><i class="fa-solid fa-truck-medical me-2"></i>Працюємо для фронту та волонтерів 24/7</div>
-      <div class="top-bar__links d-flex align-items-center flex-wrap justify-content-center gap-3">
-        <a class="top-bar__link" href="mailto:info@volonterka.org"><i class="fa-solid fa-envelope me-1"></i>info@volonterka.org</a>
-        <a class="top-bar__link" href="https://t.me/volonterka" target="_blank" rel="noopener"><i class="fa-brands fa-telegram me-1"></i>Telegram</a>
-        <a class="top-bar__link" href="tel:+380931234567"><i class="fa-solid fa-phone me-1"></i>+38 (093) 123 45 67</a>
+      <div class="top-bar__links d-flex align-items-center flex-wrap justify-content-center gap-2">
+        <a class="top-bar__link" href="mailto:info@volonterka.org" aria-label="Email">
+          <i class="fa-solid fa-envelope"></i>
+          <span>info@volonterka.org</span>
+        </a>
+        <a class="top-bar__link" href="https://t.me/volonterka" target="_blank" rel="noopener" aria-label="Telegram">
+          <i class="fa-brands fa-telegram"></i>
+          <span>Telegram</span>
+        </a>
+        <a class="top-bar__link" href="tel:+380931234567" aria-label="Телефон">
+          <i class="fa-solid fa-phone"></i>
+          <span>+38 (093) 123 45 67</span>
+        </a>
       </div>
     </div>
   </div>
@@ -44,25 +53,27 @@
       <div class="nav-actions">
         <a class="btn btn-warning nav-donate" href="/donations"><i class="fa-solid fa-heart me-2"></i>Зробити внесок</a>
         <% if (currentUser) { %>
-          <div class="nav-user" role="group" aria-label="Поточний користувач">
-            <span class="nav-user__avatar"><i class="fa-solid fa-circle-user"></i></span>
-            <div class="nav-user__details">
-              <span class="nav-user__name"><%= currentUser.full_name || currentUser.email %></span>
-              <span class="nav-user__meta">
-                <% if (currentUser.role === 'admin') { %>
-                  Адміністратор
-                <% } else if (currentUser.role === 'moderator') { %>
-                  Модератор
-                <% } else { %>
-                  Донатор
-                <% } %>
-              </span>
+          <div class="nav-account">
+            <div class="nav-user" role="group" aria-label="Поточний користувач">
+              <span class="nav-user__avatar"><i class="fa-solid fa-circle-user"></i></span>
+              <div class="nav-user__details">
+                <span class="nav-user__name"><%= currentUser.full_name || currentUser.email %></span>
+                <span class="nav-user__role-badge">
+                  <% if (currentUser.role === 'admin') { %>
+                    Адміністратор
+                  <% } else if (currentUser.role === 'moderator') { %>
+                    Модератор
+                  <% } else { %>
+                    Донатор
+                  <% } %>
+                </span>
+              </div>
             </div>
-          </div>
-          <div class="nav-actions__row">
-            <form method="POST" action="/auth/logout" class="nav-logout">
+            <form method="POST" action="/auth/logout" class="nav-logout" title="Вийти">
               <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-              <button class="btn btn-outline-light nav-secondary" type="submit"><i class="fa-solid fa-right-from-bracket me-2"></i>Вийти</button>
+              <button class="btn btn-icon" type="submit" aria-label="Вийти">
+                <i class="fa-solid fa-right-from-bracket"></i>
+              </button>
             </form>
           </div>
         <% } else { %>
