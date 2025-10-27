@@ -20,8 +20,8 @@
   --color-surface-muted: #eef2fb;
   --color-border: #d6deee;
   --color-border-strong: #90a4d4;
-  --color-text: #1b2738;
-  --color-text-muted: #51617c;
+  --color-text: #162033;
+  --color-text-muted: #3a4a66;
   --color-success: #2aa866;
   --color-danger: #d64545;
   --color-warning: #f5a524;
@@ -79,7 +79,7 @@ body {
   font-size: 16px;
   line-height: 1.65;
   color: var(--color-text);
-  background: linear-gradient(180deg, #f5f7fb 0%, #eaf0fb 30%, #f4f9ff 100%);
+  background: linear-gradient(180deg, #f6f8fd 0%, #eef3fd 28%, #f7fbff 100%);
 }
 
 body::before {
@@ -193,7 +193,7 @@ h4 {
 
 p {
   margin: 0 0 1rem;
-  color: var(--color-text-muted);
+  color: var(--color-text);
 }
 
 .lead {
@@ -448,6 +448,15 @@ p {
 }
 
 .nav-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(1rem, 2vw, 2.25rem);
+  width: 100%;
+}
+
+/* Ensure inner panel lays out nav on left and actions on right on desktop */
+.nav-panel__inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1791,6 +1800,27 @@ p {
   gap: 2rem;
 }
 
+/* Improve admin form readability */
+.admin-form .form-label {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.admin-form .form-control,
+.admin-form .form-select,
+.admin-form textarea.form-control {
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  border-color: var(--color-border-strong);
+}
+
+.admin-form .form-control:focus,
+.admin-form .form-select:focus,
+.admin-form textarea.form-control:focus {
+  box-shadow: var(--shadow-focus);
+  border-color: var(--color-primary);
+}
+
 .admin-section {
   background: var(--color-surface);
   border-radius: var(--radius-xl);
@@ -1839,10 +1869,10 @@ p {
 }
 
 .admin-form-card {
-  background: rgba(0, 87, 183, 0.03);
+  background: rgba(0, 87, 183, 0.04);
   border-radius: var(--radius-lg);
   padding: 1.25rem 1.5rem;
-  border: 1px solid rgba(0, 87, 183, 0.1);
+  border: 1px solid rgba(0, 87, 183, 0.16);
   margin-bottom: 1.25rem;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
 }
