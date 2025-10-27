@@ -5,6 +5,21 @@
 </section>
 
 <section class="mt-4">
+  <% const vehicleStatusLabels = {
+    needs_funding: 'Збір коштів',
+    in_progress: 'У процесі',
+    funded: 'Передано',
+    repairing: 'На ремонті',
+    ready_for_mission: 'Готове до виїзду',
+    scouting: 'У пошуку'
+  }; %>
+  <% const vehicleCategoryLabels = {
+    pickup: 'Пікап',
+    suv: 'Позашляховик',
+    van: 'Мікроавтобус',
+    crossover: 'Кросовер',
+    truck: 'Вантажівка'
+  }; %>
   <div class="row g-4">
     <% vehicles.forEach(function(vehicle) { %>
       <div class="col-md-4">
@@ -13,10 +28,10 @@
             <img src="/<%= vehicle.image_path %>" alt="<%= vehicle.name %>" class="vehicle-image">
           <% } %>
           <div class="vehicle-body">
-            <span class="badge status-<%= vehicle.status %>"><%= vehicle.status %></span>
+            <span class="badge status-<%= vehicle.status %>"><%= vehicleStatusLabels[vehicle.status] || vehicle.status %></span>
             <h3><%= vehicle.name %></h3>
             <p><%= vehicle.description %></p>
-            <p class="vehicle-meta">Категорія: <%= vehicle.category %></p>
+            <p class="vehicle-meta">Категорія: <%= vehicleCategoryLabels[vehicle.category] || vehicle.category || 'Не вказано' %></p>
           </div>
         </div>
       </div>
