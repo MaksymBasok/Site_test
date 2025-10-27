@@ -1,0 +1,92 @@
+BEGIN TRANSACTION;
+
+ALTER TABLE users ADD COLUMN full_name TEXT;
+ALTER TABLE users ADD COLUMN phone TEXT;
+ALTER TABLE users ADD COLUMN status TEXT NOT NULL DEFAULT 'pending';
+ALTER TABLE users ADD COLUMN proof_path TEXT;
+ALTER TABLE users ADD COLUMN notes TEXT;
+ALTER TABLE users ADD COLUMN approved_at TEXT;
+ALTER TABLE users ADD COLUMN banned_at TEXT;
+ALTER TABLE users ADD COLUMN last_login_at TEXT;
+ALTER TABLE users ADD COLUMN created_via TEXT;
+
+UPDATE users SET status = 'approved' WHERE role = 'admin';
+
+CREATE TABLE IF NOT EXISTS user_audit_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  action TEXT NOT NULL,
+  details TEXT,
+  performed_by INTEGER,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (performed_by) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS donor_reviews (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER,
+  author_name TEXT NOT NULL,
+  rating INTEGER CHECK (rating BETWEEN 1 AND 5),
+  message TEXT NOT NULL,
+  public INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS volunteer_feedback (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  sender_name TEXT NOT NULL,
+  contact TEXT,
+  message TEXT NOT NULL,
+  channel TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS content_blocks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  slug TEXT NOT NULL UNIQUE,
+  title TEXT,
+  body TEXT,
+  updated_by INTEGER,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS admin_notes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  note TEXT NOT NULL,
+  created_by INTEGER,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS pending_actions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER,
+  entity_type TEXT NOT NULL,
+  entity_id INTEGER,
+  action TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  payload TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  processed_at TEXT,
+  processed_by INTEGER,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+  FOREIGN KEY (processed_by) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS site_articles (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  excerpt TEXT,
+  body TEXT,
+  cover_image TEXT,
+  published_at TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+COMMIT;

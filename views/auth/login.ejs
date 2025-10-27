@@ -1,0 +1,30 @@
+<%- include('../partials/layout-start') %>
+<section class="page-header">
+  <h1>Вхід до кабінету донатора</h1>
+  <p class="lead">Отримайте доступ до прямого ефіру та внутрішніх оновлень команди.</p>
+</section>
+<section class="mt-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h2 class="h4 mb-3">Авторизація</h2>
+          <form method="POST" action="/auth/login" novalidate>
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="mb-3">
+              <label class="form-label" for="email">Email</label>
+              <input class="form-control" type="email" id="email" name="email" required autocomplete="email">
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="password">Пароль</label>
+              <input class="form-control" type="password" id="password" name="password" required autocomplete="current-password">
+            </div>
+            <button class="btn btn-primary w-100" type="submit">Увійти</button>
+          </form>
+          <p class="mt-3 mb-0 text-muted">Ще не з нами? <a href="/auth/register">Подайте заявку на доступ</a>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<%- include('../partials/layout-end') %>

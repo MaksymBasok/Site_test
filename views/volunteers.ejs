@@ -38,6 +38,21 @@
       </form>
     </div>
     <div class="col-lg-6">
+      <div class="mb-4">
+        <h2 class="h4 mb-3">Координація</h2>
+        <% if (coordinator) { %>
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <% if (coordinator.title) { %>
+                <h3 class="h5"><%= coordinator.title %></h3>
+              <% } %>
+              <p class="mb-0"><%= coordinator.body %></p>
+            </div>
+          </div>
+        <% } else { %>
+          <p class="text-muted">Контактні дані координаторів з'являться найближчим часом.</p>
+        <% } %>
+      </div>
       <h2 class="h4 mb-3">Останні, хто долучилися</h2>
       <ul class="volunteer-list">
         <% volunteers.forEach(function(volunteer) { %>
@@ -55,6 +70,57 @@
           <li>Будьте першими, хто заповнить анкету!</li>
         <% } %>
       </ul>
+      <div class="mt-4">
+        <h2 class="h4 mb-3">Поточні запити</h2>
+        <div class="list-card">
+          <% feedback.forEach(function(item) { %>
+            <div class="list-card-item">
+              <strong><%= item.sender_name %></strong>
+              <p class="mb-1"><%= item.message %></p>
+              <% if (item.contact) { %>
+                <p class="small text-muted"><i class="fa-solid fa-link me-1"></i><%= item.contact %></p>
+              <% } %>
+              <% if (item.channel) { %>
+                <span class="badge bg-light text-dark"><%= item.channel %></span>
+              <% } %>
+            </div>
+          <% }) %>
+          <% if (feedback.length === 0) { %>
+            <div class="list-card-item">Запитів поки немає.</div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="mt-4">
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h2 class="h4">Зворотній зв'язок для координаторів</h2>
+      <p class="text-muted">Якщо маєте питання чи пропозиції — заповніть форму, і координатор зв'яжеться з вами.</p>
+      <form method="POST" action="/feedback" class="row g-3" novalidate>
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="col-md-4">
+          <label class="form-label" for="sender_name">Ваше ім'я</label>
+          <input class="form-control" type="text" id="sender_name" name="sender_name" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="contact">Контакт</label>
+          <input class="form-control" type="text" id="contact" name="contact" placeholder="@telegram або телефон">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="channel">Канал зв'язку</label>
+          <input class="form-control" type="text" id="channel" name="channel" placeholder="telegram, phone, email">
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="message">Повідомлення</label>
+          <textarea class="form-control" id="message" name="message" rows="3" required></textarea>
+        </div>
+        <div class="col-12">
+          <button class="btn btn-outline-primary" type="submit">Надіслати</button>
+        </div>
+      </form>
     </div>
   </div>
 </section>
