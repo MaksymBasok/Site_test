@@ -1434,6 +1434,34 @@ p {
   opacity: 0.06;
 }
 
+.page-header {
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  padding: clamp(2.5rem, 2rem + 1vw, 3.5rem);
+  box-shadow: var(--shadow-soft);
+  position: relative;
+  overflow: hidden;
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--gradient-surface);
+  opacity: 0.9;
+}
+
+.page-header > * {
+  position: relative;
+  z-index: 1;
+}
+
+.page-header .lead {
+  margin-bottom: 0;
+  max-width: 52ch;
+  color: var(--color-text-muted);
+}
+
 .cta-banner__content {
   position: relative;
   z-index: 2;
@@ -1456,6 +1484,29 @@ p {
   border: 1px solid rgba(0, 87, 183, 0.12);
   background: var(--color-surface);
   box-shadow: var(--shadow-soft);
+}
+
+.list-check {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.list-check li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.list-check li::before {
+  content: '\f00c';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  color: var(--color-success);
+  font-size: 0.95em;
+  line-height: 1.6;
 }
 
 .volunteer-list {
