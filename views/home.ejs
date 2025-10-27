@@ -1,199 +1,289 @@
 <%- include('partials/layout-start') %>
-<section class="hero">
-  <div class="row align-items-center">
-    <div class="col-lg-7">
+<%
+  const donationsList = Array.isArray(donations) ? donations : [];
+  const vehiclesList = Array.isArray(vehicles) ? vehicles : [];
+  const reviewsList = Array.isArray(reviews) ? reviews : [];
+  const articlesList = Array.isArray(articles) ? articles : [];
+  const ratedReviews = reviewsList.filter((review) => review.rating);
+  const averageRatingValue = ratedReviews.length
+    ? (ratedReviews.reduce((sum, review) => sum + review.rating, 0) / ratedReviews.length)
+    : null;
+  const averageDonation = donationsList.length
+    ? Math.round(donationsList.reduce((sum, donation) => sum + donation.amount, 0) / donationsList.length)
+    : null;
+  const vehicleStatusLabels = {
+    needs_funding: 'Збір коштів',
+    in_progress: 'У процесі',
+    funded: 'Передано',
+    repairing: 'На ремонті',
+    ready_for_mission: 'Готове до виїзду',
+    scouting: 'У пошуку'
+  };
+%>
+<section class="hero hero--spotlight">
+  <div class="hero__inner">
+    <div class="hero__content">
+      <span class="hero__eyebrow">Благодійний фонд</span>
       <h1>Автомобілі для перемоги</h1>
-      <p class="lead">Фонд "Волонтерка" закуповує, ремонтує та передає транспорт волонтерам і підрозділам ЗСУ. Ми працюємо прозоро та звітуємо про кожну гривню.</p>
-      <div class="hero-actions">
+      <p class="hero__lead">Фонд "Волонтерка" закуповує, ремонтує та доставляє транспорт для волонтерів і підрозділів ЗСУ. Ми працюємо відкрито, оперативно та поважаємо кожен донат.</p>
+      <div class="hero__actions">
         <a class="btn btn-warning btn-lg" href="/donations"><i class="fa-solid fa-heart me-2"></i>Зробити внесок</a>
         <a class="btn btn-outline-light btn-lg" href="/volunteers"><i class="fa-solid fa-people-carry-box me-2"></i>Стати волонтером</a>
       </div>
+      <div class="hero__assurance"><i class="fa-solid fa-shield-heart" aria-hidden="true"></i> 100% прозорі звіти та актуальні оновлення</div>
     </div>
-    <div class="col-lg-5 text-center">
-      <img class="img-fluid hero-illustration" src="/images/png/2.png" alt="Волонтери та автомобіль">
+    <div class="hero__media">
+      <div class="hero__floating-card hero__floating-card--primary">
+        <span class="hero__floating-label">Середній донат</span>
+        <% if (averageDonation) { %>
+          <strong class="hero__floating-value"><%= averageDonation.toLocaleString('uk-UA') %> ₴</strong>
+          <span class="hero__floating-meta">за останні внески</span>
+        <% } else { %>
+          <strong class="hero__floating-value">Разом сильніші</strong>
+          <span class="hero__floating-meta">Кожна гривня наближає перемогу</span>
+        <% } %>
+      </div>
+      <div class="hero__image-frame">
+        <img class="hero-illustration" src="/images/png/2.png" alt="Волонтери та автомобіль" loading="lazy">
+      </div>
+      <div class="hero__floating-card hero__floating-card--secondary">
+        <% if (averageRatingValue) { %>
+          <span class="hero__floating-label">Оцінка донаторів</span>
+          <strong class="hero__floating-value"><%= averageRatingValue.toFixed(1) %><span aria-hidden="true">★</span></strong>
+          <span class="hero__floating-meta">на основі <%= ratedReviews.length %> відгуків</span>
+        <% } else { %>
+          <span class="hero__floating-label">Авто в роботі</span>
+          <strong class="hero__floating-value"><%= vehiclesList.length %></strong>
+          <span class="hero__floating-meta">активних проєктів зараз</span>
+        <% } %>
+      </div>
     </div>
+  </div>
+  <div class="hero__metrics">
+    <article class="hero-metric">
+      <span class="hero-metric__icon" aria-hidden="true"><i class="fa-solid fa-piggy-bank"></i></span>
+      <div class="hero-metric__label">Зібрано</div>
+      <div class="hero-metric__value"><%= totals.totalRaised.toLocaleString('uk-UA') %> ₴</div>
+    </article>
+    <article class="hero-metric">
+      <span class="hero-metric__icon" aria-hidden="true"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+      <div class="hero-metric__label">Використано</div>
+      <div class="hero-metric__value text-danger"><%= totals.totalWithdrawn.toLocaleString('uk-UA') %> ₴</div>
+    </article>
+    <article class="hero-metric">
+      <span class="hero-metric__icon" aria-hidden="true"><i class="fa-solid fa-circle-check"></i></span>
+      <div class="hero-metric__label">Залишок</div>
+      <div class="hero-metric__value text-success"><%= totals.balance.toLocaleString('uk-UA') %> ₴</div>
+    </article>
   </div>
 </section>
 
-<section class="mt-5">
-  <div class="row g-4">
-    <div class="col-md-4">
-      <div class="stat-card">
-        <h3>Зібрано</h3>
-        <p class="stat-number"><%= totals.totalRaised.toLocaleString('uk-UA') %> ₴</p>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="stat-card">
-        <h3>Використано</h3>
-        <p class="stat-number text-danger"><%= totals.totalWithdrawn.toLocaleString('uk-UA') %> ₴</p>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="stat-card">
-        <h3>Залишок</h3>
-        <p class="stat-number text-success"><%= totals.balance.toLocaleString('uk-UA') %> ₴</p>
-      </div>
-    </div>
+<section class="section section--goal">
+  <div class="section__intro">
+    <h2 class="section__title">Актуальна ціль</h2>
+    <p class="section__description">Щодня ремонтуємо та готуємо авто до виїзду. Остання ціль — забезпечити підрозділ новим транспортом.</p>
   </div>
-</section>
-
-<section class="mt-5">
-  <div class="card shadow-sm">
-    <div class="card-body">
-      <h2 class="card-title">Актуальна ціль</h2>
-      <% if (goal) { %>
-        <div class="row align-items-center">
-          <div class="col-lg-7">
-            <h3><%= goal.title %></h3>
-            <p><%= goal.description %></p>
-          </div>
-          <div class="col-lg-5">
-            <div class="progress mb-2">
-              <% const progress = Math.min(100, Math.round((totals.totalRaised / goal.target_amount) * 100)); %>
-              <div class="progress-bar" role="progressbar" style="width: <%= progress %>%" aria-valuenow="<%= progress %>" aria-valuemin="0" aria-valuemax="100">
-                <%= progress %>%
-              </div>
-            </div>
-            <p class="mb-1"><strong>Мета:</strong> <%= goal.target_amount.toLocaleString('uk-UA') %> ₴</p>
-            <p class="mb-1"><strong>Оновлено:</strong> <%= new Date(goal.updated_at).toLocaleDateString('uk-UA') %></p>
-            <a class="btn btn-primary" href="/donations">Допомогти виконати ціль</a>
-          </div>
+  <% if (goal) { %>
+    <% const progress = Math.min(100, Math.round((totals.totalRaised / goal.target_amount) * 100)); %>
+    <article class="goal-card">
+      <div class="goal-card__content">
+        <h3><%= goal.title %></h3>
+        <p><%= goal.description %></p>
+        <ul class="goal-card__meta">
+          <li><i class="fa-solid fa-bullseye"></i> Мета: <strong><%= goal.target_amount.toLocaleString('uk-UA') %> ₴</strong></li>
+          <li><i class="fa-regular fa-clock"></i> Оновлено: <strong><%= new Date(goal.updated_at).toLocaleDateString('uk-UA') %></strong></li>
+        </ul>
+      </div>
+      <div class="goal-card__progress">
+        <div class="goal-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<%= progress %>">
+          <div class="goal-progress__bar" style="width: <%= progress %>%"></div>
         </div>
-      <% } else { %>
-        <p>Зараз нова ціль формується. Стежте за оновленнями в наших соціальних мережах.</p>
-      <% } %>
+        <div class="goal-progress__value"><%= progress %>%</div>
+        <a class="btn btn-primary" href="/donations">Допомогти виконати ціль</a>
+      </div>
+    </article>
+  <% } else { %>
+    <div class="empty-state">
+      <span class="empty-state__icon" aria-hidden="true"><i class="fa-solid fa-flag"></i></span>
+      <div class="empty-state__content">
+        <h3>Нова ціль вже готується</h3>
+        <p>Стежте за оновленнями у наших соціальних мережах — скоро з'явиться свіжа задача для фонду.</p>
+      </div>
     </div>
-  </div>
+  <% } %>
 </section>
 
-<section class="mt-5">
-  <div class="section-header d-flex justify-content-between align-items-center">
-    <h2>Останні донати</h2>
-    <a href="/donations" class="link-arrow">Усі донати</a>
-  </div>
-  <div class="row g-4">
-    <% donations.forEach(function(donation) { %>
-      <div class="col-md-4">
-        <div class="donation-card">
-          <div class="donor-name"><i class="fa-solid fa-user"></i> <%= donation.donor_name %></div>
-          <div class="donation-amount"><%= donation.amount.toLocaleString('uk-UA') %> <%= donation.currency %></div>
-          <% if (donation.message) { %>
-            <p class="donation-message">“<%= donation.message %>”</p>
-          <% } %>
-          <div class="donation-date"><%= new Date(donation.created_at).toLocaleString('uk-UA') %></div>
-        </div>
-      </div>
-    <% }) %>
-    <% if (donations.length === 0) { %>
-      <div class="col-12">
-        <p>Поки що немає публічних донатів. Станьте першим!</p>
-      </div>
-    <% } %>
-  </div>
-</section>
-
-<section class="mt-5">
-  <div class="section-header d-flex justify-content-between align-items-center">
-    <h2>Поточні автомобілі та потреби</h2>
-    <a href="/cars" class="link-arrow">Детальніше</a>
-  </div>
-  <div class="row g-4">
-    <% const vehicleStatusLabels = {
-      needs_funding: 'Збір коштів',
-      in_progress: 'У процесі',
-      funded: 'Передано',
-      repairing: 'На ремонті',
-      ready_for_mission: 'Готове до виїзду',
-      scouting: 'У пошуку'
-    }; %>
-    <% vehicles.slice(0, 3).forEach(function(vehicle) { %>
-      <div class="col-md-4">
-        <div class="vehicle-card">
-          <% if (vehicle.image_path) { %>
-            <img src="/<%= vehicle.image_path %>" alt="<%= vehicle.name %>" class="vehicle-image">
-          <% } %>
-          <div class="vehicle-body">
-            <h3><%= vehicle.name %></h3>
-            <p><%= vehicle.description %></p>
-            <span class="badge status-<%= vehicle.status %>"><%= vehicleStatusLabels[vehicle.status] || vehicle.status %></span>
-          </div>
-        </div>
-      </div>
-    <% }) %>
-  </div>
-</section>
-
-<section class="mt-5">
-  <div class="section-header d-flex justify-content-between align-items-center">
+<section class="section">
+  <div class="section__intro">
     <div>
-      <h2>Відгуки донаторів</h2>
+      <h2 class="section__title">Останні донати</h2>
+      <p class="section__description">Ми дякуємо кожному, хто допомагає рухати волонтерський транспорт до фронту.</p>
+    </div>
+    <a href="/donations" class="section__link">Усі донати</a>
+  </div>
+  <% if (donationsList.length > 0) { %>
+    <div class="card-grid card-grid--donations">
+      <% donationsList.forEach((donation) => { %>
+        <article class="donation-card">
+          <header class="donation-card__header">
+            <span class="donation-card__avatar" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
+            <div class="donation-card__meta">
+              <span class="donation-card__name"><%= donation.donor_name %></span>
+              <time class="donation-card__date" datetime="<%= new Date(donation.created_at).toISOString() %>"><%= new Date(donation.created_at).toLocaleString('uk-UA') %></time>
+            </div>
+          </header>
+          <div class="donation-card__amount"><%= donation.amount.toLocaleString('uk-UA') %> <%= donation.currency %></div>
+          <% if (donation.message) { %>
+            <p class="donation-card__message">“<%= donation.message %>”</p>
+          <% } %>
+        </article>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <div class="empty-state">
+      <span class="empty-state__icon" aria-hidden="true"><i class="fa-solid fa-gift"></i></span>
+      <div class="empty-state__content">
+        <h3>Ще немає публічних донатів</h3>
+        <p>Будьте першими — саме ваша підтримка відкриє рух новій партії транспорту.</p>
+      </div>
+    </div>
+  <% } %>
+</section>
+
+<section class="section section--surface">
+  <div class="section__intro">
+    <div>
+      <h2 class="section__title">Поточні автомобілі та потреби</h2>
+      <p class="section__description">Ми постійно оновлюємо статус кожного авто, щоб ви знали, на якому етапі допомога.</p>
+    </div>
+    <a href="/cars" class="section__link">Детальніше</a>
+  </div>
+  <% const featuredVehicles = vehiclesList.slice(0, 3); %>
+  <% if (featuredVehicles.length > 0) { %>
+    <div class="card-grid card-grid--vehicles">
+      <% featuredVehicles.forEach((vehicle) => { %>
+        <article class="vehicle-card">
+          <% if (vehicle.image_path) { %>
+            <div class="vehicle-card__media">
+              <img src="/<%= vehicle.image_path %>" alt="<%= vehicle.name %>" loading="lazy">
+            </div>
+          <% } %>
+          <div class="vehicle-card__body">
+            <div class="vehicle-card__header">
+              <h3><%= vehicle.name %></h3>
+              <span class="vehicle-card__status status-<%= vehicle.status %>"><%= vehicleStatusLabels[vehicle.status] || vehicle.status %></span>
+            </div>
+            <p><%= vehicle.description %></p>
+          </div>
+        </article>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <div class="empty-state">
+      <span class="empty-state__icon" aria-hidden="true"><i class="fa-solid fa-car"></i></span>
+      <div class="empty-state__content">
+        <h3>Інформація оновлюється</h3>
+        <p>Зараз ми готуємо новий список автівок. Загляньте трохи пізніше або зв'яжіться з координаторами напряму.</p>
+      </div>
+    </div>
+  <% } %>
+</section>
+
+<section class="section">
+  <div class="section__intro">
+    <div>
+      <h2 class="section__title">Відгуки донаторів</h2>
       <% if (reviewIntro) { %>
-        <p class="text-muted mb-0"><%= reviewIntro.body %></p>
+        <p class="section__description"><%= reviewIntro.body %></p>
+      <% } else { %>
+        <p class="section__description">Ми завжди тримаємо зворотний зв'язок і ділимось результатами з кожним, хто підтримує фонд.</p>
       <% } %>
     </div>
-    <a href="/donations" class="link-arrow">Залишити відгук</a>
+    <a href="/donations" class="section__link">Залишити відгук</a>
   </div>
-  <div class="row g-4">
-    <% reviews.forEach(function(review) { %>
-      <div class="col-md-4">
-        <div class="review-card">
-          <div class="review-author"><i class="fa-solid fa-user-circle me-2"></i><%= review.author_name %></div>
+  <% if (reviewsList.length > 0) { %>
+    <div class="card-grid card-grid--reviews">
+      <% reviewsList.forEach((review) => { %>
+        <article class="review-card">
+          <header class="review-card__header">
+            <span class="review-card__avatar" aria-hidden="true"><i class="fa-solid fa-user-circle"></i></span>
+            <div>
+              <span class="review-card__name"><%= review.author_name %></span>
+              <span class="review-card__date"><%= new Date(review.created_at).toLocaleDateString('uk-UA') %></span>
+            </div>
+          </header>
           <% if (review.rating) { %>
-            <div class="review-rating mb-2">
+            <div class="review-card__rating" aria-label="Оцінка: <%= review.rating %> з 5">
               <% for (let i = 0; i < review.rating; i++) { %>
-                <i class="fa-solid fa-star text-warning"></i>
+                <i class="fa-solid fa-star"></i>
               <% } %>
             </div>
           <% } %>
-          <p class="review-message">“<%= review.message %>”</p>
-          <span class="text-muted small"><%= new Date(review.created_at).toLocaleDateString('uk-UA') %></span>
-        </div>
+          <p class="review-card__message">“<%= review.message %>”</p>
+        </article>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <div class="empty-state">
+      <span class="empty-state__icon" aria-hidden="true"><i class="fa-solid fa-comments"></i></span>
+      <div class="empty-state__content">
+        <h3>Очікуємо перші відгуки</h3>
+        <p>Щойно розпочали кампанію — скоро тут з'являться відгуки людей, які вже допомогли.</p>
       </div>
-    <% }) %>
-    <% if (reviews.length === 0) { %>
-      <div class="col-12">
-        <div class="alert alert-info">Очікуємо на перші відгуки після старту кампанії.</div>
-      </div>
-    <% } %>
-  </div>
+    </div>
+  <% } %>
 </section>
 
-<section class="mt-5">
-  <div class="section-header d-flex justify-content-between align-items-center">
-    <h2>Свіжі новини</h2>
-    <a href="/articles" class="link-arrow">Усі матеріали</a>
+<section class="section">
+  <div class="section__intro">
+    <div>
+      <h2 class="section__title">Свіжі новини</h2>
+      <p class="section__description">Звіти про передані авто, історії з фронту та корисні поради для волонтерів.</p>
+    </div>
+    <a href="/articles" class="section__link">Усі матеріали</a>
   </div>
-  <div class="row g-4">
-    <% articles.forEach(function(article) { %>
-      <div class="col-md-4">
-        <div class="card h-100 shadow-sm article-card">
+  <% if (articlesList.length > 0) { %>
+    <div class="card-grid card-grid--articles">
+      <% articlesList.forEach((article) => { %>
+        <article class="article-card">
           <% if (article.cover_image) { %>
-            <img src="/<%= article.cover_image %>" class="card-img-top" alt="<%= article.title %>">
+            <div class="article-card__media">
+              <img src="/<%= article.cover_image %>" alt="<%= article.title %>" loading="lazy">
+            </div>
           <% } %>
-          <div class="card-body d-flex flex-column">
-            <h3 class="h5"><a href="/articles/<%= article.id %>"><%= article.title %></a></h3>
+          <div class="article-card__body">
+            <h3><a href="/articles/<%= article.id %>"><%= article.title %></a></h3>
             <% if (article.excerpt) { %>
-              <p class="text-muted"><%= article.excerpt %></p>
+              <p><%= article.excerpt %></p>
             <% } %>
-            <div class="mt-auto text-muted small"><i class="fa-regular fa-calendar me-1"></i><%= article.published_at ? new Date(article.published_at).toLocaleDateString('uk-UA') : 'Незабаром' %></div>
+            <div class="article-card__meta">
+              <span><i class="fa-regular fa-calendar"></i> <%= article.published_at ? new Date(article.published_at).toLocaleDateString('uk-UA') : 'Незабаром' %></span>
+            </div>
           </div>
-        </div>
+        </article>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <div class="empty-state">
+      <span class="empty-state__icon" aria-hidden="true"><i class="fa-solid fa-newspaper"></i></span>
+      <div class="empty-state__content">
+        <h3>Матеріали готуються</h3>
+        <p>Команда працює над новими публікаціями. Поверніться трохи згодом, щоб нічого не пропустити.</p>
       </div>
-    <% }) %>
-    <% if (articles.length === 0) { %>
-      <div class="col-12">
-        <div class="alert alert-secondary">Матеріали готуються до публікації.</div>
-      </div>
-    <% } %>
-  </div>
+    </div>
+  <% } %>
 </section>
 
-<section class="cta-banner mt-5">
-  <div class="cta-content">
-    <h2>Ваш донат — це врятовані життя</h2>
-    <p>Навіть 200 гривень можуть допомогти відремонтувати авто для евакуації та логістики.</p>
-    <a class="btn btn-light btn-lg" href="/donations">Підтримати фонд</a>
+<section class="section section--cta">
+  <div class="cta-banner">
+    <div class="cta-banner__content">
+      <h2>Ваш донат — це врятовані життя</h2>
+      <p>Навіть 200 гривень допомагають викупити запчастини, заправити авто та евакуювати людей із небезпеки.</p>
+      <div class="cta-banner__actions">
+        <a class="btn btn-light btn-lg" href="/donations"><i class="fa-solid fa-heart-circle-bolt me-2"></i>Підтримати фонд</a>
+        <a class="btn btn-outline-light btn-lg" href="/documents"><i class="fa-solid fa-file-shield me-2"></i>Переглянути звіти</a>
+      </div>
+    </div>
   </div>
 </section>
 <%- include('partials/layout-end') %>

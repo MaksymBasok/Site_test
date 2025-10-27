@@ -13,8 +13,10 @@
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-  <%- include('header', { currentPath, currentUser, csrfToken }) %>
-  <div class="page">
-    <main id="main-content" tabindex="-1">
-      <div class="container">
+  <a class="skip-link" href="#main-content">Перейти до основного контенту</a>
+  <div class="page-shell">
+    <%- include('header', { currentPath, currentUser, csrfToken }) %>
+    <div class="page">
+      <main id="main-content" tabindex="-1">
+        <div class="container container--page">
         <%- include('flash-messages', { flash: flash }) %>
