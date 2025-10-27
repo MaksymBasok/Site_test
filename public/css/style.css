@@ -389,8 +389,6 @@ p {
 
 .logo-icon {
   width: 46px;
-.logo-icon {
-  width: 46px;
   height: 46px;
   display: grid;
   place-items: center;
@@ -625,8 +623,6 @@ p {
   z-index: 1;
 }
 
-.hero__content {
-  display: flex;
 .hero__content {
   display: flex;
   flex-direction: column;
