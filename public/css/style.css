@@ -2354,6 +2354,9 @@ p {
 /* Ensure modal content is always interactive */
 .modal, .modal * { pointer-events: auto; }
 
+/* Utility to force-hide overlays when modals open */
+.force-hidden { display: none !important; }
+
 /* Prevent Bootstrap from adding right padding visual shift */
 body.modal-open { padding-right: 0 !important; }
 

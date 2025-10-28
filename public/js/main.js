@@ -34,10 +34,18 @@ const initNavigation = () => {
   document.addEventListener('show.bs.modal', () => {
     document.documentElement.style.setProperty('--scrollbar-comp', '0px');
     document.body.style.paddingRight = '0px';
+    const panel = document.querySelector('[data-nav-panel]');
+    const backdrop = document.querySelector('[data-nav-backdrop]');
+    panel && panel.classList.add('force-hidden');
+    backdrop && backdrop.classList.add('force-hidden');
   });
   document.addEventListener('hidden.bs.modal', () => {
     document.documentElement.style.removeProperty('--scrollbar-comp');
     document.body.style.paddingRight = '';
+    const panel = document.querySelector('[data-nav-panel]');
+    const backdrop = document.querySelector('[data-nav-backdrop]');
+    panel && panel.classList.remove('force-hidden');
+    backdrop && backdrop.classList.remove('force-hidden');
   });
 
   $$("[data-nav-dropdown]").forEach((dropdown) => {
@@ -762,8 +770,9 @@ const initAdminExportCenter = () => {
         headers: {
           'Content-Type': 'application/json',
           'Accept': format === 'json' ? 'application/json' : 'application/zip',
-          'X-CSRF-Token': csrfToken || ''
+          'X-CSRF-Token': csrfToken || document.querySelector('meta[name="csrf-token"]')?.content || ''
         },
+        credentials: 'same-origin',
         body: JSON.stringify({ datasets: selected, format })
       });
 

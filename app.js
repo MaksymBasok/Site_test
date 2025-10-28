@@ -80,6 +80,17 @@ app.use((req, res, next) => {
   res.locals.csrfToken = req.csrfToken ? req.csrfToken() : '';
   res.locals.currentPath = req.path;
   res.locals.flash = req.flash();
+  // Expose CSRF token for XHR clients as a non-HttpOnly cookie (safe due to CSRF double-submit design)
+  try {
+    if (res.locals.csrfToken) {
+      res.cookie('XSRF-TOKEN', res.locals.csrfToken, {
+        httpOnly: false,
+        sameSite: 'lax',
+        secure: isProd,
+        path: '/'
+      });
+    }
+  } catch (e) {}
   // Cache-busting for static assets
   try {
     const pkg = require('./package.json');
