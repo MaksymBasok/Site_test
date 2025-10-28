@@ -75,8 +75,8 @@
 html {
   scroll-behavior: smooth;
   min-height: 100%;
-  /* Avoid layout shift when Bootstrap toggles body scrollbar */
-  scrollbar-gutter: stable both-edges;
+  /* Avoid layout shift when Bootstrap toggles body scrollbar; keep only end gutter */
+  scrollbar-gutter: stable;
 }
 
 body {
