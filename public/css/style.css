@@ -1553,6 +1553,8 @@ p {
   inset: 0;
   background: var(--gradient-surface);
   opacity: 0.9;
+  /* Ensure overlay never blocks clicks */
+  pointer-events: none;
 }
 
 .page-header > * {
@@ -1654,6 +1656,36 @@ p {
   box-shadow: var(--shadow-strong);
 }
 
+/* Improve contrast inside admin header */
+.page-header--admin h1,
+.page-header--admin h2,
+.page-header--admin h3,
+.page-header--admin h4,
+.page-header--admin h5,
+.page-header--admin h6,
+.page-header--admin p,
+.page-header--admin .text-muted,
+.page-header--admin .page-header__eyebrow,
+.page-header--admin a:not(.btn) {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+.page-header--admin .text-muted {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.page-header--admin .btn-outline-primary {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.page-header--admin .btn-outline-primary:hover,
+.page-header--admin .btn-outline-primary:focus-visible {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.8);
+}
+
 .page-header__content {
   display: flex;
   flex-direction: column;
@@ -1694,6 +1726,8 @@ p {
   background: linear-gradient(130deg, var(--color-surface) 0%, rgba(230, 247, 245, 0.5) 100%);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
   cursor: pointer;
+  position: relative;
+  z-index: 1;
 }
 
 .export-option .form-check {
@@ -2312,6 +2346,12 @@ p {
 [data-reveal].is-visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* On admin pages, avoid accidental hidden sections if observer fails */
+.admin-content [data-reveal] {
+  opacity: 1;
+  transform: none;
 }
 /* Footer */
 
