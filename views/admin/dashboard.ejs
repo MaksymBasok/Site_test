@@ -237,7 +237,7 @@
                       <h4 class="h6 mb-0"><%= account.label %></h4>
                       <span class="badge bg-light text-dark">Оновлено <%= new Date(account.updated_at).toLocaleDateString('uk-UA') %></span>
                     </div>
-                    <form method="POST" action="/admin/bank-accounts/<%= account.id %>" class="row g-3" id="bank-form-<%= account.id %>" novalidate>
+                    <form method="POST" action="/admin/bank-accounts/<%= account.id %>" class="admin-form row g-3" id="bank-form-<%= account.id %>" novalidate>
                       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                       <div class="col-md-6">
                         <label class="form-label">Отримувач</label>
@@ -265,7 +265,7 @@
                     </div>
                   </div>
                 <% }) %>
-                <form method="POST" action="/admin/bank-accounts" class="admin-form-card admin-form-card--inline" novalidate>
+                <form method="POST" action="/admin/bank-accounts" class="admin-form admin-form-card admin-form-card--inline" novalidate>
                   <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                   <div class="admin-form-card__header">
                     <h4 class="h6 mb-0">Новий рахунок</h4>
@@ -308,7 +308,7 @@
             </div>
             <div class="card-body">
               <% goals.forEach(function(goal) { %>
-                <form method="POST" action="/admin/goals/<%= goal.id %>" class="admin-form-card" novalidate>
+                <form method="POST" action="/admin/goals/<%= goal.id %>" class="admin-form admin-form-card" novalidate>
                   <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                   <div class="admin-form-card__header">
                     <h4 class="h6 mb-0"><%= goal.title %></h4>
@@ -341,7 +341,7 @@
                   </div>
                 </form>
               <% }) %>
-              <form method="POST" action="/admin/goals" class="admin-form-card" novalidate>
+              <form method="POST" action="/admin/goals" class="admin-form admin-form-card" novalidate>
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <div class="admin-form-card__header">
                   <h4 class="h6 mb-0">Нова ціль</h4>
@@ -571,7 +571,7 @@
                     </div>
                   <% } %>
                   <p class="mb-2"><%= vehicle.description %></p>
-                  <form method="POST" action="/admin/vehicles/<%= vehicle.id %>" class="row g-2" id="vehicle-form-<%= vehicle.id %>" novalidate>
+                  <form method="POST" action="/admin/vehicles/<%= vehicle.id %>" class="admin-form row g-2" id="vehicle-form-<%= vehicle.id %>" novalidate>
                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     <div class="col-md-6">
                       <label class="form-label">Статус</label>
@@ -611,7 +611,7 @@
               <h3 class="h5 mb-0">Додати авто</h3>
             </div>
             <div class="card-body">
-              <form method="POST" action="/admin/vehicles" class="row g-3" novalidate>
+              <form method="POST" action="/admin/vehicles" class="admin-form row g-3" novalidate>
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <div class="col-12">
                   <label class="form-label">Назва</label>
@@ -658,7 +658,7 @@
             </div>
             <div class="card-body">
               <% contentBlocks.forEach(function(block) { %>
-                <form method="POST" action="/admin/content-blocks/<%= block.slug %>" class="admin-form-card">
+                <form method="POST" action="/admin/content-blocks/<%= block.slug %>" class="admin-form admin-form-card">
                   <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                   <div class="admin-form-card__header">
                     <h4 class="h6 mb-0 text-uppercase text-muted"><%= block.slug %></h4>
@@ -690,7 +690,7 @@
                   <div class="admin-form-card__header">
                     <h4 class="h6 mb-0"><%= item.title %></h4>
                   </div>
-                  <form method="POST" action="/admin/media/<%= item.id %>" class="admin-form-card__form" id="media-form-<%= item.id %>" novalidate>
+                  <form method="POST" action="/admin/media/<%= item.id %>" class="admin-form admin-form-card__form" id="media-form-<%= item.id %>" novalidate>
                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     <div class="mb-3">
                       <label class="form-label">Назва</label>
@@ -718,7 +718,7 @@
                   </div>
                 </div>
               <% }) %>
-              <form method="POST" action="/admin/media" class="admin-form-card" novalidate>
+              <form method="POST" action="/admin/media" class="admin-form admin-form-card" novalidate>
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <div class="admin-form-card__header">
                   <h4 class="h6 mb-0">Новий матеріал</h4>
@@ -756,7 +756,7 @@
                     <h4 class="h6 mb-0"><%= article.title %></h4>
                     <span class="badge bg-light text-dark"><%= article.published_at ? new Date(article.published_at).toLocaleDateString('uk-UA') : 'Чернетка' %></span>
                   </div>
-                  <form method="POST" action="/admin/articles/<%= article.id %>" class="admin-form-card__form" id="article-form-<%= article.id %>" novalidate>
+                  <form method="POST" action="/admin/articles/<%= article.id %>" class="admin-form admin-form-card__form" id="article-form-<%= article.id %>" novalidate>
                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     <div class="mb-3">
                       <label class="form-label">Заголовок</label>
@@ -788,7 +788,7 @@
                   </div>
                 </div>
               <% }) %>
-              <form method="POST" action="/admin/articles" class="admin-form-card" novalidate>
+              <form method="POST" action="/admin/articles" class="admin-form admin-form-card" novalidate>
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <div class="admin-form-card__header">
                   <h4 class="h6 mb-0">Нова стаття</h4>
@@ -838,7 +838,7 @@
             </div>
             <div class="card-body">
               <% reviews.forEach(function(review) { %>
-                <form method="POST" action="/admin/reviews/<%= review.id %>/toggle" class="admin-form-card">
+                <form method="POST" action="/admin/reviews/<%= review.id %>/toggle" class="admin-form admin-form-card">
                   <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                   <div class="admin-form-card__header d-flex justify-content-between align-items-center">
                     <h4 class="h6 mb-0"><%= review.author_name %></h4>
@@ -857,7 +857,7 @@
                   <p class="small text-muted mb-0"><%= new Date(review.created_at).toLocaleDateString('uk-UA') %></p>
                 </form>
               <% }) %>
-              <form method="POST" action="/admin/reviews" class="admin-form-card" novalidate>
+              <form method="POST" action="/admin/reviews" class="admin-form admin-form-card" novalidate>
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <div class="admin-form-card__header">
                   <h4 class="h6 mb-0">Додати відгук</h4>
@@ -954,7 +954,7 @@
         <h2 class="modal-title fs-5" id="modalAddDonationLabel">Додати донат вручну</h2>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити"></button>
       </div>
-      <form method="POST" action="/admin/donations" novalidate>
+      <form method="POST" action="/admin/donations" class="admin-form" novalidate>
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="modal-body">
           <div class="row g-3">
@@ -998,7 +998,7 @@
         <h2 class="modal-title fs-5" id="modalAddExpenseLabel">Зафіксувати витрату</h2>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити"></button>
       </div>
-      <form method="POST" action="/admin/withdrawals" novalidate>
+      <form method="POST" action="/admin/withdrawals" class="admin-form" novalidate>
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="modal-body">
           <div class="mb-3">
@@ -1026,7 +1026,7 @@
         <h2 class="modal-title fs-5" id="modalExportCenterLabel">Експорт даних фонду</h2>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити"></button>
       </div>
-      <form class="export-form" data-export-form data-csrf="<%= csrfToken %>" novalidate>
+      <form class="admin-form export-form" data-export-form data-csrf="<%= csrfToken %>" novalidate>
         <div class="modal-body">
           <p class="text-muted small mb-3">Оберіть розділи, які хочете завантажити. Ми сформуємо структурований ZIP з CSV та JSON файлами відповідно до обраних блоків.</p>
           <div class="row g-3">
