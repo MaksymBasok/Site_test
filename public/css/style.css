@@ -2367,7 +2367,9 @@ p {
 }
 
 /* On admin pages, avoid accidental hidden sections if observer fails */
-.admin-content [data-reveal] {
+.admin-content [data-reveal],
+.dashboard-kpis[data-reveal],
+.admin-workspace[data-reveal] {
   opacity: 1;
   transform: none;
 }
