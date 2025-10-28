@@ -1530,6 +1530,16 @@ p {
   overflow: hidden;
 }
 
+.cta-banner h1,
+.cta-banner h2,
+.cta-banner h3,
+.cta-banner h4,
+.cta-banner h5,
+.cta-banner h6,
+.cta-banner p {
+  color: inherit;
+}
+
 .cta-banner::after {
   content: '';
   position: absolute;

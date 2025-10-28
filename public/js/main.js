@@ -517,6 +517,28 @@ const initAdminExportCenter = () => {
   const modalInstance = modalElement && window.bootstrap
     ? window.bootstrap.Modal.getOrCreateInstance(modalElement)
     : null;
+  const exportLaunchers = $$('[data-export-launch]');
+
+  const closeNavigationOverlay = () => {
+    const navPanel = $('[data-nav-panel]');
+    const navToggle = $('[data-nav-toggle]');
+    const navBackdrop = $('[data-nav-backdrop]');
+    if (navPanel && navPanel.classList.contains('is-open')) {
+      navPanel.classList.remove('is-open');
+      navToggle && navToggle.setAttribute('aria-expanded', 'false');
+    }
+    navBackdrop && navBackdrop.classList.remove('is-visible');
+  };
+
+  exportLaunchers.forEach((button) => {
+    button.addEventListener('click', () => {
+      closeNavigationOverlay();
+    });
+  });
+
+  if (modalElement) {
+    modalElement.addEventListener('show.bs.modal', closeNavigationOverlay);
+  }
 
   const updateStatus = (message = '', tone = 'muted') => {
     if (!status) return;
