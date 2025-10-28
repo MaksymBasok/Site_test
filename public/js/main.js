@@ -30,24 +30,6 @@ const initNavigation = () => {
   document.addEventListener('show.bs.modal', () => closeNav());
   document.addEventListener('shown.bs.modal', () => closeNav());
 
-  // Avoid header shifting when modal toggles scrollbar
-  document.addEventListener('show.bs.modal', () => {
-    document.documentElement.style.setProperty('--scrollbar-comp', '0px');
-    document.body.style.paddingRight = '0px';
-    const panel = document.querySelector('[data-nav-panel]');
-    const backdrop = document.querySelector('[data-nav-backdrop]');
-    panel && panel.classList.add('force-hidden');
-    backdrop && backdrop.classList.add('force-hidden');
-  });
-  document.addEventListener('hidden.bs.modal', () => {
-    document.documentElement.style.removeProperty('--scrollbar-comp');
-    document.body.style.paddingRight = '';
-    const panel = document.querySelector('[data-nav-panel]');
-    const backdrop = document.querySelector('[data-nav-backdrop]');
-    panel && panel.classList.remove('force-hidden');
-    backdrop && backdrop.classList.remove('force-hidden');
-  });
-
   $$("[data-nav-dropdown]").forEach((dropdown) => {
     const button = $('button', dropdown);
     if (!button) return;

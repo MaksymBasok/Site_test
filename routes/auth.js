@@ -4,6 +4,7 @@ const fs = require('fs');
 const multer = require('multer');
 const { body, validationResult } = require('express-validator');
 const createError = require('http-errors');
+const csrfProtection = require('../middleware/csrf');
 const { registerUser, authenticate } = require('../services/userService');
 
 const router = express.Router();
@@ -86,7 +87,7 @@ router.get('/register', (req, res) => {
   });
 });
 
-router.post('/register', upload.single('proof'), registrationValidators, async (req, res, next) => {
+router.post('/register', upload.single('proof'), csrfProtection, registrationValidators, async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
