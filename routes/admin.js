@@ -11,6 +11,10 @@ const {
   listApplicants,
   listApprovedDonors,
   listAdministrators,
+  listAllUsers,
+  listUserAuditLogs,
+  listAdminNotesByUsers,
+  createAdminNote,
   updateUserStatus,
   assignRole,
   STATUSES
@@ -50,6 +54,7 @@ const {
   deleteArticle
 } = require('../services/contentService');
 const { requireAdmin } = require('../middleware/auth');
+const { storeFormState } = require('../utils/formState');
 
 const router = express.Router();
 
@@ -118,6 +123,32 @@ router.get('/dashboard', requireAdmin, (req, res) => {
   const applicants = listApplicants();
   const donors = listApprovedDonors();
   const admins = listAdministrators();
+  const allUsers = listAllUsers();
+  const userIds = allUsers.map((user) => user.id);
+  const auditLogs = listUserAuditLogs(userIds);
+  const adminNotes = listAdminNotesByUsers(userIds);
+  const auditByUser = auditLogs.reduce((acc, log) => {
+    if (!acc[log.user_id]) acc[log.user_id] = [];
+    acc[log.user_id].push(log);
+    return acc;
+  }, {});
+  const notesByUser = adminNotes.reduce((acc, note) => {
+    if (!acc[note.user_id]) acc[note.user_id] = [];
+    acc[note.user_id].push(note);
+    return acc;
+  }, {});
+  const userStats = allUsers.reduce((acc, user) => {
+    acc.total += 1;
+    acc.roles[user.role] = (acc.roles[user.role] || 0) + 1;
+    acc.statuses[user.status] = (acc.statuses[user.status] || 0) + 1;
+    if (user.approved_at) {
+      acc.approved += 1;
+    }
+    if (user.status === STATUSES.PENDING) {
+      acc.pending += 1;
+    }
+    return acc;
+  }, { total: 0, approved: 0, pending: 0, roles: {}, statuses: {} });
   const bankAccounts = listBankAccounts();
   const goals = listGoals();
   const vehicles = listVehicles();
@@ -136,6 +167,10 @@ router.get('/dashboard', requireAdmin, (req, res) => {
     applicants,
     donors,
     admins,
+    allUsers,
+    auditByUser,
+    notesByUser,
+    userStats,
     bankAccounts,
     goals,
     vehicles,
@@ -165,6 +200,8 @@ router.post('/donations', requireAdmin, donationService.donationValidators, (req
     res.redirect('/admin/dashboard#finance');
   } catch (error) {
     if (error.status === 422) {
+      const formId = req.body._formId || 'donation:new';
+      storeFormState(req, formId, { values: req.body, errors: error.fields, message: error.message });
       req.flash('error', error.message);
       return res.redirect('/admin/dashboard#finance');
     }
@@ -183,6 +220,8 @@ router.post('/withdrawals', requireAdmin, withdrawalService.withdrawalValidators
     res.redirect('/admin/dashboard#finance');
   } catch (error) {
     if (error.status === 422) {
+      const formId = req.body._formId || 'withdrawal:new';
+      storeFormState(req, formId, { values: req.body, errors: error.fields, message: error.message });
       req.flash('error', error.message);
       return res.redirect('/admin/dashboard#finance');
     }
@@ -230,6 +269,68 @@ router.post('/users/:id/role', requireAdmin, (req, res, next) => {
   }
 });
 
+router.post('/users/:id/status', requireAdmin, (req, res, next) => {
+  const redirectUrl = req.body.redirect || '/admin/dashboard#users';
+  const formId = req.body._formId || `user-status:${req.params.id}`;
+  try {
+    const status = req.body.status;
+    if (!status || !Object.values(STATUSES).includes(status)) {
+      const message = 'Некоректний статус користувача.';
+      storeFormState(req, formId, {
+        values: req.body,
+        errors: [{ field: 'status', message }],
+        message
+      });
+      req.flash('error', message);
+      return res.redirect(redirectUrl);
+    }
+    updateUserStatus(Number(req.params.id), status, req.session.user.id, { notes: req.body.notes });
+    req.flash('success', 'Статус оновлено.');
+    return res.redirect(redirectUrl);
+  } catch (error) {
+    if (error.status === 404) {
+      const message = error.message || 'Користувача не знайдено.';
+      storeFormState(req, formId, {
+        values: req.body,
+        errors: [{ field: 'status', message }],
+        message
+      });
+      req.flash('error', message);
+      return res.redirect(redirectUrl);
+    }
+    if (error.status === 422 && error.fields) {
+      storeFormState(req, formId, {
+        values: req.body,
+        errors: error.fields,
+        message: error.message
+      });
+      req.flash('error', error.message);
+      return res.redirect(redirectUrl);
+    }
+    return next(error);
+  }
+});
+
+router.post('/users/:id/notes', requireAdmin, (req, res, next) => {
+  const formId = req.body._formId || `user-note:${req.params.id}`;
+  try {
+    createAdminNote(Number(req.params.id), req.body.note, req.session.user.id);
+    req.flash('success', 'Примітку додано.');
+    return res.redirect(req.body.redirect || '/admin/dashboard#users');
+  } catch (error) {
+    if (error.status === 422) {
+      storeFormState(req, formId, {
+        values: req.body,
+        errors: [{ field: 'note', message: error.message }],
+        message: error.message
+      });
+      req.flash('error', error.message);
+      return res.redirect(req.body.redirect || '/admin/dashboard#users');
+    }
+    return next(error);
+  }
+});
+
 router.post('/bank-accounts', requireAdmin, bankAccountValidators, (req, res, next) => {
   try {
     validateFundraising(req);
@@ -244,6 +345,8 @@ router.post('/bank-accounts', requireAdmin, bankAccountValidators, (req, res, ne
     res.redirect('/admin/dashboard#finance');
   } catch (error) {
     if (error.status === 422) {
+      const formId = req.body._formId || 'bank-account:new';
+      storeFormState(req, formId, { values: req.body, errors: error.fields, message: error.message });
       req.flash('error', error.message);
       return res.redirect('/admin/dashboard#finance');
     }
@@ -265,6 +368,8 @@ router.post('/bank-accounts/:id', requireAdmin, bankAccountValidators, (req, res
     res.redirect('/admin/dashboard#finance');
   } catch (error) {
     if (error.status === 422) {
+      const formId = req.body._formId || `bank-account:${req.params.id}`;
+      storeFormState(req, formId, { values: req.body, errors: error.fields, message: error.message });
       req.flash('error', error.message);
       return res.redirect('/admin/dashboard#finance');
     }
@@ -285,7 +390,10 @@ router.post('/bank-accounts/:id/delete', requireAdmin, (req, res, next) => {
 router.post('/goals', requireAdmin, goalValidators, (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    req.flash('error', errors.array()[0].msg);
+    const details = errors.array();
+    const formId = req.body._formId || 'goal:new';
+    storeFormState(req, formId, { values: req.body, errors: details.map((item) => ({ field: item.path, message: item.msg })), message: details[0].msg });
+    req.flash('error', details[0].msg);
     return res.redirect('/admin/dashboard#finance');
   }
   try {
@@ -308,7 +416,10 @@ router.post('/goals', requireAdmin, goalValidators, (req, res, next) => {
 router.post('/goals/:id', requireAdmin, goalValidators, (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    req.flash('error', errors.array()[0].msg);
+    const details = errors.array();
+    const formId = req.body._formId || `goal:${req.params.id}`;
+    storeFormState(req, formId, { values: req.body, errors: details.map((item) => ({ field: item.path, message: item.msg })), message: details[0].msg });
+    req.flash('error', details[0].msg);
     return res.redirect('/admin/dashboard#finance');
   }
   try {
@@ -342,6 +453,8 @@ router.post('/vehicles', requireAdmin, vehicleValidators, (req, res, next) => {
     res.redirect('/admin/dashboard#vehicles');
   } catch (error) {
     if (error.status === 422) {
+      const formId = req.body._formId || 'vehicle:new';
+      storeFormState(req, formId, { values: req.body, errors: error.fields, message: error.message });
       req.flash('error', error.message);
       return res.redirect('/admin/dashboard#vehicles');
     }
@@ -363,6 +476,8 @@ router.post('/vehicles/:id', requireAdmin, vehicleValidators, (req, res, next) =
     res.redirect('/admin/dashboard#vehicles');
   } catch (error) {
     if (error.status === 422) {
+      const formId = req.body._formId || `vehicle:${req.params.id}`;
+      storeFormState(req, formId, { values: req.body, errors: error.fields, message: error.message });
       req.flash('error', error.message);
       return res.redirect('/admin/dashboard#vehicles');
     }
@@ -396,7 +511,10 @@ router.post('/content-blocks/:slug', requireAdmin, (req, res, next) => {
 router.post('/media', requireAdmin, mediaValidators, (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    req.flash('error', errors.array()[0].msg);
+    const details = errors.array();
+    const formId = req.body._formId || 'media:new';
+    storeFormState(req, formId, { values: req.body, errors: details.map((item) => ({ field: item.path, message: item.msg })), message: details[0].msg });
+    req.flash('error', details[0].msg);
     return res.redirect('/admin/dashboard#content');
   }
   try {
@@ -416,7 +534,10 @@ router.post('/media', requireAdmin, mediaValidators, (req, res, next) => {
 router.post('/media/:id', requireAdmin, mediaValidators, (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    req.flash('error', errors.array()[0].msg);
+    const details = errors.array();
+    const formId = req.body._formId || `media:${req.params.id}`;
+    storeFormState(req, formId, { values: req.body, errors: details.map((item) => ({ field: item.path, message: item.msg })), message: details[0].msg });
+    req.flash('error', details[0].msg);
     return res.redirect('/admin/dashboard#content');
   }
   try {
@@ -446,7 +567,10 @@ router.post('/media/:id/delete', requireAdmin, (req, res, next) => {
 router.post('/articles', requireAdmin, articleValidators, (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    req.flash('error', errors.array()[0].msg);
+    const details = errors.array();
+    const formId = req.body._formId || 'article:new';
+    storeFormState(req, formId, { values: req.body, errors: details.map((item) => ({ field: item.path, message: item.msg })), message: details[0].msg });
+    req.flash('error', details[0].msg);
     return res.redirect('/admin/dashboard#content');
   }
   try {
@@ -467,7 +591,10 @@ router.post('/articles', requireAdmin, articleValidators, (req, res, next) => {
 router.post('/articles/:id', requireAdmin, articleValidators, (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    req.flash('error', errors.array()[0].msg);
+    const details = errors.array();
+    const formId = req.body._formId || `article:${req.params.id}`;
+    storeFormState(req, formId, { values: req.body, errors: details.map((item) => ({ field: item.path, message: item.msg })), message: details[0].msg });
+    req.flash('error', details[0].msg);
     return res.redirect('/admin/dashboard#content');
   }
   try {
@@ -508,6 +635,8 @@ router.post('/reviews', requireAdmin, reviewService.reviewValidators, (req, res,
     res.redirect('/admin/dashboard#community');
   } catch (error) {
     if (error.status === 422) {
+      const formId = req.body._formId || 'review:new';
+      storeFormState(req, formId, { values: req.body, errors: error.fields, message: error.message });
       req.flash('error', error.message);
       return res.redirect('/admin/dashboard#community');
     }

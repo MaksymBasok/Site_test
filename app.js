@@ -19,6 +19,7 @@ const adminRouter = require('./routes/admin');
 const authRouter = require('./routes/auth');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandlers');
 const csrfProtection = require('./middleware/csrf');
+const { consumeFormState } = require('./utils/formState');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -80,6 +81,10 @@ app.use((req, res, next) => {
   res.locals.csrfToken = req.csrfToken ? req.csrfToken() : '';
   res.locals.currentPath = req.path;
   res.locals.flash = req.flash();
+  res.locals.formState = consumeFormState(req);
+  res.locals.formValue = (formId, field, fallback = '') => res.locals.formState.value(formId, field, fallback);
+  res.locals.formInvalid = (formId, field) => res.locals.formState.isInvalid(formId, field);
+  res.locals.formFieldError = (formId, field) => res.locals.formState.fieldError(formId, field);
   // Expose CSRF token for XHR clients as a non-HttpOnly cookie (safe due to CSRF double-submit design)
   try {
     if (res.locals.csrfToken) {

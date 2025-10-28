@@ -7,6 +7,22 @@
   const activeGoal = goals.find((goal) => goal.status === 'active');
   const datasetOrder = Array.isArray(exportDatasets) ? exportDatasets : [];
   const datasetMeta = exportMeta || {};
+  const getFormValue = formValue;
+  const isInvalid = formInvalid;
+  const fieldError = formFieldError;
+  const hasFormState = (formId) => (formState && typeof formState.has === 'function' ? formState.has(formId) : false);
+  const roleFilters = Object.keys((userStats && userStats.roles) || {}).sort();
+  const roleSelectOptions = Array.from(new Set(['admin', 'moderator', 'donor', 'volunteer'].concat(roleFilters))).filter(Boolean);
+  const statusFilters = Object.keys((userStats && userStats.statuses) || {}).sort();
+  const statusOptions = Object.values(STATUSES || {});
+  const humanizeAction = (action = '') => action.replace(/_/g, ' ');
+  const formatDetails = (details) => {
+    if (!details) return '';
+    if (typeof details === 'object') {
+      return Object.entries(details).map(([key, value]) => `${key}: ${value}`).join(', ');
+    }
+    return String(details);
+  };
 %>
 <!-- Продовжуємо використання синьо-жовтого градієнта з першого коміту -->
 <section class="page-header page-header--admin" data-reveal>
@@ -239,21 +255,34 @@
                     </div>
                     <form method="POST" action="/admin/bank-accounts/<%= account.id %>" class="admin-form row g-3" id="bank-form-<%= account.id %>" novalidate>
                       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <input type="hidden" name="_formId" value="bank-account:<%= account.id %>">
                       <div class="col-md-6">
                         <label class="form-label">Отримувач</label>
-                        <input class="form-control" type="text" name="recipient" value="<%= account.recipient %>" required>
+                        <input class="form-control<%= isInvalid(`bank-account:${account.id}`, 'recipient') ? ' is-invalid' : '' %>" type="text" name="recipient" value="<%= getFormValue(`bank-account:${account.id}`, 'recipient', account.recipient) %>" required>
+                        <% if (isInvalid(`bank-account:${account.id}`, 'recipient')) { %>
+                          <div class="invalid-feedback"><%= fieldError(`bank-account:${account.id}`, 'recipient') || 'Вкажіть отримувача' %></div>
+                        <% } %>
                       </div>
                       <div class="col-md-6">
                         <label class="form-label">IBAN</label>
-                        <input class="form-control" type="text" name="iban" value="<%= account.iban %>" required>
+                        <input class="form-control<%= isInvalid(`bank-account:${account.id}`, 'iban') ? ' is-invalid' : '' %>" type="text" name="iban" value="<%= getFormValue(`bank-account:${account.id}`, 'iban', account.iban) %>" required>
+                        <% if (isInvalid(`bank-account:${account.id}`, 'iban')) { %>
+                          <div class="invalid-feedback"><%= fieldError(`bank-account:${account.id}`, 'iban') || 'Некоректний IBAN' %></div>
+                        <% } %>
                       </div>
                       <div class="col-md-6">
                         <label class="form-label">ЄДРПОУ</label>
-                        <input class="form-control" type="text" name="edrpou" value="<%= account.edrpou || '' %>">
+                        <input class="form-control<%= isInvalid(`bank-account:${account.id}`, 'edrpou') ? ' is-invalid' : '' %>" type="text" name="edrpou" value="<%= getFormValue(`bank-account:${account.id}`, 'edrpou', account.edrpou || '') %>">
+                        <% if (isInvalid(`bank-account:${account.id}`, 'edrpou')) { %>
+                          <div class="invalid-feedback"><%= fieldError(`bank-account:${account.id}`, 'edrpou') %></div>
+                        <% } %>
                       </div>
                       <div class="col-md-6">
                         <label class="form-label">Призначення</label>
-                        <input class="form-control" type="text" name="purpose" value="<%= account.purpose || '' %>">
+                        <input class="form-control<%= isInvalid(`bank-account:${account.id}`, 'purpose') ? ' is-invalid' : '' %>" type="text" name="purpose" value="<%= getFormValue(`bank-account:${account.id}`, 'purpose', account.purpose || '') %>">
+                        <% if (isInvalid(`bank-account:${account.id}`, 'purpose')) { %>
+                          <div class="invalid-feedback"><%= fieldError(`bank-account:${account.id}`, 'purpose') %></div>
+                        <% } %>
                       </div>
                     </form>
                     <div class="admin-form-card__footer">
@@ -267,29 +296,45 @@
                 <% }) %>
                 <form method="POST" action="/admin/bank-accounts" class="admin-form admin-form-card admin-form-card--inline" novalidate>
                   <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <input type="hidden" name="_formId" value="bank-account:new">
                   <div class="admin-form-card__header">
                     <h4 class="h6 mb-0">Новий рахунок</h4>
                   </div>
                   <div class="row g-3">
                     <div class="col-md-6">
                       <label class="form-label">Назва</label>
-                      <input class="form-control" type="text" name="label" required>
+                      <input class="form-control<%= isInvalid('bank-account:new', 'label') ? ' is-invalid' : '' %>" type="text" name="label" value="<%= getFormValue('bank-account:new', 'label', '') %>" required>
+                      <% if (isInvalid('bank-account:new', 'label')) { %>
+                        <div class="invalid-feedback"><%= fieldError('bank-account:new', 'label') || 'Вкажіть назву' %></div>
+                      <% } %>
                     </div>
                     <div class="col-md-6">
                       <label class="form-label">Отримувач</label>
-                      <input class="form-control" type="text" name="recipient" required>
+                      <input class="form-control<%= isInvalid('bank-account:new', 'recipient') ? ' is-invalid' : '' %>" type="text" name="recipient" value="<%= getFormValue('bank-account:new', 'recipient', '') %>" required>
+                      <% if (isInvalid('bank-account:new', 'recipient')) { %>
+                        <div class="invalid-feedback"><%= fieldError('bank-account:new', 'recipient') || 'Вкажіть отримувача' %></div>
+                      <% } %>
                     </div>
                     <div class="col-12">
                       <label class="form-label">IBAN</label>
-                      <input class="form-control" type="text" name="iban" required>
+                      <input class="form-control<%= isInvalid('bank-account:new', 'iban') ? ' is-invalid' : '' %>" type="text" name="iban" value="<%= getFormValue('bank-account:new', 'iban', '') %>" required>
+                      <% if (isInvalid('bank-account:new', 'iban')) { %>
+                        <div class="invalid-feedback"><%= fieldError('bank-account:new', 'iban') || 'Некоректний IBAN' %></div>
+                      <% } %>
                     </div>
                     <div class="col-md-6">
                       <label class="form-label">ЄДРПОУ</label>
-                      <input class="form-control" type="text" name="edrpou">
+                      <input class="form-control<%= isInvalid('bank-account:new', 'edrpou') ? ' is-invalid' : '' %>" type="text" name="edrpou" value="<%= getFormValue('bank-account:new', 'edrpou', '') %>">
+                      <% if (isInvalid('bank-account:new', 'edrpou')) { %>
+                        <div class="invalid-feedback"><%= fieldError('bank-account:new', 'edrpou') %></div>
+                      <% } %>
                     </div>
                     <div class="col-md-6">
                       <label class="form-label">Призначення</label>
-                      <input class="form-control" type="text" name="purpose">
+                      <input class="form-control<%= isInvalid('bank-account:new', 'purpose') ? ' is-invalid' : '' %>" type="text" name="purpose" value="<%= getFormValue('bank-account:new', 'purpose', '') %>">
+                      <% if (isInvalid('bank-account:new', 'purpose')) { %>
+                        <div class="invalid-feedback"><%= fieldError('bank-account:new', 'purpose') %></div>
+                      <% } %>
                     </div>
                   </div>
                   <div class="admin-form-card__footer">
@@ -310,6 +355,7 @@
               <% goals.forEach(function(goal) { %>
                 <form method="POST" action="/admin/goals/<%= goal.id %>" class="admin-form admin-form-card" novalidate>
                   <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <input type="hidden" name="_formId" value="goal:<%= goal.id %>">
                   <div class="admin-form-card__header">
                     <h4 class="h6 mb-0"><%= goal.title %></h4>
                     <span class="badge <%= goal.status === 'active' ? 'bg-success-subtle text-success' : 'bg-light text-dark' %>"><%= goal.status %></span>
@@ -317,23 +363,35 @@
                   <div class="row g-3">
                     <div class="col-md-6">
                       <label class="form-label">Заголовок</label>
-                      <input class="form-control" type="text" name="title" value="<%= goal.title %>" required>
+                      <input class="form-control<%= isInvalid(`goal:${goal.id}`, 'title') ? ' is-invalid' : '' %>" type="text" name="title" value="<%= getFormValue(`goal:${goal.id}`, 'title', goal.title) %>" required>
+                      <% if (isInvalid(`goal:${goal.id}`, 'title')) { %>
+                        <div class="invalid-feedback"><%= fieldError(`goal:${goal.id}`, 'title') || 'Вкажіть назву' %></div>
+                      <% } %>
                     </div>
                     <div class="col-md-6">
                       <label class="form-label">Сума</label>
-                      <input class="form-control" type="number" name="target_amount" min="1000" value="<%= goal.target_amount %>" required>
+                      <input class="form-control<%= isInvalid(`goal:${goal.id}`, 'target_amount') ? ' is-invalid' : '' %>" type="number" name="target_amount" min="1000" value="<%= getFormValue(`goal:${goal.id}`, 'target_amount', goal.target_amount) %>" required>
+                      <% if (isInvalid(`goal:${goal.id}`, 'target_amount')) { %>
+                        <div class="invalid-feedback"><%= fieldError(`goal:${goal.id}`, 'target_amount') || 'Некоректна сума' %></div>
+                      <% } %>
                     </div>
                     <div class="col-12">
                       <label class="form-label">Опис</label>
-                      <textarea class="form-control" name="description" rows="2"><%= goal.description || '' %></textarea>
+                      <textarea class="form-control<%= isInvalid(`goal:${goal.id}`, 'description') ? ' is-invalid' : '' %>" name="description" rows="2"><%= getFormValue(`goal:${goal.id}`, 'description', goal.description || '') %></textarea>
+                      <% if (isInvalid(`goal:${goal.id}`, 'description')) { %>
+                        <div class="invalid-feedback"><%= fieldError(`goal:${goal.id}`, 'description') %></div>
+                      <% } %>
                     </div>
                     <div class="col-md-6">
                       <label class="form-label">Статус</label>
-                      <select class="form-select" name="status" required>
-                        <option value="draft" <%= goal.status === 'draft' ? 'selected' : '' %>>Чернетка</option>
-                        <option value="active" <%= goal.status === 'active' ? 'selected' : '' %>>Активна</option>
-                        <option value="archived" <%= goal.status === 'archived' ? 'selected' : '' %>>Архів</option>
+                      <select class="form-select<%= isInvalid(`goal:${goal.id}`, 'status') ? ' is-invalid' : '' %>" name="status" required>
+                        <option value="draft" <%= getFormValue(`goal:${goal.id}`, 'status', goal.status) === 'draft' ? 'selected' : '' %>>Чернетка</option>
+                        <option value="active" <%= getFormValue(`goal:${goal.id}`, 'status', goal.status) === 'active' ? 'selected' : '' %>>Активна</option>
+                        <option value="archived" <%= getFormValue(`goal:${goal.id}`, 'status', goal.status) === 'archived' ? 'selected' : '' %>>Архів</option>
                       </select>
+                      <% if (isInvalid(`goal:${goal.id}`, 'status')) { %>
+                        <div class="invalid-feedback"><%= fieldError(`goal:${goal.id}`, 'status') || 'Оберіть статус' %></div>
+                      <% } %>
                     </div>
                   </div>
                   <div class="admin-form-card__footer">
@@ -343,29 +401,42 @@
               <% }) %>
               <form method="POST" action="/admin/goals" class="admin-form admin-form-card" novalidate>
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <input type="hidden" name="_formId" value="goal:new">
                 <div class="admin-form-card__header">
                   <h4 class="h6 mb-0">Нова ціль</h4>
                 </div>
                 <div class="row g-3">
                   <div class="col-md-6">
                     <label class="form-label">Заголовок</label>
-                    <input class="form-control" type="text" name="title" required>
+                    <input class="form-control<%= isInvalid('goal:new', 'title') ? ' is-invalid' : '' %>" type="text" name="title" value="<%= getFormValue('goal:new', 'title', '') %>" required>
+                    <% if (isInvalid('goal:new', 'title')) { %>
+                      <div class="invalid-feedback"><%= fieldError('goal:new', 'title') || 'Вкажіть назву' %></div>
+                    <% } %>
                   </div>
                   <div class="col-md-6">
                     <label class="form-label">Сума</label>
-                    <input class="form-control" type="number" name="target_amount" min="1000" required>
+                    <input class="form-control<%= isInvalid('goal:new', 'target_amount') ? ' is-invalid' : '' %>" type="number" name="target_amount" min="1000" value="<%= getFormValue('goal:new', 'target_amount', '') %>" required>
+                    <% if (isInvalid('goal:new', 'target_amount')) { %>
+                      <div class="invalid-feedback"><%= fieldError('goal:new', 'target_amount') || 'Некоректна сума' %></div>
+                    <% } %>
                   </div>
                   <div class="col-12">
                     <label class="form-label">Опис</label>
-                    <textarea class="form-control" name="description" rows="2"></textarea>
+                    <textarea class="form-control<%= isInvalid('goal:new', 'description') ? ' is-invalid' : '' %>" name="description" rows="2"><%= getFormValue('goal:new', 'description', '') %></textarea>
+                    <% if (isInvalid('goal:new', 'description')) { %>
+                      <div class="invalid-feedback"><%= fieldError('goal:new', 'description') %></div>
+                    <% } %>
                   </div>
                   <div class="col-md-6">
                     <label class="form-label">Статус</label>
-                    <select class="form-select" name="status" required>
-                      <option value="draft">Чернетка</option>
-                      <option value="active">Активна</option>
-                      <option value="archived">Архів</option>
+                    <select class="form-select<%= isInvalid('goal:new', 'status') ? ' is-invalid' : '' %>" name="status" required>
+                      <option value="draft" <%= getFormValue('goal:new', 'status', 'draft') === 'draft' ? 'selected' : '' %>>Чернетка</option>
+                      <option value="active" <%= getFormValue('goal:new', 'status', 'draft') === 'active' ? 'selected' : '' %>>Активна</option>
+                      <option value="archived" <%= getFormValue('goal:new', 'status', 'draft') === 'archived' ? 'selected' : '' %>>Архів</option>
                     </select>
+                    <% if (isInvalid('goal:new', 'status')) { %>
+                      <div class="invalid-feedback"><%= fieldError('goal:new', 'status') || 'Оберіть статус' %></div>
+                    <% } %>
                   </div>
                 </div>
                 <div class="admin-form-card__footer">
@@ -435,8 +506,8 @@
                       <td>
                         <ul class="moderation-checklist">
                           <li><input class="form-check-input" type="checkbox" disabled <%= applicant.proof_path ? 'checked' : '' %>> Доказ оплати</li>
-                          <li><input class="form-check-input" type="checkbox" disabled <%= applicant.phone ? 'checked' : '' %>> Контакт підтверджено</li>
-                          <li><input class="form-check-input" type="checkbox" disabled <%= applicant.notes ? 'checked' : '' %>> Коментар менеджера</li>
+                          <li><input class="form-check-input" type="checkbox" disabled <%= applicant.phone ? 'checked' : '' %>>Контакт підтверджено</li>
+                          <li><input class="form-check-input" type="checkbox" disabled <%= applicant.notes ? 'checked' : '' %>>Коментар менеджера</li>
                         </ul>
                       </td>
                       <td class="text-end">
@@ -464,76 +535,198 @@
             </div>
           </div>
         </div>
-        <div class="col-xl-6">
+        <div class="col-12">
           <div class="card shadow-soft">
-            <div class="card-header">
-              <h3 class="h5 mb-0">Підтверджені донатори</h3>
-            </div>
-            <div class="table-responsive">
-              <table class="table align-middle admin-table">
-                <thead>
-                  <tr>
-                    <th>Ім'я</th>
-                    <th>Контакти</th>
-                    <th>Роль</th>
-                    <th class="text-end">Дії</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% donors.forEach(function(donor) { %>
-                    <tr>
-                      <td><strong><%= donor.full_name || '—' %></strong></td>
-                      <td>
-                        <div class="small"><i class="fa-solid fa-envelope me-1"></i><%= donor.email %></div>
-                        <% if (donor.phone) { %><div class="small"><i class="fa-solid fa-phone me-1"></i><%= donor.phone %></div><% } %>
-                      </td>
-                      <td><span class="badge bg-primary-subtle text-primary"><%= donor.role || 'donor' %></span></td>
-                      <td class="text-end">
-                        <form method="POST" action="/admin/users/<%= donor.id %>/role" class="d-inline-flex align-items-center gap-2">
-                          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                          <select class="form-select form-select-sm" name="role">
-                            <option value="donor" <%= donor.role === 'donor' ? 'selected' : '' %>>Донатор</option>
-                            <option value="moderator" <%= donor.role === 'moderator' ? 'selected' : '' %>>Модератор</option>
-                            <option value="admin" <%= donor.role === 'admin' ? 'selected' : '' %>>Адмін</option>
-                          </select>
-                          <button class="btn btn-sm btn-outline-primary" type="submit">Оновити</button>
-                        </form>
-                      </td>
-                    </tr>
+            <div class="card-body">
+              <div class="user-directory__summary">
+                <span class="user-directory__summary-badge">
+                  <i class="fa-solid fa-users" aria-hidden="true"></i>
+                  <span data-user-total><%= allUsers.length %></span> користувачів
+                </span>
+                <span class="user-directory__summary-badge user-directory__summary-badge--muted">підтверджено: <%= userStats.approved %></span>
+                <span class="user-directory__summary-badge user-directory__summary-badge--muted">в очікуванні: <%= userStats.pending %></span>
+                <div class="user-directory__counts">
+                  <% roleFilters.forEach(function(role) { %>
+                    <span class="user-directory__summary-badge user-directory__summary-badge--muted"><i class="fa-solid fa-user-tag" aria-hidden="true"></i><%= role %>: <%= userStats.roles[role] %></span>
                   <% }) %>
-                  <% if (donors.length === 0) { %>
-                    <tr><td colspan="4" class="text-center text-muted">Немає підтверджених донаторів.</td></tr>
-                  <% } %>
-                </tbody>
-              </table>
+                  <% statusFilters.filter(function(status) { return !['approved', 'pending'].includes(status); }).forEach(function(status) { %>
+                    <span class="user-directory__summary-badge user-directory__summary-badge--muted"><i class="fa-solid fa-signal" aria-hidden="true"></i><%= status %>: <%= userStats.statuses[status] %></span>
+                  <% }) %>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-        <div class="col-xl-6">
+        <div class="col-12">
           <div class="card shadow-soft">
-            <div class="card-header">
-              <h3 class="h5 mb-0">Адміністратори</h3>
+            <div class="card-header d-flex flex-column flex-xl-row justify-content-between align-items-xl-center gap-3">
+              <div>
+                <h3 class="h5 mb-1">Усі користувачі</h3>
+                <p class="small text-muted mb-0">Каталог усіх акаунтів фонду з можливістю змінювати статуси, ролі та залишати внутрішні примітки.</p>
+              </div>
+              <div class="user-directory__filters">
+                <label class="admin-table__search mb-0">
+                  <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                  <input type="search" class="form-control" placeholder="Пошук за ім'ям або email" data-filter-search>
+                </label>
+                <select class="form-select" data-filter-role>
+                  <option value="all">Усі ролі</option>
+                  <% roleFilters.forEach(function(role) { %>
+                    <option value="<%= role %>"><%= role %> (<%= userStats.roles[role] %>)</option>
+                  <% }) %>
+                </select>
+                <select class="form-select" data-filter-status>
+                  <option value="all">Усі статуси</option>
+                  <% statusFilters.forEach(function(status) { %>
+                    <option value="<%= status %>"><%= status %> (<%= userStats.statuses[status] %>)</option>
+                  <% }) %>
+                </select>
+                <span class="user-directory__summary-badge user-directory__summary-badge--muted">
+                  <span data-user-count><%= allUsers.length %></span> у добірці
+                </span>
+              </div>
             </div>
             <div class="table-responsive">
-              <table class="table align-middle admin-table">
+              <table class="table align-middle admin-table mb-0" data-user-table>
                 <thead>
                   <tr>
-                    <th>Ім'я</th>
-                    <th>Email</th>
-                    <th>Статус</th>
+                    <th scope="col">Користувач</th>
+                    <th scope="col">Контакти</th>
+                    <th scope="col">Роль</th>
+                    <th scope="col">Статус</th>
+                    <th scope="col" class="text-end">Дії</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <% admins.forEach(function(admin) { %>
-                    <tr>
-                      <td><%= admin.full_name || '—' %></td>
-                      <td><%= admin.email %></td>
-                      <td><span class="badge bg-success-subtle text-success">Адміністратор</span></td>
+                  <% allUsers.forEach(function(user) {
+                       const searchVector = [user.full_name || '', user.email || '', user.phone || '', user.role || '', user.status || ''].join(' ').toLowerCase();
+                       const formIdStatus = `user-status:${user.id}`;
+                       const formIdNote = `user-note:${user.id}`;
+                       const roleBadgeClass = user.role === 'admin' ? 'badge-role badge-role--admin' : user.role === 'moderator' ? 'badge-role badge-role--moderator' : user.role === 'donor' ? 'badge-role badge-role--donor' : 'badge bg-light text-dark';
+                       const statusClass = user.status === 'approved' ? 'badge bg-success-subtle text-success' : user.status === 'pending' ? 'badge bg-warning-subtle text-warning' : user.status === 'banned' ? 'badge bg-danger-subtle text-danger' : 'badge bg-secondary-subtle text-secondary';
+                    %>
+                    <tr data-user-row data-user-id="<%= user.id %>" data-role="<%= user.role %>" data-status="<%= user.status %>" data-search="<%= searchVector %>">
+                      <td>
+                        <strong><%= user.full_name || '—' %></strong>
+                        <div class="small text-muted">ID <%= user.id %> · створено <%= user.created_at ? new Date(user.created_at).toLocaleString('uk-UA') : '—' %></div>
+                      </td>
+                      <td>
+                        <div class="small"><i class="fa-solid fa-envelope me-1"></i><%= user.email %></div>
+                        <% if (user.phone) { %><div class="small"><i class="fa-solid fa-phone me-1"></i><%= user.phone %></div><% } %>
+                        <% if (user.last_login_at) { %><div class="small text-muted">Останній вхід: <%= new Date(user.last_login_at).toLocaleString('uk-UA') %></div><% } %>
+                      </td>
+                      <td>
+                        <span class="<%= roleBadgeClass %>"><%= user.role %></span>
+                        <form method="POST" action="/admin/users/<%= user.id %>/role" class="d-inline-flex align-items-center gap-2 mt-2">
+                          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                          <select class="form-select form-select-sm" name="role">
+                            <% roleSelectOptions.forEach(function(role) { %>
+                              <option value="<%= role %>" <%= user.role === role ? 'selected' : '' %>><%= role %></option>
+                            <% }) %>
+                          </select>
+                          <button class="btn btn-sm btn-outline-primary" type="submit">Зберегти</button>
+                        </form>
+                      </td>
+                      <td>
+                        <span class="<%= statusClass %> text-uppercase"><%= user.status %></span>
+                        <% if (user.approved_at) { %>
+                          <div class="small text-muted mt-1">підтверджено <%= new Date(user.approved_at).toLocaleString('uk-UA') %></div>
+                        <% } %>
+                      </td>
+                      <td class="text-end">
+                        <button class="btn btn-sm btn-outline-secondary" type="button" data-user-details-toggle aria-expanded="false">
+                          <i class="fa-solid fa-clock-rotate-left me-1"></i>Історія
+                        </button>
+                      </td>
+                    </tr>
+                    <tr class="user-detail-row d-none" data-user-details="<%= user.id %>">
+                      <td colspan="5">
+                        <div class="user-detail">
+                          <div class="user-detail__columns">
+                            <div>
+                              <h4 class="h6 mb-3">Журнал дій</h4>
+                              <ul class="user-history-list">
+                                <% (auditByUser[user.id] || []).forEach(function(entry) { %>
+                                  <li class="user-history-item">
+                                    <strong><%= humanizeAction(entry.action) %></strong>
+                                    <% const detailText = formatDetails(entry.details); %>
+                                    <% if (detailText) { %>
+                                      <div class="small text-muted"><%= detailText %></div>
+                                    <% } %>
+                                    <% if (entry.performed_by_name) { %>
+                                      <div class="small text-muted">Оператор: <%= entry.performed_by_name %> (<%= entry.performed_by_email %>)</div>
+                                    <% } %>
+                                    <time datetime="<%= entry.created_at %>"><%= entry.created_at ? new Date(entry.created_at).toLocaleString('uk-UA') : '—' %></time>
+                                  </li>
+                                <% }) %>
+                                <% if ((auditByUser[user.id] || []).length === 0) { %>
+                                  <li class="user-history-item text-muted">Журнал дій поки порожній.</li>
+                                <% } %>
+                              </ul>
+                            </div>
+                            <div>
+                              <h4 class="h6 mb-3">Статус та примітки</h4>
+                              <form method="POST" action="/admin/users/<%= user.id %>/status" class="admin-form" novalidate>
+                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                <input type="hidden" name="_formId" value="<%= formIdStatus %>">
+                                <input type="hidden" name="redirect" value="<%= getFormValue(formIdStatus, 'redirect', '/admin/dashboard#users') %>">
+                                <div class="mb-3">
+                                  <label class="form-label">Статус користувача</label>
+                                  <select class="form-select<%= isInvalid(formIdStatus, 'status') ? ' is-invalid' : '' %>" name="status" required>
+                                    <% statusOptions.forEach(function(status) { %>
+                                      <option value="<%= status %>" <%= getFormValue(formIdStatus, 'status', user.status) === status ? 'selected' : '' %>><%= status %></option>
+                                    <% }) %>
+                                  </select>
+                                  <% if (isInvalid(formIdStatus, 'status')) { %>
+                                    <div class="invalid-feedback"><%= fieldError(formIdStatus, 'status') || 'Оберіть статус' %></div>
+                                  <% } %>
+                                </div>
+                                <div class="mb-3">
+                                  <label class="form-label">Коментар для команди</label>
+                                  <textarea class="form-control<%= isInvalid(formIdStatus, 'notes') ? ' is-invalid' : '' %>" name="notes" rows="2"><%= getFormValue(formIdStatus, 'notes', user.notes || '') %></textarea>
+                                  <% if (isInvalid(formIdStatus, 'notes')) { %>
+                                    <div class="invalid-feedback"><%= fieldError(formIdStatus, 'notes') %></div>
+                                  <% } %>
+                                </div>
+                                <button class="btn btn-sm btn-primary" type="submit">Оновити статус</button>
+                              </form>
+                              <hr class="my-4">
+                              <form method="POST" action="/admin/users/<%= user.id %>/notes" class="admin-form" novalidate>
+                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                <input type="hidden" name="_formId" value="<%= formIdNote %>">
+                                <input type="hidden" name="redirect" value="<%= getFormValue(formIdNote, 'redirect', '/admin/dashboard#users') %>">
+                                <div class="mb-3">
+                                  <label class="form-label">Додати примітку</label>
+                                  <textarea class="form-control<%= isInvalid(formIdNote, 'note') ? ' is-invalid' : '' %>" name="note" rows="3" required><%= getFormValue(formIdNote, 'note', '') %></textarea>
+                                  <% if (isInvalid(formIdNote, 'note')) { %>
+                                    <div class="invalid-feedback"><%= fieldError(formIdNote, 'note') || 'Вкажіть текст примітки' %></div>
+                                  <% } %>
+                                </div>
+                                <button class="btn btn-sm btn-outline-primary" type="submit">Зберегти примітку</button>
+                              </form>
+                              <h5 class="h6 mt-4 mb-2">Внутрішні нотатки</h5>
+                              <ul class="user-notes-list">
+                                <% (notesByUser[user.id] || []).forEach(function(note) { %>
+                                  <li class="user-note">
+                                    <div class="user-note__meta">
+                                      <%= note.created_by_name || 'Система' %> · <time datetime="<%= note.created_at %>"><%= note.created_at ? new Date(note.created_at).toLocaleString('uk-UA') : '—' %></time>
+                                    </div>
+                                    <p class="mb-0"><%= note.note %></p>
+                                  </li>
+                                <% }) %>
+                                <% if ((notesByUser[user.id] || []).length === 0) { %>
+                                  <li class="user-note text-muted">Ще немає приміток по користувачу.</li>
+                                <% } %>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
                     </tr>
                   <% }) %>
-                  <% if (admins.length === 0) { %>
-                    <tr><td colspan="3" class="text-center text-muted">Адміністраторів не знайдено.</td></tr>
-                  <% } %>
+                  <tr data-user-empty class="<%= allUsers.length ? 'd-none' : '' %>">
+                    <td colspan="5" class="text-center text-muted">Користувачів не знайдено.</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -541,7 +734,6 @@
         </div>
       </div>
     </section>
-
     <section id="vehicles" class="admin-section" data-admin-section>
       <div class="admin-section__header">
         <div>
@@ -573,21 +765,34 @@
                   <p class="mb-2"><%= vehicle.description %></p>
                   <form method="POST" action="/admin/vehicles/<%= vehicle.id %>" class="admin-form row g-2" id="vehicle-form-<%= vehicle.id %>" novalidate>
                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="hidden" name="_formId" value="vehicle:<%= vehicle.id %>">
                     <div class="col-md-6">
                       <label class="form-label">Статус</label>
-                      <input class="form-control" type="text" name="status" value="<%= vehicle.status %>" required>
+                      <input class="form-control<%= isInvalid(`vehicle:${vehicle.id}`, 'status') ? ' is-invalid' : '' %>" type="text" name="status" value="<%= getFormValue(`vehicle:${vehicle.id}`, 'status', vehicle.status) %>" required>
+                      <% if (isInvalid(`vehicle:${vehicle.id}`, 'status')) { %>
+                        <div class="invalid-feedback"><%= fieldError(`vehicle:${vehicle.id}`, 'status') || 'Вкажіть статус' %></div>
+                      <% } %>
                     </div>
                     <div class="col-md-6">
                       <label class="form-label">Категорія</label>
-                      <input class="form-control" type="text" name="category" value="<%= vehicle.category || '' %>">
+                      <input class="form-control<%= isInvalid(`vehicle:${vehicle.id}`, 'category') ? ' is-invalid' : '' %>" type="text" name="category" value="<%= getFormValue(`vehicle:${vehicle.id}`, 'category', vehicle.category || '') %>">
+                      <% if (isInvalid(`vehicle:${vehicle.id}`, 'category')) { %>
+                        <div class="invalid-feedback"><%= fieldError(`vehicle:${vehicle.id}`, 'category') %></div>
+                      <% } %>
                     </div>
                     <div class="col-12">
                       <label class="form-label">Опис</label>
-                      <textarea class="form-control" name="description" rows="2"><%= vehicle.description || '' %></textarea>
+                      <textarea class="form-control<%= isInvalid(`vehicle:${vehicle.id}`, 'description') ? ' is-invalid' : '' %>" name="description" rows="2"><%= getFormValue(`vehicle:${vehicle.id}`, 'description', vehicle.description || '') %></textarea>
+                      <% if (isInvalid(`vehicle:${vehicle.id}`, 'description')) { %>
+                        <div class="invalid-feedback"><%= fieldError(`vehicle:${vehicle.id}`, 'description') %></div>
+                      <% } %>
                     </div>
                     <div class="col-12">
                       <label class="form-label">Зображення</label>
-                      <input class="form-control" type="text" name="image_path" value="<%= vehicle.image_path || '' %>">
+                      <input class="form-control<%= isInvalid(`vehicle:${vehicle.id}`, 'image_path') ? ' is-invalid' : '' %>" type="text" name="image_path" value="<%= getFormValue(`vehicle:${vehicle.id}`, 'image_path', vehicle.image_path || '') %>">
+                      <% if (isInvalid(`vehicle:${vehicle.id}`, 'image_path')) { %>
+                        <div class="invalid-feedback"><%= fieldError(`vehicle:${vehicle.id}`, 'image_path') %></div>
+                      <% } %>
                     </div>
                   </form>
                   <div class="d-flex gap-2">
@@ -613,25 +818,41 @@
             <div class="card-body">
               <form method="POST" action="/admin/vehicles" class="admin-form row g-3" novalidate>
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <input type="hidden" name="_formId" value="vehicle:new">
                 <div class="col-12">
                   <label class="form-label">Назва</label>
-                  <input class="form-control" type="text" name="name" required>
+                  <input class="form-control<%= isInvalid('vehicle:new', 'name') ? ' is-invalid' : '' %>" type="text" name="name" value="<%= getFormValue('vehicle:new', 'name', '') %>" required>
+                  <% if (isInvalid('vehicle:new', 'name')) { %>
+                    <div class="invalid-feedback"><%= fieldError('vehicle:new', 'name') || 'Вкажіть назву' %></div>
+                  <% } %>
                 </div>
                 <div class="col-12">
                   <label class="form-label">Опис</label>
-                  <textarea class="form-control" name="description" rows="3"></textarea>
+                  <textarea class="form-control<%= isInvalid('vehicle:new', 'description') ? ' is-invalid' : '' %>" name="description" rows="3"><%= getFormValue('vehicle:new', 'description', '') %></textarea>
+                  <% if (isInvalid('vehicle:new', 'description')) { %>
+                    <div class="invalid-feedback"><%= fieldError('vehicle:new', 'description') %></div>
+                  <% } %>
                 </div>
                 <div class="col-md-6">
                   <label class="form-label">Статус</label>
-                  <input class="form-control" type="text" name="status" placeholder="needs_funding" required>
+                  <input class="form-control<%= isInvalid('vehicle:new', 'status') ? ' is-invalid' : '' %>" type="text" name="status" placeholder="needs_funding" value="<%= getFormValue('vehicle:new', 'status', '') %>" required>
+                  <% if (isInvalid('vehicle:new', 'status')) { %>
+                    <div class="invalid-feedback"><%= fieldError('vehicle:new', 'status') || 'Вкажіть статус' %></div>
+                  <% } %>
                 </div>
                 <div class="col-md-6">
                   <label class="form-label">Категорія</label>
-                  <input class="form-control" type="text" name="category" placeholder="suv">
+                  <input class="form-control<%= isInvalid('vehicle:new', 'category') ? ' is-invalid' : '' %>" type="text" name="category" placeholder="suv" value="<%= getFormValue('vehicle:new', 'category', '') %>">
+                  <% if (isInvalid('vehicle:new', 'category')) { %>
+                    <div class="invalid-feedback"><%= fieldError('vehicle:new', 'category') %></div>
+                  <% } %>
                 </div>
                 <div class="col-12">
                   <label class="form-label">Зображення (шлях)</label>
-                  <input class="form-control" type="text" name="image_path" placeholder="images/cars/car1.jpg">
+                  <input class="form-control<%= isInvalid('vehicle:new', 'image_path') ? ' is-invalid' : '' %>" type="text" name="image_path" placeholder="images/cars/car1.jpg" value="<%= getFormValue('vehicle:new', 'image_path', '') %>">
+                  <% if (isInvalid('vehicle:new', 'image_path')) { %>
+                    <div class="invalid-feedback"><%= fieldError('vehicle:new', 'image_path') %></div>
+                  <% } %>
                 </div>
                 <div class="col-12">
                   <button class="btn btn-primary" type="submit">Створити</button>
@@ -692,21 +913,34 @@
                   </div>
                   <form method="POST" action="/admin/media/<%= item.id %>" class="admin-form admin-form-card__form" id="media-form-<%= item.id %>" novalidate>
                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="hidden" name="_formId" value="media:<%= item.id %>">
                     <div class="mb-3">
                       <label class="form-label">Назва</label>
-                      <input class="form-control" type="text" name="title" value="<%= item.title %>" required>
+                      <input class="form-control<%= isInvalid(`media:${item.id}`, 'title') ? ' is-invalid' : '' %>" type="text" name="title" value="<%= getFormValue(`media:${item.id}`, 'title', item.title) %>" required>
+                      <% if (isInvalid(`media:${item.id}`, 'title')) { %>
+                        <div class="invalid-feedback"><%= fieldError(`media:${item.id}`, 'title') || 'Вкажіть назву' %></div>
+                      <% } %>
                     </div>
                     <div class="mb-3">
                       <label class="form-label">Коротко</label>
-                      <textarea class="form-control" name="summary" rows="2"><%= item.summary || '' %></textarea>
+                      <textarea class="form-control<%= isInvalid(`media:${item.id}`, 'summary') ? ' is-invalid' : '' %>" name="summary" rows="2"><%= getFormValue(`media:${item.id}`, 'summary', item.summary || '') %></textarea>
+                      <% if (isInvalid(`media:${item.id}`, 'summary')) { %>
+                        <div class="invalid-feedback"><%= fieldError(`media:${item.id}`, 'summary') %></div>
+                      <% } %>
                     </div>
                     <div class="mb-3">
                       <label class="form-label">Посилання</label>
-                      <input class="form-control" type="url" name="url" value="<%= item.url %>" required>
+                      <input class="form-control<%= isInvalid(`media:${item.id}`, 'url') ? ' is-invalid' : '' %>" type="url" name="url" value="<%= getFormValue(`media:${item.id}`, 'url', item.url) %>" required>
+                      <% if (isInvalid(`media:${item.id}`, 'url')) { %>
+                        <div class="invalid-feedback"><%= fieldError(`media:${item.id}`, 'url') || 'Вкажіть посилання' %></div>
+                      <% } %>
                     </div>
                     <div class="mb-3">
                       <label class="form-label">Зображення</label>
-                      <input class="form-control" type="text" name="image_path" value="<%= item.image_path || '' %>">
+                      <input class="form-control<%= isInvalid(`media:${item.id}`, 'image_path') ? ' is-invalid' : '' %>" type="text" name="image_path" value="<%= getFormValue(`media:${item.id}`, 'image_path', item.image_path || '') %>">
+                      <% if (isInvalid(`media:${item.id}`, 'image_path')) { %>
+                        <div class="invalid-feedback"><%= fieldError(`media:${item.id}`, 'image_path') %></div>
+                      <% } %>
                     </div>
                   </form>
                   <div class="admin-form-card__footer d-flex gap-2">
@@ -720,24 +954,37 @@
               <% }) %>
               <form method="POST" action="/admin/media" class="admin-form admin-form-card" novalidate>
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <input type="hidden" name="_formId" value="media:new">
                 <div class="admin-form-card__header">
                   <h4 class="h6 mb-0">Новий матеріал</h4>
                 </div>
                 <div class="mb-3">
                   <label class="form-label">Назва</label>
-                  <input class="form-control" type="text" name="title" required>
+                  <input class="form-control<%= isInvalid('media:new', 'title') ? ' is-invalid' : '' %>" type="text" name="title" value="<%= getFormValue('media:new', 'title', '') %>" required>
+                  <% if (isInvalid('media:new', 'title')) { %>
+                    <div class="invalid-feedback"><%= fieldError('media:new', 'title') || 'Вкажіть назву' %></div>
+                  <% } %>
                 </div>
                 <div class="mb-3">
                   <label class="form-label">Коротко</label>
-                  <textarea class="form-control" name="summary" rows="2"></textarea>
+                  <textarea class="form-control<%= isInvalid('media:new', 'summary') ? ' is-invalid' : '' %>" name="summary" rows="2"><%= getFormValue('media:new', 'summary', '') %></textarea>
+                  <% if (isInvalid('media:new', 'summary')) { %>
+                    <div class="invalid-feedback"><%= fieldError('media:new', 'summary') %></div>
+                  <% } %>
                 </div>
                 <div class="mb-3">
                   <label class="form-label">Посилання</label>
-                  <input class="form-control" type="url" name="url" required>
+                  <input class="form-control<%= isInvalid('media:new', 'url') ? ' is-invalid' : '' %>" type="url" name="url" value="<%= getFormValue('media:new', 'url', '') %>" required>
+                  <% if (isInvalid('media:new', 'url')) { %>
+                    <div class="invalid-feedback"><%= fieldError('media:new', 'url') || 'Вкажіть посилання' %></div>
+                  <% } %>
                 </div>
                 <div class="mb-3">
                   <label class="form-label">Зображення</label>
-                  <input class="form-control" type="text" name="image_path">
+                  <input class="form-control<%= isInvalid('media:new', 'image_path') ? ' is-invalid' : '' %>" type="text" name="image_path" value="<%= getFormValue('media:new', 'image_path', '') %>">
+                  <% if (isInvalid('media:new', 'image_path')) { %>
+                    <div class="invalid-feedback"><%= fieldError('media:new', 'image_path') %></div>
+                  <% } %>
                 </div>
                 <div class="admin-form-card__footer">
                   <button class="btn btn-sm btn-primary" type="submit">Додати</button>
@@ -758,25 +1005,41 @@
                   </div>
                   <form method="POST" action="/admin/articles/<%= article.id %>" class="admin-form admin-form-card__form" id="article-form-<%= article.id %>" novalidate>
                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="hidden" name="_formId" value="article:<%= article.id %>">
                     <div class="mb-3">
                       <label class="form-label">Заголовок</label>
-                      <input class="form-control" type="text" name="title" value="<%= article.title %>" required>
+                      <input class="form-control<%= isInvalid(`article:${article.id}`, 'title') ? ' is-invalid' : '' %>" type="text" name="title" value="<%= getFormValue(`article:${article.id}`, 'title', article.title) %>" required>
+                      <% if (isInvalid(`article:${article.id}`, 'title')) { %>
+                        <div class="invalid-feedback"><%= fieldError(`article:${article.id}`, 'title') || 'Вкажіть заголовок' %></div>
+                      <% } %>
                     </div>
                     <div class="mb-3">
                       <label class="form-label">Анонс</label>
-                      <textarea class="form-control" name="excerpt" rows="2"><%= article.excerpt || '' %></textarea>
+                      <textarea class="form-control<%= isInvalid(`article:${article.id}`, 'excerpt') ? ' is-invalid' : '' %>" name="excerpt" rows="2"><%= getFormValue(`article:${article.id}`, 'excerpt', article.excerpt || '') %></textarea>
+                      <% if (isInvalid(`article:${article.id}`, 'excerpt')) { %>
+                        <div class="invalid-feedback"><%= fieldError(`article:${article.id}`, 'excerpt') %></div>
+                      <% } %>
                     </div>
                     <div class="mb-3">
                       <label class="form-label">Текст</label>
-                      <textarea class="form-control" name="body" rows="3"><%= article.body || '' %></textarea>
+                      <textarea class="form-control<%= isInvalid(`article:${article.id}`, 'body') ? ' is-invalid' : '' %>" name="body" rows="3"><%= getFormValue(`article:${article.id}`, 'body', article.body || '') %></textarea>
+                      <% if (isInvalid(`article:${article.id}`, 'body')) { %>
+                        <div class="invalid-feedback"><%= fieldError(`article:${article.id}`, 'body') %></div>
+                      <% } %>
                     </div>
                     <div class="mb-3">
                       <label class="form-label">Зображення</label>
-                      <input class="form-control" type="text" name="cover_image" value="<%= article.cover_image || '' %>">
+                      <input class="form-control<%= isInvalid(`article:${article.id}`, 'cover_image') ? ' is-invalid' : '' %>" type="text" name="cover_image" value="<%= getFormValue(`article:${article.id}`, 'cover_image', article.cover_image || '') %>">
+                      <% if (isInvalid(`article:${article.id}`, 'cover_image')) { %>
+                        <div class="invalid-feedback"><%= fieldError(`article:${article.id}`, 'cover_image') %></div>
+                      <% } %>
                     </div>
                     <div class="mb-3">
                       <label class="form-label">Дата публікації</label>
-                      <input class="form-control" type="date" name="published_at" value="<%= article.published_at ? article.published_at.substring(0,10) : '' %>">
+                      <input class="form-control<%= isInvalid(`article:${article.id}`, 'published_at') ? ' is-invalid' : '' %>" type="date" name="published_at" value="<%= getFormValue(`article:${article.id}`, 'published_at', article.published_at ? article.published_at.substring(0,10) : '') %>">
+                      <% if (isInvalid(`article:${article.id}`, 'published_at')) { %>
+                        <div class="invalid-feedback"><%= fieldError(`article:${article.id}`, 'published_at') %></div>
+                      <% } %>
                     </div>
                   </form>
                   <div class="admin-form-card__footer d-flex gap-2">
@@ -790,28 +1053,44 @@
               <% }) %>
               <form method="POST" action="/admin/articles" class="admin-form admin-form-card" novalidate>
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <input type="hidden" name="_formId" value="article:new">
                 <div class="admin-form-card__header">
                   <h4 class="h6 mb-0">Нова стаття</h4>
                 </div>
                 <div class="mb-3">
                   <label class="form-label">Заголовок</label>
-                  <input class="form-control" type="text" name="title" required>
+                  <input class="form-control<%= isInvalid('article:new', 'title') ? ' is-invalid' : '' %>" type="text" name="title" value="<%= getFormValue('article:new', 'title', '') %>" required>
+                  <% if (isInvalid('article:new', 'title')) { %>
+                    <div class="invalid-feedback"><%= fieldError('article:new', 'title') || 'Вкажіть заголовок' %></div>
+                  <% } %>
                 </div>
                 <div class="mb-3">
                   <label class="form-label">Анонс</label>
-                  <textarea class="form-control" name="excerpt" rows="2"></textarea>
+                  <textarea class="form-control<%= isInvalid('article:new', 'excerpt') ? ' is-invalid' : '' %>" name="excerpt" rows="2"><%= getFormValue('article:new', 'excerpt', '') %></textarea>
+                  <% if (isInvalid('article:new', 'excerpt')) { %>
+                    <div class="invalid-feedback"><%= fieldError('article:new', 'excerpt') %></div>
+                  <% } %>
                 </div>
                 <div class="mb-3">
                   <label class="form-label">Текст</label>
-                  <textarea class="form-control" name="body" rows="3"></textarea>
+                  <textarea class="form-control<%= isInvalid('article:new', 'body') ? ' is-invalid' : '' %>" name="body" rows="3"><%= getFormValue('article:new', 'body', '') %></textarea>
+                  <% if (isInvalid('article:new', 'body')) { %>
+                    <div class="invalid-feedback"><%= fieldError('article:new', 'body') %></div>
+                  <% } %>
                 </div>
                 <div class="mb-3">
                   <label class="form-label">Зображення</label>
-                  <input class="form-control" type="text" name="cover_image">
+                  <input class="form-control<%= isInvalid('article:new', 'cover_image') ? ' is-invalid' : '' %>" type="text" name="cover_image" value="<%= getFormValue('article:new', 'cover_image', '') %>">
+                  <% if (isInvalid('article:new', 'cover_image')) { %>
+                    <div class="invalid-feedback"><%= fieldError('article:new', 'cover_image') %></div>
+                  <% } %>
                 </div>
                 <div class="mb-3">
                   <label class="form-label">Дата публікації</label>
-                  <input class="form-control" type="date" name="published_at">
+                  <input class="form-control<%= isInvalid('article:new', 'published_at') ? ' is-invalid' : '' %>" type="date" name="published_at" value="<%= getFormValue('article:new', 'published_at', '') %>">
+                  <% if (isInvalid('article:new', 'published_at')) { %>
+                    <div class="invalid-feedback"><%= fieldError('article:new', 'published_at') %></div>
+                  <% } %>
                 </div>
                 <div class="admin-form-card__footer">
                   <button class="btn btn-sm btn-primary" type="submit">Опублікувати</button>
@@ -859,23 +1138,33 @@
               <% }) %>
               <form method="POST" action="/admin/reviews" class="admin-form admin-form-card" novalidate>
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <input type="hidden" name="_formId" value="review:new">
                 <div class="admin-form-card__header">
                   <h4 class="h6 mb-0">Додати відгук</h4>
                 </div>
                 <div class="mb-3">
                   <label class="form-label">Ім'я</label>
-                  <input class="form-control" type="text" name="author_name" required>
+                  <input class="form-control<%= isInvalid('review:new', 'author_name') ? ' is-invalid' : '' %>" type="text" name="author_name" value="<%= getFormValue('review:new', 'author_name', '') %>" required>
+                  <% if (isInvalid('review:new', 'author_name')) { %>
+                    <div class="invalid-feedback"><%= fieldError('review:new', 'author_name') || 'Вкажіть ім\'я' %></div>
+                  <% } %>
                 </div>
                 <div class="mb-3">
                   <label class="form-label">Оцінка (1-5)</label>
-                  <input class="form-control" type="number" name="rating" min="1" max="5">
+                  <input class="form-control<%= isInvalid('review:new', 'rating') ? ' is-invalid' : '' %>" type="number" name="rating" min="1" max="5" value="<%= getFormValue('review:new', 'rating', '') %>">
+                  <% if (isInvalid('review:new', 'rating')) { %>
+                    <div class="invalid-feedback"><%= fieldError('review:new', 'rating') %></div>
+                  <% } %>
                 </div>
                 <div class="mb-3">
                   <label class="form-label">Повідомлення</label>
-                  <textarea class="form-control" name="message" rows="3" required></textarea>
+                  <textarea class="form-control<%= isInvalid('review:new', 'message') ? ' is-invalid' : '' %>" name="message" rows="3" required><%= getFormValue('review:new', 'message', '') %></textarea>
+                  <% if (isInvalid('review:new', 'message')) { %>
+                    <div class="invalid-feedback"><%= fieldError('review:new', 'message') || 'Вкажіть текст відгуку' %></div>
+                  <% } %>
                 </div>
                 <div class="form-check mb-3">
-                  <input class="form-check-input" type="checkbox" id="review_public" name="public" checked>
+                  <input class="form-check-input" type="checkbox" id="review_public" name="public" value="on" <%= hasFormState('review:new') ? (getFormValue('review:new', 'public', 'off') === 'on' ? 'checked' : '') : 'checked' %>>
                   <label class="form-check-label" for="review_public">Показувати одразу</label>
                 </div>
                 <div class="admin-form-card__footer">
@@ -956,27 +1245,40 @@
       </div>
       <form method="POST" action="/admin/donations" class="admin-form" novalidate>
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <input type="hidden" name="_formId" value="donation:new">
         <div class="modal-body">
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label" for="modal_donor_name">Ім'я</label>
-              <input class="form-control" type="text" id="modal_donor_name" name="donor_name" required>
+              <input class="form-control<%= isInvalid('donation:new', 'donor_name') ? ' is-invalid' : '' %>" type="text" id="modal_donor_name" name="donor_name" value="<%= getFormValue('donation:new', 'donor_name', '') %>" required>
+              <% if (isInvalid('donation:new', 'donor_name')) { %>
+                <div class="invalid-feedback"><%= fieldError('donation:new', 'donor_name') || 'Вкажіть ім\'я' %></div>
+              <% } %>
             </div>
             <div class="col-md-3">
               <label class="form-label" for="modal_amount">Сума</label>
-              <input class="form-control" type="number" id="modal_amount" name="amount" min="10" required>
+              <input class="form-control<%= isInvalid('donation:new', 'amount') ? ' is-invalid' : '' %>" type="number" id="modal_amount" name="amount" min="10" value="<%= getFormValue('donation:new', 'amount', '') %>" required>
+              <% if (isInvalid('donation:new', 'amount')) { %>
+                <div class="invalid-feedback"><%= fieldError('donation:new', 'amount') || 'Вкажіть суму' %></div>
+              <% } %>
             </div>
             <div class="col-md-3">
               <label class="form-label" for="modal_currency">Валюта</label>
-              <input class="form-control" type="text" id="modal_currency" name="currency" value="UAH">
+              <input class="form-control<%= isInvalid('donation:new', 'currency') ? ' is-invalid' : '' %>" type="text" id="modal_currency" name="currency" value="<%= getFormValue('donation:new', 'currency', 'UAH') %>">
+              <% if (isInvalid('donation:new', 'currency')) { %>
+                <div class="invalid-feedback"><%= fieldError('donation:new', 'currency') %></div>
+              <% } %>
             </div>
             <div class="col-12">
               <label class="form-label" for="modal_message">Коментар</label>
-              <textarea class="form-control" id="modal_message" name="message" rows="3"></textarea>
+              <textarea class="form-control<%= isInvalid('donation:new', 'message') ? ' is-invalid' : '' %>" id="modal_message" name="message" rows="3"><%= getFormValue('donation:new', 'message', '') %></textarea>
+              <% if (isInvalid('donation:new', 'message')) { %>
+                <div class="invalid-feedback"><%= fieldError('donation:new', 'message') %></div>
+              <% } %>
             </div>
             <div class="col-12">
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="modal_public" name="public" checked>
+                <input class="form-check-input" type="checkbox" id="modal_public" name="public" value="on" <%= hasFormState('donation:new') ? (getFormValue('donation:new', 'public', 'off') === 'on' ? 'checked' : '') : 'checked' %>>
                 <label class="form-check-label" for="modal_public">Показувати у публічному списку</label>
               </div>
             </div>
@@ -1000,14 +1302,21 @@
       </div>
       <form method="POST" action="/admin/withdrawals" class="admin-form" novalidate>
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <input type="hidden" name="_formId" value="withdrawal:new">
         <div class="modal-body">
           <div class="mb-3">
             <label class="form-label" for="modal_withdraw_amount">Сума</label>
-            <input class="form-control" type="number" id="modal_withdraw_amount" name="amount" min="1" required>
+            <input class="form-control<%= isInvalid('withdrawal:new', 'amount') ? ' is-invalid' : '' %>" type="number" id="modal_withdraw_amount" name="amount" min="1" value="<%= getFormValue('withdrawal:new', 'amount', '') %>" required>
+            <% if (isInvalid('withdrawal:new', 'amount')) { %>
+              <div class="invalid-feedback"><%= fieldError('withdrawal:new', 'amount') || 'Вкажіть суму' %></div>
+            <% } %>
           </div>
           <div class="mb-3">
             <label class="form-label" for="modal_description">Призначення</label>
-            <textarea class="form-control" id="modal_description" name="description" rows="3"></textarea>
+            <textarea class="form-control<%= isInvalid('withdrawal:new', 'description') ? ' is-invalid' : '' %>" id="modal_description" name="description" rows="3"><%= getFormValue('withdrawal:new', 'description', '') %></textarea>
+            <% if (isInvalid('withdrawal:new', 'description')) { %>
+              <div class="invalid-feedback"><%= fieldError('withdrawal:new', 'description') %></div>
+            <% } %>
           </div>
           <p class="form-hint mb-0">Додайте чек у блок «Заявки» для прозорої модерації.</p>
         </div>

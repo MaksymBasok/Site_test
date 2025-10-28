@@ -32,6 +32,17 @@ function mapUser(row) {
   };
 }
 
+function parseDetails(details) {
+  if (!details) {
+    return null;
+  }
+  try {
+    return JSON.parse(details);
+  } catch (error) {
+    return details;
+  }
+}
+
 function findUserByEmail(email) {
   return db.prepare('SELECT * FROM users WHERE email = ?').get(email);
 }
@@ -152,6 +163,72 @@ function listAdministrators() {
   `).all();
 }
 
+function listAllUsers() {
+  return db.prepare(`
+    SELECT id, email, full_name, phone, role, status, notes, proof_path,
+           datetime(created_at) AS created_at,
+           datetime(approved_at) AS approved_at,
+           datetime(last_login_at) AS last_login_at,
+           datetime(updated_at) AS updated_at
+    FROM users
+    ORDER BY datetime(created_at) DESC
+  `).all();
+}
+
+function listUserAuditLogs(userIds = []) {
+  if (!userIds || userIds.length === 0) {
+    return [];
+  }
+  const placeholders = userIds.map(() => '?').join(',');
+  return db.prepare(`
+    SELECT log.id, log.user_id, log.action, log.details, log.performed_by,
+           datetime(log.created_at) AS created_at,
+           performer.full_name AS performed_by_name,
+           performer.email AS performed_by_email
+    FROM user_audit_log log
+    LEFT JOIN users performer ON performer.id = log.performed_by
+    WHERE log.user_id IN (${placeholders})
+    ORDER BY datetime(log.created_at) DESC
+  `).all(userIds).map((row) => ({
+    id: row.id,
+    user_id: row.user_id,
+    action: row.action,
+    details: parseDetails(row.details),
+    performed_by: row.performed_by,
+    performed_by_name: row.performed_by_name,
+    performed_by_email: row.performed_by_email,
+    created_at: row.created_at
+  }));
+}
+
+function listAdminNotesByUsers(userIds = []) {
+  if (!userIds || userIds.length === 0) {
+    return [];
+  }
+  const placeholders = userIds.map(() => '?').join(',');
+  return db.prepare(`
+    SELECT notes.id, notes.user_id, notes.note,
+           datetime(notes.created_at) AS created_at,
+           notes.created_by,
+           author.full_name AS created_by_name,
+           author.email AS created_by_email
+    FROM admin_notes notes
+    LEFT JOIN users author ON author.id = notes.created_by
+    WHERE notes.user_id IN (${placeholders})
+    ORDER BY datetime(notes.created_at) DESC
+  `).all(userIds);
+}
+
+function createAdminNote(userId, note, createdBy) {
+  if (!note || !String(note).trim()) {
+    throw createError(422, 'Вкажіть зміст примітки');
+  }
+  db.prepare(`
+    INSERT INTO admin_notes (user_id, note, created_by)
+    VALUES (?, ?, ?)
+  `).run(userId, note.trim(), createdBy || null);
+}
+
 function updateUserStatus(userId, status, performedBy, options = {}) {
   const user = findUserById(userId);
   if (!user) {
@@ -210,6 +287,10 @@ module.exports = {
   listApplicants,
   listApprovedDonors,
   listAdministrators,
+  listAllUsers,
+  listUserAuditLogs,
+  listAdminNotesByUsers,
+  createAdminNote,
   updateUserStatus,
   assignRole,
   updateProofPath
