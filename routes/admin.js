@@ -1,12 +1,11 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
-const path = require('path');
-const PDFDocument = require('pdfkit');
 const donationService = require('../services/donationService');
 const volunteerService = require('../services/volunteerService');
 const withdrawalService = require('../services/withdrawalService');
 const reviewService = require('../services/reviewService');
 const feedbackService = require('../services/feedbackService');
+const exportService = require('../services/exportService');
 const {
   authenticate,
   listApplicants,
@@ -146,6 +145,8 @@ router.get('/dashboard', requireAdmin, (req, res) => {
     media,
     articles,
     STATUSES,
+    exportDatasets: exportService.datasets,
+    exportMeta: exportService.meta,
     csrfToken: res.locals.csrfToken
   });
 });
@@ -524,72 +525,39 @@ router.post('/reviews/:id/toggle', requireAdmin, (req, res, next) => {
   }
 });
 
-router.get('/export/users.pdf', requireAdmin, (req, res, next) => {
+router.post('/export', requireAdmin, (req, res, next) => {
   try {
-    const applicants = listApplicants();
-    const donors = listApprovedDonors();
-    const admins = listAdministrators();
+    const requested = req.body.datasets || req.body.selection;
+    if (!requested || (Array.isArray(requested) && requested.length === 0)) {
+      return res.status(400).json({ error: 'Оберіть хоча б один розділ для експорту.' });
+    }
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename="volonterka-users-report.pdf"');
+    const selection = exportService.normalizeSelection(requested);
+    if (!selection.length) {
+      return res.status(400).json({ error: 'Некоректні параметри експорту.' });
+    }
 
-    const doc = new PDFDocument({ size: 'A4', margin: 40 });
-    doc.on('error', (err) => {
-      // Ensure stream ends on error to avoid broken download
-      try { res.end(); } catch (_) {}
-      console.error('PDF generation error:', err);
-    });
-    doc.pipe(res);
+    const datasets = exportService.buildDatasets(selection);
 
-    const fs = require('fs');
-    const regularFont = path.join(__dirname, '..', 'public', 'fonts', 'Montserrat-Regular.ttf');
-    const semiBoldFont = path.join(__dirname, '..', 'public', 'fonts', 'Montserrat-SemiBold.ttf');
+    if ((req.body.format || '').toLowerCase() === 'json') {
+      return res.json({
+        generatedAt: new Date().toISOString(),
+        datasets
+      });
+    }
 
-    const hasRegular = fs.existsSync(regularFont);
-    const hasSemiBold = fs.existsSync(semiBoldFont);
-    if (hasRegular) doc.registerFont('Montserrat-Regular', regularFont);
-    if (hasSemiBold) doc.registerFont('Montserrat-SemiBold', semiBoldFont);
+    const archive = exportService.createArchive(datasets, { prefix: 'volonterka' });
+    const filename = exportService.generateFilename('datasets');
 
-    const titleFont = hasSemiBold ? 'Montserrat-SemiBold' : 'Helvetica-Bold';
-    const textFont = hasRegular ? 'Montserrat-Regular' : 'Helvetica';
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
 
-    doc.font(titleFont).fontSize(18).text('Звіт по користувачах фонду', { align: 'center' });
-    doc.moveDown();
-
-    doc.font(titleFont).fontSize(14).text('Адміністратори', { underline: true });
-    admins.forEach((admin) => {
-      doc.font(textFont).fontSize(11).text(`${admin.full_name || admin.email} — ${admin.email}`);
-      if (admin.last_login_at) {
-        doc.fontSize(9).fillColor('gray').text(`Останній вхід: ${admin.last_login_at}`, { indent: 20 });
-        doc.fillColor('black');
-      }
-    });
-    doc.moveDown();
-
-    doc.font(titleFont).fontSize(14).text('Підтверджені донатери', { underline: true });
-    donors.forEach((donor) => {
-      doc.font(textFont).fontSize(11).text(`${donor.full_name || donor.email} — ${donor.email}`);
-      if (donor.phone) {
-        doc.fontSize(9).fillColor('gray').text(`Телефон: ${donor.phone}`, { indent: 20 });
-      }
-      if (donor.approved_at) {
-        doc.fontSize(9).fillColor('gray').text(`З нами з: ${donor.approved_at}`, { indent: 20 });
-      }
-      doc.fillColor('black');
-    });
-    doc.moveDown();
-
-    doc.font(titleFont).fontSize(14).text('Заявки на розгляд', { underline: true });
-    applicants.forEach((applicant) => {
-      doc.font(textFont).fontSize(11).text(`${applicant.full_name || applicant.email} — ${applicant.email}`);
-      if (applicant.phone) {
-        doc.fontSize(9).fillColor('gray').text(`Телефон: ${applicant.phone}`, { indent: 20 });
-      }
-      doc.fontSize(9).fillColor('gray').text(`Статус: ${applicant.status}`, { indent: 20 });
-      doc.fillColor('black');
+    archive.on('error', (error) => {
+      next(error);
     });
 
-    doc.end();
+    archive.pipe(res);
+    archive.finalize();
   } catch (err) {
     return next(err);
   }

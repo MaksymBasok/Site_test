@@ -497,14 +497,134 @@ const initAdminTables = () => {
   });
 };
 
-const initAdminExportButton = () => {
-  const button = document.querySelector('[data-export-users]');
-  if (!button) return;
-  button.addEventListener('click', () => {
-    button.dataset.loading = 'true';
-    setTimeout(() => {
-      delete button.dataset.loading;
-    }, 5000);
+const parseContentDisposition = (header) => {
+  if (!header) return null;
+  const match = /filename="?([^";]+)"?/i.exec(header);
+  return match ? match[1] : null;
+};
+
+const initAdminExportCenter = () => {
+  const form = document.querySelector('[data-export-form]');
+  if (!form) return;
+
+  const csrfToken = form.dataset.csrf;
+  const selectAll = form.querySelector('[data-export-select-all]');
+  const checkboxes = $$('[data-export-dataset]', form);
+  const status = form.querySelector('[data-export-status]');
+  const submit = form.querySelector('[data-export-submit]');
+  const formatSelect = form.querySelector('[data-export-format]');
+  const modalElement = form.closest('.modal');
+  const modalInstance = modalElement && window.bootstrap
+    ? window.bootstrap.Modal.getOrCreateInstance(modalElement)
+    : null;
+
+  const updateStatus = (message = '', tone = 'muted') => {
+    if (!status) return;
+    status.textContent = message;
+    status.className = 'export-status';
+    if (message) {
+      status.classList.add(`export-status--${tone}`);
+    }
+  };
+
+  const syncSelectAll = () => {
+    if (!selectAll) return;
+    const total = checkboxes.length;
+    const checked = checkboxes.filter((input) => input.checked).length;
+    selectAll.indeterminate = checked > 0 && checked < total;
+    selectAll.checked = checked === total;
+  };
+
+  const toggleSubmitState = (isLoading) => {
+    if (!submit) return;
+    submit.disabled = isLoading;
+    submit.classList.toggle('is-loading', isLoading);
+  };
+
+  selectAll && selectAll.addEventListener('change', () => {
+    checkboxes.forEach((input) => {
+      input.checked = selectAll.checked;
+    });
+    updateStatus('', 'muted');
+  });
+
+  checkboxes.forEach((input) => {
+    input.addEventListener('change', () => {
+      syncSelectAll();
+    });
+  });
+
+  syncSelectAll();
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const selected = checkboxes.filter((input) => input.checked).map((input) => input.value);
+    if (selected.length === 0) {
+      updateStatus('Оберіть хоча б один розділ для експорту.', 'danger');
+      return;
+    }
+
+    const format = (formatSelect && formatSelect.value) || 'zip';
+    toggleSubmitState(true);
+    updateStatus('Готуємо вивантаження…', 'muted');
+
+    try {
+      const response = await fetch('/admin/export', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': format === 'json' ? 'application/json' : 'application/zip',
+          'X-CSRF-Token': csrfToken || ''
+        },
+        body: JSON.stringify({ datasets: selected, format })
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.error || 'Не вдалося сформувати експорт.');
+      }
+
+      if (format === 'json') {
+        const payload = await response.json();
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const previewWindow = window.open(url, '_blank', 'noopener');
+        if (!previewWindow) {
+          const anchor = document.createElement('a');
+          anchor.href = url;
+          anchor.download = `volonterka-export-${Date.now()}.json`;
+          document.body.appendChild(anchor);
+          anchor.click();
+          document.body.removeChild(anchor);
+          updateStatus('JSON-звіт збережено як файл.', 'success');
+        } else {
+          updateStatus('JSON-звіт відкрито у новій вкладці.', 'success');
+        }
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      } else {
+        const blob = await response.blob();
+        const filename = parseContentDisposition(response.headers.get('Content-Disposition'))
+          || `volonterka-export-${Date.now()}.zip`;
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = filename;
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+        updateStatus('Архів готується до завантаження.', 'success');
+      }
+
+      if (modalInstance) {
+        setTimeout(() => modalInstance.hide(), 600);
+      }
+    } catch (error) {
+      updateStatus(error.message || 'Сталася помилка при експорті.', 'danger');
+    } finally {
+      toggleSubmitState(false);
+      syncSelectAll();
+    }
   });
 };
 
@@ -539,7 +659,7 @@ const initScripts = () => {
   initSparklineCharts();
   initAdminNav();
   initAdminTables();
-  initAdminExportButton();
+  initAdminExportCenter();
 };
 
 document.addEventListener('DOMContentLoaded', initScripts);

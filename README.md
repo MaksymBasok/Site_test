@@ -142,7 +142,7 @@
 
 - `data-sparkline` — канвас для міні-графіків (ініціалізується `initSparklineCharts`).
 - `data-table="donations"` + `data-table-body="donations"` — живий пошук у таблицях адмінки.
-- `data-export-users` — кнопка експорту з індикатором виконання.
+- `data-export-form` — модальне вікно «Центр експорту» з чекбоксами `data-export-dataset` та селектором `data-export-format`.
 - `data-admin-nav` — бічне меню адмін-панелі з активним станом.
 
 ## Подальший розвиток
