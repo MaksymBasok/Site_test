@@ -39,7 +39,10 @@ function createFeedback(data) {
 function validate(req) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    throw createError(422, errors.array()[0].msg);
+    const details = errors.array();
+    const error = createError(422, details[0].msg);
+    error.fields = details.map((item) => ({ field: item.path, message: item.msg }));
+    throw error;
   }
 }
 

@@ -1,9 +1,28 @@
-<% if (flash && (flash.error || flash.success)) { %>
+<%
+  const hasFlash = flash && (flash.error || flash.success || flash.info || flash.warning);
+%>
+<% if (hasFlash) { %>
   <div class="toast-container" data-toast-container>
     <% if (flash.success) { %>
       <% flash.success.forEach(function(message) { %>
         <div class="toast-message toast-message--success" role="status">
           <strong><i class="fa-solid fa-circle-check me-2"></i>Успіх</strong>
+          <span><%= message %></span>
+        </div>
+      <% }) %>
+    <% } %>
+    <% if (flash.info) { %>
+      <% flash.info.forEach(function(message) { %>
+        <div class="toast-message toast-message--info" role="status">
+          <strong><i class="fa-solid fa-circle-info me-2"></i>Нотатка</strong>
+          <span><%= message %></span>
+        </div>
+      <% }) %>
+    <% } %>
+    <% if (flash.warning) { %>
+      <% flash.warning.forEach(function(message) { %>
+        <div class="toast-message toast-message--warning" role="alert">
+          <strong><i class="fa-solid fa-triangle-exclamation me-2"></i>Увага</strong>
           <span><%= message %></span>
         </div>
       <% }) %>

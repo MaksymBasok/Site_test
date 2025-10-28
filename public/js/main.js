@@ -418,6 +418,126 @@ const initAdminNav = () => {
   });
 };
 
+const initModalBackdropGuard = () => {
+  const cleanup = () => {
+    const activeModals = document.querySelectorAll('.modal.show');
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    if (activeModals.length === 0 && backdrops.length > 0) {
+      backdrops.forEach((backdrop) => backdrop.remove());
+      document.body.classList.remove('modal-open');
+      document.body.style.removeProperty('overflow');
+      document.body.style.removeProperty('paddingRight');
+    } else if (activeModals.length > 0 && backdrops.length > activeModals.length) {
+      Array.from(backdrops)
+        .slice(activeModals.length)
+        .forEach((backdrop) => backdrop.remove());
+    }
+  };
+
+  document.addEventListener('hidden.bs.modal', cleanup);
+  window.addEventListener('pageshow', cleanup);
+  cleanup();
+};
+
+const initHashNavigation = () => {
+  if (!window.location.hash) return;
+  const target = document.querySelector(window.location.hash);
+  if (!target) return;
+  window.requestAnimationFrame(() => {
+    target.scrollIntoView({ block: 'start' });
+  });
+};
+
+const initRealtimeValidation = () => {
+  $$('input.is-invalid, textarea.is-invalid, select.is-invalid').forEach((field) => {
+    const handler = () => {
+      field.classList.remove('is-invalid');
+      field.removeEventListener('input', handler);
+      field.removeEventListener('change', handler);
+    };
+    field.addEventListener('input', handler);
+    field.addEventListener('change', handler);
+  });
+};
+
+const initUserDirectory = () => {
+  const table = document.querySelector('[data-user-table]');
+  if (!table) return;
+  const rows = $$('[data-user-row]', table);
+  const emptyRow = table.querySelector('[data-user-empty]');
+  const roleFilter = document.querySelector('[data-filter-role]');
+  const statusFilter = document.querySelector('[data-filter-status]');
+  const searchInput = document.querySelector('[data-filter-search]');
+  const counter = document.querySelector('[data-user-count]');
+  const totalBadge = document.querySelector('[data-user-total]');
+  if (totalBadge) {
+    totalBadge.textContent = rows.length;
+  }
+
+  const applyFilters = () => {
+    const roleValue = roleFilter ? roleFilter.value : 'all';
+    const statusValue = statusFilter ? statusFilter.value : 'all';
+    const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    let visible = 0;
+
+    rows.forEach((row) => {
+      const rowRole = row.dataset.role || '';
+      const rowStatus = row.dataset.status || '';
+      const searchable = row.dataset.search || '';
+      const roleMatch = roleValue === 'all' || rowRole === roleValue;
+      const statusMatch = statusValue === 'all' || rowStatus === statusValue;
+      const searchMatch = !query || searchable.includes(query);
+      const isVisible = roleMatch && statusMatch && searchMatch;
+      row.classList.toggle('d-none', !isVisible);
+      const detailsRow = row.nextElementSibling;
+      if (detailsRow && detailsRow.dataset.userDetails === row.dataset.userId) {
+        if (!isVisible) {
+          detailsRow.classList.add('d-none');
+          detailsRow.classList.remove('is-open');
+          const toggle = row.querySelector('[data-user-details-toggle]');
+          toggle && toggle.setAttribute('aria-expanded', 'false');
+        }
+      }
+      if (isVisible) {
+        visible += 1;
+      }
+    });
+
+    if (counter) {
+      counter.textContent = visible;
+    }
+    if (emptyRow) {
+      emptyRow.classList.toggle('d-none', visible !== 0);
+    }
+  };
+
+  roleFilter && roleFilter.addEventListener('change', applyFilters);
+  statusFilter && statusFilter.addEventListener('change', applyFilters);
+  searchInput && searchInput.addEventListener('input', () => {
+    window.requestAnimationFrame(applyFilters);
+  });
+
+  $$('[data-user-details-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const row = button.closest('[data-user-row]');
+      if (!row) return;
+      const detailsRow = row.nextElementSibling;
+      if (!detailsRow || detailsRow.dataset.userDetails !== row.dataset.userId) return;
+      const isOpen = !detailsRow.classList.contains('is-open');
+      detailsRow.classList.toggle('d-none', !isOpen);
+      detailsRow.classList.toggle('is-open', isOpen);
+      button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      if (isOpen) {
+        window.requestAnimationFrame(() => {
+          detailsRow.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        });
+      }
+    });
+  });
+
+  applyFilters();
+};
+
 const initFullscreenViewer = () => {
   const modalEl = document.getElementById('fullscreenViewer');
   if (!modalEl) return;
@@ -837,6 +957,10 @@ const initScripts = () => {
   initToastAutoHide();
   initSparklineCharts();
   initAdminNav();
+  initModalBackdropGuard();
+  initHashNavigation();
+  initRealtimeValidation();
+  initUserDirectory();
   initAdminTables();
   initAdminExportCenter();
   initAdminCompactLists();
