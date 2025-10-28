@@ -7,7 +7,6 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const session = require('express-session');
 const SQLiteStore = require('connect-sqlite3')(session);
-const csrf = require('csurf');
 const flash = require('connect-flash');
 const hpp = require('hpp');
 const rateLimit = require('express-rate-limit');
@@ -19,6 +18,7 @@ const apiRouter = require('./routes/api');
 const adminRouter = require('./routes/admin');
 const authRouter = require('./routes/auth');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandlers');
+const csrfProtection = require('./middleware/csrf');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -66,10 +66,10 @@ app.use(session({
 
 app.use(flash());
 
-const csrfProtection = csrf();
-
 app.use((req, res, next) => {
-  if (req.path.startsWith('/api/') && ['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
+  const isReadOnlyApi = req.path.startsWith('/api/') && ['GET', 'HEAD', 'OPTIONS'].includes(req.method);
+  const isMultipartRegister = req.method === 'POST' && req.path === '/auth/register';
+  if (isReadOnlyApi || isMultipartRegister) {
     return next();
   }
   return csrfProtection(req, res, next);
