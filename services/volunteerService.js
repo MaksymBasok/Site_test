@@ -44,9 +44,19 @@ function listRecent(limit = 20) {
   `).all(limit);
 }
 
+function listAll() {
+  return db.prepare(`
+    SELECT id, full_name, phone, email, region, skills, comment,
+           datetime(created_at) AS created_at
+    FROM volunteers
+    ORDER BY datetime(created_at) DESC
+  `).all();
+}
+
 module.exports = {
   volunteerValidators,
   createVolunteer,
   validate,
-  listRecent
+  listRecent,
+  listAll
 };
