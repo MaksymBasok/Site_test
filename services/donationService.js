@@ -45,6 +45,15 @@ function listRecent(limit = 20) {
   `).all(limit);
 }
 
+function listAll() {
+  return db.prepare(`
+    SELECT id, donor_name, amount, currency, message, public,
+           datetime(created_at) AS created_at
+    FROM donations
+    ORDER BY datetime(created_at) DESC
+  `).all();
+}
+
 function validate(req) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -57,5 +66,6 @@ module.exports = {
   createDonation,
   listPublicDonations,
   listRecent,
+  listAll,
   validate
 };

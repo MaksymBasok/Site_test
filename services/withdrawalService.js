@@ -25,6 +25,15 @@ function listRecent(limit = 20) {
   `).all(limit);
 }
 
+function listAll() {
+  return db.prepare(`
+    SELECT id, amount, description, created_by,
+           datetime(created_at) AS created_at
+    FROM withdrawals
+    ORDER BY datetime(created_at) DESC
+  `).all();
+}
+
 function validate(req) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -36,5 +45,6 @@ module.exports = {
   withdrawalValidators,
   createWithdrawal,
   listRecent,
+  listAll,
   validate
 };

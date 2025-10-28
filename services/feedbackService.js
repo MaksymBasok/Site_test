@@ -18,6 +18,15 @@ function listRecent(limit = 10) {
   `).all(limit);
 }
 
+function listAll() {
+  return db.prepare(`
+    SELECT id, sender_name, contact, message, channel,
+           datetime(created_at) AS created_at
+    FROM volunteer_feedback
+    ORDER BY datetime(created_at) DESC
+  `).all();
+}
+
 function createFeedback(data) {
   const stmt = db.prepare(`
     INSERT INTO volunteer_feedback (sender_name, contact, message, channel)
@@ -37,6 +46,7 @@ function validate(req) {
 module.exports = {
   feedbackValidators,
   listRecent,
+  listAll,
   createFeedback,
   validate
 };

@@ -5,6 +5,8 @@
   const volunteerSparkline = volunteers.slice(0, 8).reverse().map(() => 1);
   const applicantSparkline = applicants.slice(0, 8).reverse().map(() => 1);
   const activeGoal = goals.find((goal) => goal.status === 'active');
+  const datasetOrder = Array.isArray(exportDatasets) ? exportDatasets : [];
+  const datasetMeta = exportMeta || {};
 %>
 <!-- Продовжуємо використання синьо-жовтого градієнта з першого коміту -->
 <section class="page-header page-header--admin" data-reveal>
@@ -16,10 +18,9 @@
     </div>
     <div class="admin-header-actions">
       <a class="btn btn-outline-light" href="/" target="_blank"><i class="fa-solid fa-up-right-from-square me-2"></i>Переглянути сайт</a>
-      <a class="btn btn-outline-primary" href="/admin/export/users.pdf" data-export-users>
-        <i class="fa-regular fa-file-pdf me-2"></i>Експорт користувачів
-        <span class="btn-progress" aria-hidden="true"></span>
-      </a>
+      <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#modalExportCenter" data-export-launch>
+        <i class="fa-solid fa-arrow-down-wide-short me-2"></i>Центр експорту
+      </button>
       <form method="POST" action="/admin/logout">
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <button class="btn btn-outline-danger" type="submit"><i class="fa-solid fa-right-from-bracket me-2"></i>Вийти</button>
@@ -1013,6 +1014,58 @@
         <div class="modal-footer">
           <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Скасувати</button>
           <button class="btn btn-primary" type="submit">Зафіксувати</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalExportCenter" tabindex="-1" aria-labelledby="modalExportCenterLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title fs-5" id="modalExportCenterLabel">Експорт даних фонду</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити"></button>
+      </div>
+      <form class="export-form" data-export-form data-csrf="<%= csrfToken %>" novalidate>
+        <div class="modal-body">
+          <p class="text-muted small mb-3">Оберіть розділи, які хочете завантажити. Ми сформуємо структурований ZIP з CSV та JSON файлами відповідно до обраних блоків.</p>
+          <div class="row g-3">
+            <% datasetOrder.forEach(function(key) { const meta = datasetMeta[key] || {}; %>
+              <div class="col-md-6">
+                <label class="export-option" for="export_<%= key %>">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="export_<%= key %>" name="datasets" value="<%= key %>" data-export-dataset checked>
+                    <span class="form-check-label">
+                      <span class="export-option__title"><%= meta.label || key %></span>
+                      <% if (meta.description) { %>
+                        <span class="export-option__description"><%= meta.description %></span>
+                      <% } %>
+                    </span>
+                  </div>
+                </label>
+              </div>
+            <% }) %>
+          </div>
+          <div class="export-status mt-3" data-export-status role="status" aria-live="polite"></div>
+        </div>
+        <div class="modal-footer">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 w-100">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="exportSelectAll" data-export-select-all checked>
+              <label class="form-check-label small" for="exportSelectAll">Обрати/зняти всі розділи</label>
+            </div>
+            <div class="d-flex align-items-center gap-2 ms-auto">
+              <select class="form-select form-select-sm" name="format" data-export-format>
+                <option value="zip" selected>ZIP архів</option>
+                <option value="json">JSON у браузері</option>
+              </select>
+              <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Скасувати</button>
+              <button class="btn btn-primary" type="submit" data-export-submit>
+                <span class="me-2" aria-hidden="true"><i class="fa-solid fa-file-export"></i></span>
+                Експортувати
+              </button>
+            </div>
+          </div>
         </div>
       </form>
     </div>
