@@ -2287,6 +2287,14 @@ p {
   z-index: 1200;
 }
 
+/* Ensure Bootstrap modal is above all custom headers/toasts */
+.modal { z-index: 1300; }
+.modal-backdrop { z-index: 1250; }
+
+/* Safer backdrop interactions on mobile nav */
+.nav-backdrop { pointer-events: none; }
+.nav-backdrop.is-visible { pointer-events: auto; }
+
 .toast-message {
   min-width: 260px;
   padding: 0.85rem 1rem;
