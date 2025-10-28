@@ -30,6 +30,16 @@ const initNavigation = () => {
   document.addEventListener('show.bs.modal', () => closeNav());
   document.addEventListener('shown.bs.modal', () => closeNav());
 
+  // Avoid header shifting when modal toggles scrollbar
+  document.addEventListener('show.bs.modal', () => {
+    document.documentElement.style.setProperty('--scrollbar-comp', '0px');
+    document.body.style.paddingRight = '0px';
+  });
+  document.addEventListener('hidden.bs.modal', () => {
+    document.documentElement.style.removeProperty('--scrollbar-comp');
+    document.body.style.paddingRight = '';
+  });
+
   $$("[data-nav-dropdown]").forEach((dropdown) => {
     const button = $('button', dropdown);
     if (!button) return;
@@ -422,6 +432,7 @@ const initFullscreenViewer = () => {
   const modalEl = document.getElementById('fullscreenViewer');
   if (!modalEl) return;
   const imageEl = document.getElementById('fullscreenViewerImage');
+  const videoEl = document.getElementById('fullscreenViewerVideo');
   const frameEl = document.getElementById('fullscreenViewerFrame');
   const bsModal = window.bootstrap ? new window.bootstrap.Modal(modalEl) : null;
 
@@ -429,6 +440,9 @@ const initFullscreenViewer = () => {
     if (!src) return;
     frameEl.style.display = 'none';
     frameEl.removeAttribute('src');
+    videoEl.style.display = 'none';
+    try { videoEl.pause(); } catch (e) {}
+    videoEl.removeAttribute('src');
     imageEl.src = src;
     imageEl.alt = alt;
     imageEl.style.display = 'block';
@@ -438,30 +452,52 @@ const initFullscreenViewer = () => {
     if (!src) return;
     imageEl.style.display = 'none';
     imageEl.removeAttribute('src');
+    videoEl.style.display = 'none';
+    try { videoEl.pause(); } catch (e) {}
+    videoEl.removeAttribute('src');
     frameEl.src = src;
     frameEl.style.display = 'block';
     bsModal && bsModal.show();
   };
+  const openVideo = (src) => {
+    if (!src) return;
+    imageEl.style.display = 'none';
+    imageEl.removeAttribute('src');
+    frameEl.style.display = 'none';
+    frameEl.removeAttribute('src');
+    videoEl.src = src;
+    videoEl.style.display = 'block';
+    try { videoEl.play(); } catch (e) {}
+    bsModal && bsModal.show();
+  };
 
   document.addEventListener('click', (e) => {
-    const img = e.target.closest('.vehicle-preview img, .media-card__thumb img, img[data-fullscreen]');
+    const img = e.target.closest('.vehicle-card__media img, .vehicle-preview img, .media-card__thumb img, img[data-fullscreen]');
+    const vid = e.target.closest('.vehicle-card__media video, .media-card__thumb video, video[data-fullscreen]');
     const link = e.target.closest('a[data-fullscreen]');
     if (img) {
       e.preventDefault();
       const src = img.getAttribute('src');
       const alt = img.getAttribute('alt') || '';
       openImage(src, alt);
+    } else if (vid) {
+      e.preventDefault();
+      const src = vid.currentSrc || vid.getAttribute('src') || (vid.querySelector('source') && vid.querySelector('source').src) || '';
+      openVideo(src);
     } else if (link) {
       e.preventDefault();
       const href = link.getAttribute('href');
       const as = link.dataset.type || '';
       if (as === 'image' || /\.(png|jpe?g|webp|gif)$/i.test(href)) openImage(href, link.getAttribute('aria-label') || '');
+      else if (as === 'video' || /\.(mp4|webm|ogg)$/i.test(href)) openVideo(href);
       else openFrame(href);
     }
   });
 
   modalEl.addEventListener('hidden.bs.modal', () => {
     imageEl.removeAttribute('src');
+    try { videoEl.pause(); } catch (e) {}
+    videoEl.removeAttribute('src');
     frameEl.removeAttribute('src');
   });
 };

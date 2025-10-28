@@ -75,6 +75,8 @@
 html {
   scroll-behavior: smooth;
   min-height: 100%;
+  /* Avoid layout shift when Bootstrap toggles body scrollbar */
+  scrollbar-gutter: stable both-edges;
 }
 
 body {
@@ -2351,6 +2353,9 @@ p {
 
 /* Ensure modal content is always interactive */
 .modal, .modal * { pointer-events: auto; }
+
+/* Prevent Bootstrap from adding right padding visual shift */
+body.modal-open { padding-right: 0 !important; }
 
 .toast-message {
   min-width: 260px;
