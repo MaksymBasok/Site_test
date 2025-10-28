@@ -2445,8 +2445,9 @@ tr.user-detail-row > td {
 }
 
 /* Ensure Bootstrap modal is above all custom headers/toasts */
-.modal { z-index: 1300; }
-.modal-backdrop { z-index: 1250; }
+/* Keep Bootstrap modal above any custom layers */
+.modal { z-index: 1400 !important; }
+.modal-backdrop { z-index: 1350 !important; }
 
 /* Safer backdrop interactions on mobile nav */
 .nav-backdrop { pointer-events: none; }
