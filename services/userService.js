@@ -137,10 +137,11 @@ async function registerUser(data) {
 }
 
 function listApplicants() {
+  // Only show pending applicants; rejected ones should disappear from the list
   return db.prepare(`
     SELECT id, email, full_name, phone, proof_path, status, created_at
     FROM users
-    WHERE role = 'donor' AND status IN ('pending', 'rejected')
+    WHERE role = 'donor' AND status = 'pending'
     ORDER BY datetime(created_at) DESC
   `).all();
 }
