@@ -2084,6 +2084,33 @@ p {
   display: block;
 }
 
+/* Compact collapsible lists in admin */
+.list-card-item[data-collapsible],
+.admin-form-card[data-collapsible] {
+  border: 1px solid rgba(0, 87, 183, 0.08);
+  border-radius: var(--radius-lg);
+}
+
+[data-collapsible-header] {
+  cursor: pointer;
+  user-select: none;
+}
+
+[data-collapsible-header]::after {
+  content: '\f0d7';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  margin-left: 0.5rem;
+  transition: transform var(--transition-fast);
+}
+
+[data-collapsible-header][aria-expanded='true']::after {
+  transform: rotate(180deg);
+}
+
+.collapsible-body { display: none; }
+.is-open > .collapsible-body { display: block; }
+
 .moderation-checklist {
   list-style: none;
   padding: 0;

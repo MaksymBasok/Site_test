@@ -26,6 +26,10 @@ const initNavigation = () => {
     }
   });
 
+  // Ensure any Bootstrap modal can't be blocked by an open nav panel
+  document.addEventListener('show.bs.modal', () => closeNav());
+  document.addEventListener('shown.bs.modal', () => closeNav());
+
   $$("[data-nav-dropdown]").forEach((dropdown) => {
     const button = $('button', dropdown);
     if (!button) return;
@@ -414,6 +418,84 @@ const initAdminNav = () => {
   });
 };
 
+const initAdminCompactLists = () => {
+  // Helper to wrap following siblings into a collapsible body
+  const makeCollapsible = (item, header) => {
+    if (!item || !header) return;
+    if (item.dataset.collapsible === 'true') return;
+    item.dataset.collapsible = 'true';
+    header.setAttribute('data-collapsible-header', '');
+    header.setAttribute('role', 'button');
+    header.setAttribute('tabindex', '0');
+    header.setAttribute('aria-expanded', 'false');
+    const body = document.createElement('div');
+    body.className = 'collapsible-body';
+    // Move all siblings after header into body
+    let cursor = header.nextSibling;
+    const toMove = [];
+    while (cursor) { toMove.push(cursor); cursor = cursor.nextSibling; }
+    toMove.forEach((n) => body.appendChild(n));
+    item.appendChild(body);
+    const toggle = () => {
+      const open = item.classList.toggle('is-open');
+      header.setAttribute('aria-expanded', open ? 'true' : 'false');
+    };
+    header.addEventListener('click', toggle);
+    header.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+    });
+  };
+
+  // Vehicles list
+  $$('#vehicles .list-card .list-card-item').forEach((item) => {
+    const header = item.firstElementChild; // top row with title/status
+    if (header) makeCollapsible(item, header);
+  });
+
+  // Media and Articles cards
+  $$('#content .admin-form-card').forEach((card) => {
+    const header = card.querySelector('.admin-form-card__header') || card.firstElementChild;
+    if (header) makeCollapsible(card, header);
+  });
+
+  // Start collapsed by default
+  $$('#vehicles .list-card .list-card-item, #content .admin-form-card').forEach((item) => {
+    item.classList.remove('is-open');
+  });
+
+  // Enhance vehicle forms: replace free text with selects where possible
+  const vStatuses = ['needs_funding','scouting','in_progress','repairing','ready_for_mission','funded'];
+  const vCats = ['pickup','suv','van','truck','ambulance','other'];
+  const replaceWithSelect = (form, fieldName, values) => {
+    const input = form.querySelector(`input[name="${fieldName}"]`);
+    if (!input) return;
+    const current = (input.value || '').trim();
+    const select = document.createElement('select');
+    select.className = 'form-select';
+    select.name = fieldName;
+    if (input.required) select.required = true;
+    const makeOption = (val, sel) => {
+      const opt = document.createElement('option');
+      opt.value = val; opt.textContent = val; if (sel) opt.selected = true; return opt;
+    };
+    let matched = false;
+    values.forEach((v) => { const sel = v === current; if (sel) matched = true; select.appendChild(makeOption(v, sel)); });
+    if (current && !matched) select.appendChild(makeOption(current, true));
+    input.replaceWith(select);
+  };
+  // Edit forms
+  $$('#vehicles form[id^="vehicle-form-"]').forEach((form) => {
+    replaceWithSelect(form, 'status', vStatuses);
+    replaceWithSelect(form, 'category', vCats);
+  });
+  // Create form
+  const createForm = document.querySelector('#vehicles form[action="/admin/vehicles"]');
+  if (createForm) {
+    replaceWithSelect(createForm, 'status', vStatuses);
+    replaceWithSelect(createForm, 'category', vCats);
+  }
+};
+
 const initSparklineCharts = () => {
   const charts = $$('[data-sparkline]');
   if (charts.length === 0) return;
@@ -682,6 +764,7 @@ const initScripts = () => {
   initAdminNav();
   initAdminTables();
   initAdminExportCenter();
+  initAdminCompactLists();
 };
 
 document.addEventListener('DOMContentLoaded', initScripts);
