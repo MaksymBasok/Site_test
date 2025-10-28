@@ -128,6 +128,11 @@ img {
   max-width: min(1180px, 96vw);
 }
 
+/* Wider container for admin pages */
+.container.container--wide {
+  max-width: min(1360px, 98vw);
+}
+
 .page-shell {
   position: relative;
   min-height: 100vh;
@@ -539,7 +544,7 @@ p {
 }
 
 .nav-dropdown__toggle::after {
-  content: '\\f0d7';
+  content: '\f0d7';
   font-family: 'Font Awesome 6 Free';
   font-weight: 900;
   margin-left: 0.4rem;
@@ -919,7 +924,7 @@ p {
 }
 
 .section__link::after {
-  content: '\\f061';
+  content: '\f061';
   font-family: 'Font Awesome 6 Free';
   font-weight: 900;
   font-size: 0.75rem;

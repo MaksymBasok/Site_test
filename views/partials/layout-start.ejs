@@ -18,5 +18,5 @@
     <%- include('header', { currentPath, currentUser, csrfToken }) %>
     <div class="page">
       <main id="main-content" tabindex="-1">
-        <div class="container container--page">
+        <div class="container <%= currentPath && currentPath.startsWith('/admin') ? 'container--wide' : 'container--page' %>">
         <%- include('flash-messages', { flash: flash }) %>
