@@ -2305,6 +2305,19 @@ p {
   box-shadow: var(--shadow-strong);
 }
 
+/* Fullscreen media viewer */
+.modal--media-viewer {
+  background: #000;
+  color: #fff;
+}
+.modal--media-viewer .modal-header {
+  background: rgba(255,255,255,0.06);
+  border-bottom-color: rgba(255,255,255,0.12);
+}
+.modal--media-viewer .btn-close {
+  filter: invert(1) grayscale(1);
+}
+
 .modal-header {
   border-bottom: 1px solid rgba(0, 87, 183, 0.1);
 }
@@ -2331,6 +2344,13 @@ p {
 /* Safer backdrop interactions on mobile nav */
 .nav-backdrop { pointer-events: none; }
 .nav-backdrop.is-visible { pointer-events: auto; }
+
+/* When a modal is open, force-close any sliding nav panel/backdrop */
+.modal-open .nav-panel { transform: translateX(120%) !important; }
+.modal-open .nav-backdrop { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; }
+
+/* Ensure modal content is always interactive */
+.modal, .modal * { pointer-events: auto; }
 
 .toast-message {
   min-width: 260px;

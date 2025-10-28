@@ -418,6 +418,54 @@ const initAdminNav = () => {
   });
 };
 
+const initFullscreenViewer = () => {
+  const modalEl = document.getElementById('fullscreenViewer');
+  if (!modalEl) return;
+  const imageEl = document.getElementById('fullscreenViewerImage');
+  const frameEl = document.getElementById('fullscreenViewerFrame');
+  const bsModal = window.bootstrap ? new window.bootstrap.Modal(modalEl) : null;
+
+  const openImage = (src, alt = '') => {
+    if (!src) return;
+    frameEl.style.display = 'none';
+    frameEl.removeAttribute('src');
+    imageEl.src = src;
+    imageEl.alt = alt;
+    imageEl.style.display = 'block';
+    bsModal && bsModal.show();
+  };
+  const openFrame = (src) => {
+    if (!src) return;
+    imageEl.style.display = 'none';
+    imageEl.removeAttribute('src');
+    frameEl.src = src;
+    frameEl.style.display = 'block';
+    bsModal && bsModal.show();
+  };
+
+  document.addEventListener('click', (e) => {
+    const img = e.target.closest('.vehicle-preview img, .media-card__thumb img, img[data-fullscreen]');
+    const link = e.target.closest('a[data-fullscreen]');
+    if (img) {
+      e.preventDefault();
+      const src = img.getAttribute('src');
+      const alt = img.getAttribute('alt') || '';
+      openImage(src, alt);
+    } else if (link) {
+      e.preventDefault();
+      const href = link.getAttribute('href');
+      const as = link.dataset.type || '';
+      if (as === 'image' || /\.(png|jpe?g|webp|gif)$/i.test(href)) openImage(href, link.getAttribute('aria-label') || '');
+      else openFrame(href);
+    }
+  });
+
+  modalEl.addEventListener('hidden.bs.modal', () => {
+    imageEl.removeAttribute('src');
+    frameEl.removeAttribute('src');
+  });
+};
+
 const initAdminCompactLists = () => {
   // Helper to wrap following siblings into a collapsible body
   const makeCollapsible = (item, header) => {
@@ -765,6 +813,7 @@ const initScripts = () => {
   initAdminTables();
   initAdminExportCenter();
   initAdminCompactLists();
+  initFullscreenViewer();
 };
 
 document.addEventListener('DOMContentLoaded', initScripts);
