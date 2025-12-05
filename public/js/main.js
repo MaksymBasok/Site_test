@@ -871,7 +871,7 @@ const initAdminExportCenter = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': format === 'json' ? 'application/json' : 'application/zip',
+          'Accept': format === 'json' ? 'application/json' : 'application/octet-stream',
           'X-CSRF-Token': csrfToken || document.querySelector('meta[name="csrf-token"]')?.content || ''
         },
         credentials: 'same-origin',
@@ -902,8 +902,9 @@ const initAdminExportCenter = () => {
         setTimeout(() => URL.revokeObjectURL(url), 10000);
       } else {
         const blob = await response.blob();
+        const defaultExtension = format === 'xlsx' ? 'xlsx' : format === 'docx' || format === 'word' ? 'docx' : format;
         const filename = parseContentDisposition(response.headers.get('Content-Disposition'))
-          || `volonterka-export-${Date.now()}.zip`;
+          || `volonterka-export-${Date.now()}.${defaultExtension === 'csv' ? 'zip' : defaultExtension}`;
         const url = URL.createObjectURL(blob);
         const anchor = document.createElement('a');
         anchor.href = url;

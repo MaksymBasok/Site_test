@@ -1750,7 +1750,7 @@
       </div>
       <form class="admin-form export-form" data-export-form data-csrf="<%= csrfToken %>" novalidate>
         <div class="modal-body">
-          <p class="text-muted small mb-3">Оберіть розділи, які хочете завантажити. Ми сформуємо структурований ZIP з CSV та JSON файлами відповідно до обраних блоків.</p>
+          <p class="text-muted small mb-3">Оберіть розділи та формат вивантаження. Ми підготуємо структуровані файли у вибраному вигляді (PDF, Word, Excel, CSV/ZIP або JSON) з підтримкою кирилиці.</p>
           <div class="row g-3">
             <% datasetOrder.forEach(function(key) { const meta = datasetMeta[key] || {}; %>
               <div class="col-md-6">
@@ -1778,7 +1778,11 @@
             </div>
             <div class="d-flex align-items-center gap-2 ms-auto">
               <select class="form-select form-select-sm" name="format" data-export-format>
-                <option value="zip" selected>ZIP архів</option>
+                <option value="zip" selected>ZIP (CSV + JSON)</option>
+                <option value="csv">CSV (UTF-8, ZIP)</option>
+                <option value="xlsx">Excel (.xlsx)</option>
+                <option value="docx">Word (.docx)</option>
+                <option value="pdf">PDF</option>
                 <option value="json">JSON у браузері</option>
               </select>
               <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Скасувати</button>
