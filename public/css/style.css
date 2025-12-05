@@ -2691,6 +2691,58 @@ tr.user-detail-row > td {
   color: rgba(255, 255, 255, 0.85);
 }
 
+.footer-institutions {
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  padding: clamp(1.75rem, 1.1rem + 1.2vw, 2.5rem) 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+.footer-institutions__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1.25rem;
+  align-items: stretch;
+}
+
+.institution-card {
+  display: grid;
+  justify-items: center;
+  gap: 0.65rem;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: transform var(--transition-base), background var(--transition-base), border-color var(--transition-base);
+}
+
+.institution-card__logo {
+  max-width: 80px;
+  height: auto;
+}
+
+.institution-card__name {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.institution-card:hover,
+.institution-card:focus-visible {
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: white;
+}
+
+.footer-social--inline {
+  margin-top: 0.75rem;
+}
+
 /* Utilities */
 
 .btn.is-loading {
