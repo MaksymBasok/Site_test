@@ -764,7 +764,7 @@ router.post('/reviews/:id/toggle', requireAdmin, (req, res, next) => {
   }
 });
 
-router.post('/export', requireAdmin, (req, res, next) => {
+router.post('/export', requireAdmin, async (req, res, next) => {
   try {
     const requested = req.body.datasets || req.body.selection;
     if (!requested || (Array.isArray(requested) && requested.length === 0)) {
@@ -777,16 +777,51 @@ router.post('/export', requireAdmin, (req, res, next) => {
     }
 
     const datasets = exportService.buildDatasets(selection);
+    const format = (req.body.format || 'zip').toLowerCase();
 
-    if ((req.body.format || '').toLowerCase() === 'json') {
+    if (format === 'json') {
       return res.json({
         generatedAt: new Date().toISOString(),
         datasets
       });
     }
 
+    if (format === 'xlsx') {
+      const buffer = await exportService.generateExcelBuffer(datasets);
+      const filename = exportService.generateFilename('datasets', 'xlsx');
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      return res.send(Buffer.from(buffer));
+    }
+
+    if (format === 'docx' || format === 'word') {
+      const buffer = await exportService.generateDocxBuffer(datasets);
+      const filename = exportService.generateFilename('datasets', 'docx');
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      return res.send(Buffer.from(buffer));
+    }
+
+    if (format === 'pdf') {
+      const buffer = await exportService.generatePdfBuffer(datasets);
+      const filename = exportService.generateFilename('datasets', 'pdf');
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      return res.send(buffer);
+    }
+
+    if (format === 'csv') {
+      const archive = exportService.createCsvArchive(datasets, { prefix: 'volonterka' });
+      const filename = exportService.generateFilename('datasets', 'zip');
+      res.setHeader('Content-Type', 'application/zip');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      archive.on('error', (error) => next(error));
+      archive.pipe(res);
+      return archive.finalize();
+    }
+
     const archive = exportService.createArchive(datasets, { prefix: 'volonterka' });
-    const filename = exportService.generateFilename('datasets');
+    const filename = exportService.generateFilename('datasets', 'zip');
 
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
