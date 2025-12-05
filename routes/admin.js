@@ -55,6 +55,7 @@ const {
 } = require('../services/contentService');
 const { requireAdmin } = require('../middleware/auth');
 const { storeFormState } = require('../utils/formState');
+const pendingActionsService = require('../services/pendingActionsService');
 
 const router = express.Router();
 
@@ -157,6 +158,7 @@ router.get('/dashboard', requireAdmin, (req, res) => {
   const contentBlocks = listContentBlocks();
   const media = listMedia();
   const articles = listArticles();
+  const pendingActions = pendingActionsService.listAll();
 
   res.render('admin/dashboard', {
     title: 'Кабінет адміністратора',
@@ -179,6 +181,7 @@ router.get('/dashboard', requireAdmin, (req, res) => {
     contentBlocks,
     media,
     articles,
+    pendingActions,
     STATUSES,
     exportDatasets: exportService.datasets,
     exportMeta: exportService.meta,
@@ -689,6 +692,48 @@ router.post('/export', requireAdmin, (req, res, next) => {
     archive.finalize();
   } catch (err) {
     return next(err);
+  }
+});
+
+router.post('/pending-actions/:id/approve', requireAdmin, (req, res, next) => {
+  try {
+    pendingActionsService.approveAction(Number(req.params.id), req.session.user.id);
+    req.flash('success', 'Заявку підтверджено та застосовано.');
+    res.redirect('/admin/dashboard#requests');
+  } catch (error) {
+    if (error.status) {
+      req.flash('error', error.message);
+      return res.redirect('/admin/dashboard#requests');
+    }
+    return next(error);
+  }
+});
+
+router.post('/pending-actions/:id/reject', requireAdmin, (req, res, next) => {
+  try {
+    pendingActionsService.rejectAction(Number(req.params.id), req.session.user.id, req.body.reason);
+    req.flash('info', 'Заявку відхилено.');
+    res.redirect('/admin/dashboard#requests');
+  } catch (error) {
+    if (error.status) {
+      req.flash('error', error.message);
+      return res.redirect('/admin/dashboard#requests');
+    }
+    return next(error);
+  }
+});
+
+router.post('/pending-actions/:id/revert', requireAdmin, (req, res, next) => {
+  try {
+    pendingActionsService.revertAction(Number(req.params.id));
+    req.flash('warning', 'Рішення скасовано. Заявку повернуто в роботу.');
+    res.redirect('/admin/dashboard#requests');
+  } catch (error) {
+    if (error.status) {
+      req.flash('error', error.message);
+      return res.redirect('/admin/dashboard#requests');
+    }
+    return next(error);
   }
 });
 

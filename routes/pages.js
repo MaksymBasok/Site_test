@@ -13,6 +13,7 @@ const {
 const reviewService = require('../services/reviewService');
 const feedbackService = require('../services/feedbackService');
 const { requireApprovedUser } = require('../middleware/auth');
+const pendingActionsService = require('../services/pendingActionsService');
 
 const router = express.Router();
 
@@ -61,14 +62,18 @@ router.get('/donations', (req, res) => {
 router.post('/donations', donationService.donationValidators, (req, res, next) => {
   try {
     donationService.validate(req);
-    donationService.createDonation({
-      donor_name: req.body.donor_name,
-      amount: Number(req.body.amount),
-      currency: 'UAH',
-      message: req.body.message,
-      public: req.body.public === 'on'
+    pendingActionsService.queueAction({
+      entityType: 'donation',
+      action: 'create',
+      payload: {
+        donor_name: req.body.donor_name,
+        amount: Number(req.body.amount),
+        currency: 'UAH',
+        message: req.body.message
+      },
+      source: req.path
     });
-    req.flash('success', 'Дякуємо! Запис про донат збережено.');
+    req.flash('success', 'Дякуємо! Заявку на донат передано на модерацію.');
     res.redirect('/donations');
   } catch (error) {
     if (error.status === 422) {
@@ -102,8 +107,20 @@ router.get('/volunteers', (req, res) => {
 router.post('/volunteers', volunteerService.volunteerValidators, (req, res, next) => {
   try {
     volunteerService.validate(req);
-    volunteerService.createVolunteer(req.body);
-    req.flash('success', 'Анкету прийнято. Ми з вами зв\'яжемося.');
+    pendingActionsService.queueAction({
+      entityType: 'volunteer',
+      action: 'create',
+      payload: {
+        full_name: req.body.full_name,
+        email: req.body.email,
+        phone: req.body.phone,
+        region: req.body.region,
+        skills: req.body.skills,
+        comment: req.body.comment
+      },
+      source: req.path
+    });
+    req.flash('success', 'Анкету передано на модерацію. Після підтвердження ми зв\'яжемося.');
     res.redirect('/volunteers');
   } catch (error) {
     if (error.status === 422) {

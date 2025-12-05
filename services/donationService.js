@@ -54,6 +54,10 @@ function listAll() {
   `).all();
 }
 
+function deleteDonation(id) {
+  db.prepare('DELETE FROM donations WHERE id = ?').run(id);
+}
+
 function validate(req) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -70,5 +74,6 @@ module.exports = {
   listPublicDonations,
   listRecent,
   listAll,
+  deleteDonation,
   validate
 };

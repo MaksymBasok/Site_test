@@ -56,10 +56,15 @@ function listAll() {
   `).all();
 }
 
+function deleteVolunteer(id) {
+  db.prepare('DELETE FROM volunteers WHERE id = ?').run(id);
+}
+
 module.exports = {
   volunteerValidators,
   createVolunteer,
   validate,
   listRecent,
-  listAll
+  listAll,
+  deleteVolunteer
 };
