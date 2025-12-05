@@ -1,5 +1,6 @@
 const archiver = require('archiver');
 const path = require('path');
+const fs = require('fs');
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
 const { Document, Packer, Paragraph, HeadingLevel, Table, TableCell, TableRow, TextRun } = require('docx');
@@ -474,14 +475,8 @@ async function generatePdfBuffer(datasets) {
     const buffers = [];
     const doc = new PDFDocument({ size: 'A4', margin: 40 });
 
-    let fontPath = path.join(__dirname, '..', 'public', 'fonts', 'Montserrat-Regular.ttf');
-    let boldFontPath = path.join(__dirname, '..', 'public', 'fonts', 'Montserrat-SemiBold.ttf');
-    try {
-      doc.font(fontPath);
-    } catch (error) {
-      fontPath = 'Helvetica';
-      doc.font(fontPath);
-    }
+    const fonts = registerPdfFonts(doc);
+    doc.font(fonts.regular);
 
     doc.on('data', (chunk) => buffers.push(chunk));
     doc.on('error', reject);
@@ -492,21 +487,16 @@ async function generatePdfBuffer(datasets) {
 
     datasets.forEach((dataset, index) => {
       doc.addPage();
-      try {
-        doc.font(boldFontPath);
-      } catch (error) {
-        boldFontPath = 'Helvetica-Bold';
-        doc.font(boldFontPath);
-      }
+      doc.font(fonts.bold);
       doc.fontSize(14).text(dataset.label || dataset.key);
       doc.moveDown(0.5);
-      doc.fontSize(10).font(fontPath).text(dataset.description || '', { align: 'left' });
+      doc.fontSize(10).font(fonts.regular).text(dataset.description || '', { align: 'left' });
       doc.moveDown();
 
       const headers = dataset.columns.map((column) => column.label).join(' | ');
-      doc.fontSize(11).font(boldFontPath).text(headers);
+      doc.fontSize(11).font(fonts.bold).text(headers);
       doc.moveDown(0.25);
-      doc.fontSize(10).font(fontPath);
+      doc.fontSize(10).font(fonts.regular);
       dataset.rows.forEach((row) => {
         const line = dataset.columns.map((column) => normalizeCellValue(row[column.key])).join(' | ');
         doc.text(line);
@@ -526,6 +516,29 @@ function normalizeCellValue(value) {
   if (typeof value === 'boolean') return value ? 'так' : 'ні';
   if (value instanceof Date) return value.toISOString();
   return String(value);
+}
+
+function registerPdfFonts(doc) {
+  const fontsDir = path.join(__dirname, '..', 'public', 'fonts');
+  const regularPath = path.join(fontsDir, 'Montserrat-Regular.ttf');
+  const semiboldPath = path.join(fontsDir, 'Montserrat-SemiBold.ttf');
+
+  const fonts = {
+    regular: 'Helvetica',
+    bold: 'Helvetica-Bold'
+  };
+
+  if (fs.existsSync(regularPath)) {
+    doc.registerFont('volonterka-regular', regularPath);
+    fonts.regular = 'volonterka-regular';
+  }
+
+  if (fs.existsSync(semiboldPath)) {
+    doc.registerFont('volonterka-bold', semiboldPath);
+    fonts.bold = 'volonterka-bold';
+  }
+
+  return fonts;
 }
 
 function buildDocxSection(dataset) {
