@@ -7,7 +7,7 @@
             <span class="footer-logo__icon" aria-hidden="true"><i class="fa-solid fa-hand-holding-heart"></i></span>
             <span class="footer-logo__text">Фонд <strong>Волонтерка</strong></span>
           </a>
-          <p class="footer-description">Ми купуємо, ремонтуємо та доставляємо транспорт для підрозділів ЗСУ та волонтерів. Всі збори проводимо прозоро і звітуємо за кожну гривню.</p>
+          <p class="footer-description">Допомагаємо волонтерам та ЗСУ з 2022 року. Купуємо, ремонтуємо та доставляємо транспорт, звітуємо за кожну гривню.</p>
           <div class="footer-pill">
             <i class="fa-solid fa-shield-heart" aria-hidden="true"></i>
             <span>Перевірений благодійний фонд</span>
@@ -15,44 +15,69 @@
           <div class="footer-social" role="list">
             <a class="footer-social__link" href="https://t.me/volonterka" target="_blank" rel="noopener" aria-label="Наш Telegram"><i class="fa-brands fa-telegram"></i></a>
             <a class="footer-social__link" href="https://www.facebook.com" target="_blank" rel="noopener" aria-label="Ми у Facebook"><i class="fa-brands fa-facebook"></i></a>
-            <a class="footer-social__link" href="mailto:info@volonterka.org" aria-label="Написати на info@volonterka.org"><i class="fa-solid fa-envelope"></i></a>
+            <a class="footer-social__link" href="https://www.instagram.com" target="_blank" rel="noopener" aria-label="Ми в Instagram"><i class="fa-brands fa-instagram"></i></a>
           </div>
         </div>
         <div class="footer-column">
           <h3 class="footer-title">Навігація</h3>
           <ul class="footer-list">
-            <li><a href="/donations">Підтримати</a></li>
-            <li><a href="/cars">Автопарк</a></li>
+            <li><a href="/">Головна</a></li>
+            <li><a href="/cars">Автомобілі</a></li>
             <li><a href="/documents">Документи</a></li>
-            <li><a href="/articles">Новини</a></li>
-            <li><a href="/contacts">Контакти</a></li>
+            <li><a href="/about">Про нас</a></li>
           </ul>
         </div>
-        <div class="footer-column">
-          <h3 class="footer-title">Контакти штабу</h3>
+        <div class="footer-column footer-column--contact">
+          <h3 class="footer-title">Контакти</h3>
           <ul class="footer-list footer-list--contact">
-            <li><i class="fa-solid fa-phone"></i><a href="tel:+380931234567">+38 (093) 123 45 67</a></li>
-            <li><i class="fa-solid fa-envelope"></i><a href="mailto:info@volonterka.org">info@volonterка.org</a></li>
-            <li><i class="fa-solid fa-location-dot"></i>м. Вінниця, вул. Київська, 16</li>
-            <li><i class="fa-solid fa-clock"></i>Щодня 09:00–21:00</li>
+            <li><i class="fa-solid fa-phone"></i><a href="tel:+380931234567">+380 (93) 123-45-67</a></li>
+            <li><i class="fa-solid fa-envelope"></i><a href="mailto:info@volonterka.org">info@volonterka.org</a></li>
+            <li><i class="fa-solid fa-location-dot"></i>Україна, м. Київ</li>
           </ul>
-          <div class="footer-metric">
-            <span class="footer-metric__label">Авто передано</span>
-            <span class="footer-metric__value"><%= vehiclesCount || 0 %></span>
+          <div class="footer-social footer-social--inline" role="list">
+            <a href="https://www.facebook.com" class="footer-social__link" target="_blank" rel="noopener" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+            <a href="https://t.me/volonterka" class="footer-social__link" target="_blank" rel="noopener" aria-label="Telegram"><i class="fa-brands fa-telegram"></i></a>
+            <a href="https://www.instagram.com" class="footer-social__link" target="_blank" rel="noopener" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
           </div>
-        </div>
-        <div class="footer-column footer-column--cta">
-          <h3 class="footer-title">Долучайтесь</h3>
-          <p class="footer-description">Хочете допомагати регулярно або маєте авто для фронту? Залиште заявку — координатор зв'яжеться протягом години.</p>
-          <a class="btn btn-warning w-100" href="/volunteers"><i class="fa-solid fa-people-carry-box me-2"></i>Стати волонтером</a>
-          <a class="btn btn-outline-light w-100" href="/auth/register"><i class="fa-solid fa-user-plus me-2"></i>Подати заявку донатора</a>
         </div>
       </div>
     </div>
   </div>
+
+  <div class="footer-institutions">
+    <div class="container">
+      <div class="footer-institutions__grid">
+        <a class="institution-card" href="https://ssu.gov.ua/" target="_blank" rel="noopener">
+          <img class="institution-card__logo" src="/images/png/1.png" alt="СЛУЖБА БЕЗПЕКИ УКРАЇНИ">
+          <p class="institution-card__name">СЛУЖБА БЕЗПЕКИ<br>УКРАЇНИ</p>
+        </a>
+        <a class="institution-card" href="https://president.gov.ua" target="_blank" rel="noopener">
+          <img class="institution-card__logo" src="/images/png/2.png" alt="АДМІНІСТРАЦІЯ ПРЕЗИДЕНТА УКРАЇНИ">
+          <p class="institution-card__name">АДМІНІСТРАЦІЯ<br>ПРЕЗИДЕНТА УКРАЇНИ</p>
+        </a>
+        <a class="institution-card" href="https://kmu.gov.ua" target="_blank" rel="noopener">
+          <img class="institution-card__logo" src="/images/png/3.png" alt="КАБІНЕТ МІНІСТРІВ УКРАЇНИ">
+          <p class="institution-card__name">КАБІНЕТ МІНІСТРІВ<br>УКРАЇНИ</p>
+        </a>
+        <a class="institution-card" href="https://rada.gov.ua" target="_blank" rel="noopener">
+          <img class="institution-card__logo" src="/images/png/4.png" alt="ВЕРХОВНА РАДА УКРАЇНИ">
+          <p class="institution-card__name">ВЕРХОВНА РАДА<br>УКРАЇНИ</p>
+        </a>
+        <a class="institution-card" href="https://mvs.gov.ua" target="_blank" rel="noopener">
+          <img class="institution-card__logo" src="/images/png/5.png" alt="МВС УКРАЇНИ">
+          <p class="institution-card__name">МВС<br>УКРАЇНИ</p>
+        </a>
+        <a class="institution-card" href="https://ombudsman.gov.ua" target="_blank" rel="noopener">
+          <img class="institution-card__logo" src="/images/png/6.png" alt="ОМБУДСМЕН УКРАЇНИ">
+          <p class="institution-card__name">ОМБУДСМЕН<br>УКРАЇНИ</p>
+        </a>
+      </div>
+    </div>
+  </div>
+
   <div class="footer-bottom">
     <div class="container footer-bottom__inner">
-      <div class="footer-bottom__copy">© <%= new Date().getFullYear() %> Фонд "Волонтерка". Всі права захищено.</div>
+      <div class="footer-bottom__copy">© 2025 Фонд "Волонтерка". Всі права захищено.</div>
       <div class="footer-bottom__links">
         <a href="/documents">Політика прозорості</a>
         <a href="mailto:legal@volonterka.org">Юридична підтримка</a>
