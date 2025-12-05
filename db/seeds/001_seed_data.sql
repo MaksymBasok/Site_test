@@ -15,10 +15,10 @@ DELETE FROM site_articles;
 -- Production-friendly seed: keep core content, remove test donors/feedback/financial logs
 INSERT INTO fundraising_goals (title, description, target_amount, status)
 VALUES (
-  'Позашляховик для фронту',
-  'Готуємо повнопривідний автомобіль із додатковим захистом для евакуації та логістики у прифронтових районах.',
-  850000,
-  'active'
+  'Нова ціль',
+  'Додайте опис у адмін-панелі перед публікацією сайту.',
+  0,
+  'draft'
 );
 
 INSERT INTO bank_accounts (label, recipient, iban, edrpou, purpose)
