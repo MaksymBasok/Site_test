@@ -12,13 +12,12 @@ DELETE FROM fundraising_goals;
 DELETE FROM content_blocks;
 DELETE FROM site_articles;
 
--- Production-friendly seed: keep core content, remove test donors/feedback/financial logs
 INSERT INTO fundraising_goals (title, description, target_amount, status)
 VALUES (
-  'Нова ціль',
-  'Додайте опис у адмін-панелі перед публікацією сайту.',
-  0,
-  'draft'
+  'Позашляховик для фронту',
+  'Готуємо повнопривідний автомобіль із додатковим захистом для евакуації та логістики у прифронтових районах.',
+  850000,
+  'active'
 );
 
 INSERT INTO bank_accounts (label, recipient, iban, edrpou, purpose)
@@ -29,13 +28,6 @@ VALUES
     'UA443077700000026204016710032',
     NULL,
     'Для поповнення картки 4323347377472482, Roleders Aleksandrs'
-  ),
-  (
-    'Рахунок НКППК',
-    'ГО "Національний клуб професіоналів прикладного карате"',
-    'UA213052990000026204016740987',
-    '12345678',
-    'Добровільний внесок на статутну діяльність'
   );
 
 INSERT INTO vehicles (name, description, status, image_path, category)
@@ -104,13 +96,6 @@ VALUES
     'Повний матеріал про те, як команда фонду працює з автомобілями: від закупівлі до передачі на передову. Ми ділимося чек-листом перевірки та списком партнерів, які допомагають із ремонтом.',
     'images/img/cars/car1.jpg',
     datetime('now','-5 day')
-  ),
-  (
-    'Команда тижня: волонтери Вінниці',
-    'Знайомтесь із людьми, які щодня обробляють десятки запитів на допомогу.',
-    'Розмова з волонтерами, що координують запити з регіонів. Вони діляться досвідом і розповідають, як ефективно розподіляти ресурси.',
-    'images/img/org/media1.jpg',
-    datetime('now','-2 day')
   );
 
 COMMIT;
