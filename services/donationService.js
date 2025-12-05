@@ -54,6 +54,37 @@ function listAll() {
   `).all();
 }
 
+function findDonation(id) {
+  return db
+    .prepare(
+      `SELECT id, donor_name, amount, currency, message, public,
+              datetime(created_at) AS created_at
+       FROM donations
+       WHERE id = ?`
+    )
+    .get(id);
+}
+
+function updateDonation(id, data) {
+  const existing = findDonation(id);
+  if (!existing) {
+    throw createError(404, 'Донат не знайдено');
+  }
+
+  db.prepare(
+    `UPDATE donations
+     SET donor_name = ?, amount = ?, currency = ?, message = ?, public = ?
+     WHERE id = ?`
+  ).run(
+    data.donor_name,
+    data.amount,
+    data.currency || 'UAH',
+    data.message || null,
+    data.public ? 1 : 0,
+    id
+  );
+}
+
 function deleteDonation(id) {
   db.prepare('DELETE FROM donations WHERE id = ?').run(id);
 }
@@ -74,6 +105,8 @@ module.exports = {
   listPublicDonations,
   listRecent,
   listAll,
+  findDonation,
+  updateDonation,
   deleteDonation,
   validate
 };

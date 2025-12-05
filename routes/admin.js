@@ -158,7 +158,17 @@ router.get('/dashboard', requireAdmin, (req, res) => {
   const contentBlocks = listContentBlocks();
   const media = listMedia();
   const articles = listArticles();
-  const pendingActions = pendingActionsService.listAll();
+  const requestStatus = req.query.requestStatus || 'pending';
+  const requestType = req.query.requestType || 'all';
+  const requestPage = Math.max(Number(req.query.requestPage) || 1, 1);
+  const REQUEST_PAGE_SIZE = 10;
+  const pendingActionsPage = pendingActionsService.listFiltered({
+    status: requestStatus,
+    entityType: requestType,
+    page: requestPage,
+    pageSize: REQUEST_PAGE_SIZE
+  });
+  const pendingSummary = pendingActionsService.summarize();
 
   res.render('admin/dashboard', {
     title: 'Кабінет адміністратора',
@@ -181,7 +191,16 @@ router.get('/dashboard', requireAdmin, (req, res) => {
     contentBlocks,
     media,
     articles,
-    pendingActions,
+    pendingActions: pendingActionsPage.items,
+    pendingSummary,
+    pendingPagination: {
+      total: pendingActionsPage.total,
+      totalPages: pendingActionsPage.totalPages,
+      page: pendingActionsPage.page,
+      pageSize: pendingActionsPage.pageSize,
+      status: requestStatus,
+      type: requestType
+    },
     STATUSES,
     exportDatasets: exportService.datasets,
     exportMeta: exportService.meta,
@@ -208,6 +227,39 @@ router.post('/donations', requireAdmin, donationService.donationValidators, (req
       req.flash('error', error.message);
       return res.redirect('/admin/dashboard#finance');
     }
+    return next(error);
+  }
+});
+
+router.post('/donations/:id/update', requireAdmin, donationService.donationValidators, (req, res, next) => {
+  const formId = req.body._formId || `donation:${req.params.id}`;
+  try {
+    donationService.validate(req);
+    donationService.updateDonation(Number(req.params.id), {
+      donor_name: req.body.donor_name,
+      amount: Number(req.body.amount),
+      currency: req.body.currency || 'UAH',
+      message: req.body.message,
+      public: req.body.public === 'on'
+    });
+    req.flash('success', 'Донат оновлено.');
+    res.redirect('/admin/dashboard#finance');
+  } catch (error) {
+    if (error.status === 422) {
+      storeFormState(req, formId, { values: req.body, errors: error.fields, message: error.message });
+      req.flash('error', error.message);
+      return res.redirect('/admin/dashboard#finance');
+    }
+    return next(error);
+  }
+});
+
+router.post('/donations/:id/delete', requireAdmin, (req, res, next) => {
+  try {
+    donationService.deleteDonation(Number(req.params.id));
+    req.flash('success', 'Донат видалено.');
+    res.redirect('/admin/dashboard#finance');
+  } catch (error) {
     return next(error);
   }
 });
@@ -692,6 +744,40 @@ router.post('/export', requireAdmin, (req, res, next) => {
     archive.finalize();
   } catch (err) {
     return next(err);
+  }
+});
+
+router.post('/volunteers/:id/update', requireAdmin, volunteerService.volunteerValidators, (req, res, next) => {
+  const formId = req.body._formId || `volunteer:${req.params.id}`;
+  try {
+    volunteerService.validate(req);
+    volunteerService.updateVolunteer(Number(req.params.id), {
+      full_name: req.body.full_name,
+      phone: req.body.phone,
+      email: req.body.email,
+      region: req.body.region,
+      skills: req.body.skills,
+      comment: req.body.comment
+    });
+    req.flash('success', 'Картку волонтера оновлено.');
+    res.redirect('/admin/dashboard#community');
+  } catch (error) {
+    if (error.status === 422) {
+      storeFormState(req, formId, { values: req.body, errors: error.fields, message: error.message });
+      req.flash('error', error.message);
+      return res.redirect('/admin/dashboard#community');
+    }
+    return next(error);
+  }
+});
+
+router.post('/volunteers/:id/delete', requireAdmin, (req, res, next) => {
+  try {
+    volunteerService.deleteVolunteer(Number(req.params.id));
+    req.flash('warning', 'Волонтера видалено.');
+    res.redirect('/admin/dashboard#community');
+  } catch (error) {
+    return next(error);
   }
 });
 
