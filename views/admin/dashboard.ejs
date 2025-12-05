@@ -23,6 +23,22 @@
     }
     return String(details);
   };
+  const summarizePayload = (action) => {
+    if (!action || !action.entity_type) return '';
+    if (action.entity_type === 'donation') {
+      return [
+        action.payload?.donor_name,
+        action.payload?.amount ? `${action.payload.amount} ${action.payload.currency || 'UAH'}` : null,
+        action.payload?.message
+      ]
+        .filter(Boolean)
+        .join(' • ');
+    }
+    if (action.entity_type === 'volunteer') {
+      return [action.payload?.full_name, action.payload?.phone, action.payload?.region].filter(Boolean).join(' • ');
+    }
+    return formatDetails(action.payload);
+  };
 %>
 <!-- Продовжуємо використання синьо-жовтого градієнта з першого коміту -->
 <section class="page-header page-header--admin" data-reveal>
@@ -93,6 +109,11 @@
           <span class="admin-nav__icon"><i class="fa-solid fa-chart-line"></i></span>
           <span class="admin-nav__label">Фінанси</span>
           <span class="admin-nav__hint">донати, витрати, реквізити</span>
+        </a>
+        <a href="#requests">
+          <span class="admin-nav__icon"><i class="fa-solid fa-inbox"></i></span>
+          <span class="admin-nav__label">Заявки</span>
+          <span class="admin-nav__hint">модерація контенту</span>
         </a>
         <a href="#users">
           <span class="admin-nav__icon"><i class="fa-solid fa-users-gear"></i></span>
@@ -445,6 +466,92 @@
               </form>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="requests" class="admin-section" data-admin-section>
+      <div class="admin-section__header">
+        <div>
+          <h2 class="admin-section__title">Центр заявок</h2>
+          <p class="admin-section__subtitle">Усі донати, анкети та інші дії проходять модерацію адміністратора.</p>
+        </div>
+      </div>
+      <div class="card shadow-soft">
+        <div class="card-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+          <div>
+            <h3 class="h5 mb-1">Черга модерації</h3>
+            <p class="small text-muted mb-0">Приймайте, відхиляйте або повертайте заявки. Після підтвердження дані застосовуються до сайту.</p>
+          </div>
+          <span class="badge bg-warning-subtle text-warning">
+            <i class="fa-solid fa-clock me-1"></i>
+            В роботі: <%= pendingActions.filter((item) => item.status === 'pending').length %>
+          </span>
+        </div>
+        <div class="table-responsive">
+          <table class="table align-middle admin-table">
+            <thead>
+              <tr>
+                <th scope="col">Тип</th>
+                <th scope="col">Дані</th>
+                <th scope="col">Статус</th>
+                <th scope="col" class="text-end">Дії</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% pendingActions.forEach(function(action) { %>
+                <tr>
+                  <td>
+                    <span class="badge bg-light text-dark text-uppercase"><%= action.entity_type %></span>
+                    <div class="small text-muted"><%= action.source || '—' %></div>
+                  </td>
+                  <td>
+                    <strong><%= summarizePayload(action) || 'Без деталей' %></strong>
+                    <% if (action.payload && action.payload.message && action.entity_type !== 'donation') { %>
+                      <div class="small text-muted"><%= action.payload.message %></div>
+                    <% } %>
+                    <div class="small text-muted">Створено: <%= action.created_at ? new Date(action.created_at).toLocaleString('uk-UA') : '—' %></div>
+                    <% if (action.processed_at) { %>
+                      <div class="small text-muted">Опрацьовано: <%= new Date(action.processed_at).toLocaleString('uk-UA') %> (<%= action.processed_by_name || action.processed_by_email || '—' %>)</div>
+                    <% } %>
+                    <% if (action.resolution_notes) { %>
+                      <div class="small text-muted"><i class="fa-solid fa-note-sticky me-1"></i><%= action.resolution_notes %></div>
+                    <% } %>
+                  </td>
+                  <td>
+                    <% if (action.status === 'pending') { %>
+                      <span class="badge bg-warning-subtle text-warning">В очікуванні</span>
+                    <% } else if (action.status === 'approved') { %>
+                      <span class="badge bg-success-subtle text-success">Підтверджено</span>
+                    <% } else { %>
+                      <span class="badge bg-danger-subtle text-danger">Відхилено</span>
+                    <% } %>
+                  </td>
+                  <td class="text-end">
+                    <% if (action.status === 'pending') { %>
+                      <form method="POST" action="/admin/pending-actions/<%= action.id %>/approve" class="d-inline">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button class="btn btn-sm btn-success" type="submit"><i class="fa-solid fa-check me-1"></i>Прийняти</button>
+                      </form>
+                      <form method="POST" action="/admin/pending-actions/<%= action.id %>/reject" class="d-inline ms-1">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <input type="hidden" name="reason" value="Відхилено з адмін-панелі">
+                        <button class="btn btn-sm btn-outline-danger" type="submit"><i class="fa-solid fa-xmark me-1"></i>Відхилити</button>
+                      </form>
+                    <% } else { %>
+                      <form method="POST" action="/admin/pending-actions/<%= action.id %>/revert" class="d-inline" onsubmit="return confirm('Повернути заявку в чергу? Це видалить внесені зміни.');">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button class="btn btn-sm btn-outline-secondary" type="submit"><i class="fa-solid fa-rotate-left me-1"></i>Скасувати рішення</button>
+                      </form>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }) %>
+              <% if (pendingActions.length === 0) { %>
+                <tr><td colspan="4" class="text-center text-muted">Активних заявок немає.</td></tr>
+              <% } %>
+            </tbody>
+          </table>
         </div>
       </div>
     </section>
