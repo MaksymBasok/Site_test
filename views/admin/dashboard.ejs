@@ -62,6 +62,29 @@
   };
   const buildRequestUrl = (type = 'all', status = 'pending', page = 1) =>
     `/admin/dashboard?requestType=${encodeURIComponent(type)}&requestStatus=${encodeURIComponent(status)}&requestPage=${page}#requests`;
+
+  const feedbackStatusOptions = Array.from(new Set(['all'].concat((feedbackStatuses || []))));
+  const feedbackStatusCurrent = feedbackStatus || 'all';
+  const formatFeedbackStatus = (status = 'new') => {
+    if (status === 'in_progress') return 'В роботі';
+    if (status === 'resolved') return 'Закрито';
+    if (status === 'archived') return 'Архів';
+    return 'Нове';
+  };
+  const feedbackBadge = (status = 'new') => {
+    if (status === 'resolved') return 'badge bg-success-subtle text-success';
+    if (status === 'archived') return 'badge bg-secondary-subtle text-secondary';
+    if (status === 'in_progress') return 'badge bg-info-subtle text-info';
+    return 'badge bg-warning-subtle text-warning';
+  };
+  const buildFeedbackUrl = (status = 'all', page = 1) =>
+    `/admin/dashboard?feedbackStatus=${encodeURIComponent(status)}&feedbackPage=${page}#requests`;
+
+  const vehicleStatusMap = (vehicleStatusOptions || []).reduce((acc, option) => {
+    acc[option.value] = option.label;
+    return acc;
+  }, {});
+  const describeVehicleStatus = (status = 'needs_funding') => vehicleStatusMap[status] || status;
 %>
 <!-- Продовжуємо використання синьо-жовтого градієнта з першого коміту -->
 <section class="page-header page-header--admin" data-reveal>
@@ -621,6 +644,98 @@
     </div>
   </section>
 
+  <section class="admin-section" aria-label="Звернення волонтерів">
+    <div class="card shadow-soft">
+      <div class="card-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+        <div>
+          <h3 class="h5 mb-1">Звернення та зворотний зв'язок</h3>
+          <p class="small text-muted mb-0">Окрема черга для питань і пропозицій з волонтерської анкети.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2" role="tablist" aria-label="Статус звернення">
+          <% feedbackStatusOptions.forEach(function(status) { %>
+            <a class="btn btn-sm <%= feedbackStatusCurrent === status ? 'btn-primary' : 'btn-outline-primary' %>" href="<%= buildFeedbackUrl(status, 1) %>">
+              <%= formatFeedbackStatus(status) %>
+            </a>
+          <% }) %>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle admin-table">
+          <thead>
+            <tr>
+              <th scope="col">Відправник</th>
+              <th scope="col">Контакт</th>
+              <th scope="col">Повідомлення</th>
+              <th scope="col">Статус</th>
+              <th scope="col" class="text-end">Дії</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% feedback.forEach(function(item) { %>
+              <tr>
+                <td>
+                  <strong><%= item.sender_name %></strong>
+                  <div class="small text-muted"><%= item.created_at ? new Date(item.created_at).toLocaleString('uk-UA') : '' %></div>
+                </td>
+                <td>
+                  <% if (item.contact) { %>
+                    <div class="small"><i class="fa-solid fa-link me-1"></i><%= item.contact %></div>
+                  <% } else { %>
+                    <span class="text-muted small">Не вказано</span>
+                  <% } %>
+                  <% if (item.channel) { %>
+                    <div class="small text-muted"><i class="fa-solid fa-comments me-1"></i><%= item.channel %></div>
+                  <% } %>
+                </td>
+                <td>
+                  <div><%= item.message %></div>
+                  <% if (item.resolution_notes) { %>
+                    <div class="small text-muted"><i class="fa-solid fa-note-sticky me-1"></i><%= item.resolution_notes %></div>
+                  <% } %>
+                </td>
+                <td><span class="<%= feedbackBadge(item.status) %>"><%= formatFeedbackStatus(item.status) %></span></td>
+                <td class="text-end">
+                  <form method="POST" action="/admin/feedback/<%= item.id %>/status" class="d-flex flex-column flex-lg-row gap-2 align-items-lg-center justify-content-end" novalidate>
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="hidden" name="redirect" value="<%= buildFeedbackUrl(feedbackStatusCurrent, feedbackPagination ? feedbackPagination.page : 1) %>">
+                    <select class="form-select form-select-sm w-auto" name="status" aria-label="Оберіть статус">
+                      <% feedbackStatusOptions.filter(function(s) { return s !== 'all'; }).forEach(function(statusOption) { %>
+                        <option value="<%= statusOption %>" <%= statusOption === item.status ? 'selected' : '' %>><%= formatFeedbackStatus(statusOption) %></option>
+                      <% }) %>
+                    </select>
+                    <input class="form-control form-control-sm" type="text" name="notes" placeholder="Примітка" value="">
+                    <button class="btn btn-sm btn-outline-primary" type="submit">Оновити</button>
+                  </form>
+                </td>
+              </tr>
+            <% }) %>
+            <% if (feedback.length === 0) { %>
+              <tr><td colspan="5" class="text-center text-muted">Звернень за обраним статусом немає.</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+      <div class="card-footer d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+        <div class="text-muted small">Знайдено: <%= feedbackPagination ? feedbackPagination.total : feedback.length %> · Сторінка <%= feedbackPagination ? feedbackPagination.page : 1 %> з <%= feedbackPagination ? feedbackPagination.totalPages : 1 %></div>
+        <nav aria-label="Навігація по зверненнях">
+          <ul class="pagination pagination-sm mb-0">
+            <% const feedbackPage = feedbackPagination ? feedbackPagination.page : 1; %>
+            <% const feedbackTotalPages = feedbackPagination ? feedbackPagination.totalPages : 1; %>
+            <li class="page-item <%= feedbackPage <= 1 ? 'disabled' : '' %>">
+              <a class="page-link" href="<%= buildFeedbackUrl(feedbackStatusCurrent, Math.max(feedbackPage - 1, 1)) %>">Попередня</a>
+            </li>
+            <% for (let i = 1; i <= feedbackTotalPages; i += 1) { %>
+              <li class="page-item <%= feedbackPage === i ? 'active' : '' %>"><a class="page-link" href="<%= buildFeedbackUrl(feedbackStatusCurrent, i) %>"><%= i %></a></li>
+            <% } %>
+            <li class="page-item <%= feedbackPage >= feedbackTotalPages ? 'disabled' : '' %>">
+              <a class="page-link" href="<%= buildFeedbackUrl(feedbackStatusCurrent, Math.min(feedbackPage + 1, feedbackTotalPages)) %>">Наступна</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </section>
+
     <section id="users" class="admin-section" data-admin-section>
       <div class="admin-section__header">
         <div>
@@ -927,7 +1042,7 @@
                       <strong><%= vehicle.name %></strong>
                       <div class="small text-muted"><%= vehicle.category || 'Без категорії' %></div>
                     </div>
-                    <div class="badge bg-light text-dark align-self-start align-self-md-center"><i class="fa-solid fa-gauge-high me-1"></i><%= vehicle.status %></div>
+                    <div class="badge bg-light text-dark align-self-start align-self-md-center"><i class="fa-solid fa-gauge-high me-1"></i><%= describeVehicleStatus(vehicle.status) %></div>
                   </div>
                   <% if (vehicle.image_path) { %>
                     <div class="vehicle-preview">
@@ -935,12 +1050,16 @@
                     </div>
                   <% } %>
                   <p class="mb-2"><%= vehicle.description %></p>
-                  <form method="POST" action="/admin/vehicles/<%= vehicle.id %>" class="admin-form row g-2" id="vehicle-form-<%= vehicle.id %>" novalidate>
+                  <form method="POST" action="/admin/vehicles/<%= vehicle.id %>" class="admin-form row g-2" id="vehicle-form-<%= vehicle.id %>" novalidate enctype="multipart/form-data">
                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     <input type="hidden" name="_formId" value="vehicle:<%= vehicle.id %>">
                     <div class="col-md-6">
                       <label class="form-label">Статус</label>
-                      <input class="form-control<%= isInvalid(`vehicle:${vehicle.id}`, 'status') ? ' is-invalid' : '' %>" type="text" name="status" value="<%= getFormValue(`vehicle:${vehicle.id}`, 'status', vehicle.status) %>" required>
+                      <select class="form-select<%= isInvalid(`vehicle:${vehicle.id}`, 'status') ? ' is-invalid' : '' %>" name="status" required>
+                        <% vehicleStatusOptions.forEach(function(option) { %>
+                          <option value="<%= option.value %>" <%= getFormValue(`vehicle:${vehicle.id}`, 'status', vehicle.status) === option.value ? 'selected' : '' %>><%= option.label %></option>
+                        <% }) %>
+                      </select>
                       <% if (isInvalid(`vehicle:${vehicle.id}`, 'status')) { %>
                         <div class="invalid-feedback"><%= fieldError(`vehicle:${vehicle.id}`, 'status') || 'Вкажіть статус' %></div>
                       <% } %>
@@ -961,7 +1080,11 @@
                     </div>
                     <div class="col-12">
                       <label class="form-label">Зображення</label>
-                      <input class="form-control<%= isInvalid(`vehicle:${vehicle.id}`, 'image_path') ? ' is-invalid' : '' %>" type="text" name="image_path" value="<%= getFormValue(`vehicle:${vehicle.id}`, 'image_path', vehicle.image_path || '') %>">
+                      <input class="form-control<%= isInvalid(`vehicle:${vehicle.id}`, 'image_path') ? ' is-invalid' : '' %>" type="text" name="image_path" value="<%= getFormValue(`vehicle:${vehicle.id}`, 'image_path', vehicle.image_path || '') %>" placeholder="/uploads/vehicles/...">
+                      <div class="mt-2 d-flex flex-column flex-md-row gap-2 align-items-md-center">
+                        <input class="form-control form-control-sm" type="file" name="image_file" accept="image/*">
+                        <span class="small text-muted">Можна завантажити файл — шлях заповниться автоматично.</span>
+                      </div>
                       <% if (isInvalid(`vehicle:${vehicle.id}`, 'image_path')) { %>
                         <div class="invalid-feedback"><%= fieldError(`vehicle:${vehicle.id}`, 'image_path') %></div>
                       <% } %>
@@ -988,7 +1111,7 @@
               <h3 class="h5 mb-0">Додати авто</h3>
             </div>
             <div class="card-body">
-              <form method="POST" action="/admin/vehicles" class="admin-form row g-3" novalidate>
+              <form method="POST" action="/admin/vehicles" class="admin-form row g-3" novalidate enctype="multipart/form-data">
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <input type="hidden" name="_formId" value="vehicle:new">
                 <div class="col-12">
@@ -1007,7 +1130,11 @@
                 </div>
                 <div class="col-md-6">
                   <label class="form-label">Статус</label>
-                  <input class="form-control<%= isInvalid('vehicle:new', 'status') ? ' is-invalid' : '' %>" type="text" name="status" placeholder="needs_funding" value="<%= getFormValue('vehicle:new', 'status', '') %>" required>
+                  <select class="form-select<%= isInvalid('vehicle:new', 'status') ? ' is-invalid' : '' %>" name="status" required>
+                    <% vehicleStatusOptions.forEach(function(option) { %>
+                      <option value="<%= option.value %>" <%= getFormValue('vehicle:new', 'status', vehicleStatusOptions[0]?.value || '') === option.value ? 'selected' : '' %>><%= option.label %></option>
+                    <% }) %>
+                  </select>
                   <% if (isInvalid('vehicle:new', 'status')) { %>
                     <div class="invalid-feedback"><%= fieldError('vehicle:new', 'status') || 'Вкажіть статус' %></div>
                   <% } %>
@@ -1020,8 +1147,12 @@
                   <% } %>
                 </div>
                 <div class="col-12">
-                  <label class="form-label">Зображення (шлях)</label>
-                  <input class="form-control<%= isInvalid('vehicle:new', 'image_path') ? ' is-invalid' : '' %>" type="text" name="image_path" placeholder="images/cars/car1.jpg" value="<%= getFormValue('vehicle:new', 'image_path', '') %>">
+                  <label class="form-label">Зображення</label>
+                  <input class="form-control<%= isInvalid('vehicle:new', 'image_path') ? ' is-invalid' : '' %>" type="text" name="image_path" placeholder="/uploads/vehicles/..." value="<%= getFormValue('vehicle:new', 'image_path', '') %>">
+                  <div class="mt-2">
+                    <input class="form-control form-control-sm" type="file" name="image_file" accept="image/*">
+                    <span class="small text-muted">Завантажте фото з пристрою або вкажіть шлях вручну.</span>
+                  </div>
                   <% if (isInvalid('vehicle:new', 'image_path')) { %>
                     <div class="invalid-feedback"><%= fieldError('vehicle:new', 'image_path') %></div>
                   <% } %>
@@ -1352,26 +1483,8 @@
               <h3 class="h5 mb-0">Запити волонтерів</h3>
             </div>
             <div class="card-body">
-              <div class="list-card">
-                <% feedback.forEach(function(item) { %>
-                  <div class="list-card-item">
-                    <div class="d-flex justify-content-between gap-3">
-                      <strong><%= item.sender_name %></strong>
-                      <span class="small text-muted"><%= new Date(item.created_at).toLocaleString('uk-UA') %></span>
-                    </div>
-                    <p class="mb-1"><%= item.message %></p>
-                    <% if (item.contact) { %>
-                      <p class="small text-muted mb-1"><i class="fa-solid fa-link me-1"></i><%= item.contact %></p>
-                    <% } %>
-                    <% if (item.channel) { %>
-                      <span class="badge bg-light text-dark"><%= item.channel %></span>
-                    <% } %>
-                  </div>
-                <% }) %>
-                <% if (feedback.length === 0) { %>
-                  <div class="list-card-item">Немає нових запитів.</div>
-                <% } %>
-              </div>
+              <p class="text-muted mb-3">Детальна модерація звернень тепер винесена у розділ "Звернення та зворотний зв'язок" у блоці заявок.</p>
+              <a class="btn btn-sm btn-outline-primary" href="#requests"><i class="fa-solid fa-inbox me-1"></i>Відкрити центр звернень</a>
             </div>
           </div>
           <div class="card shadow-soft">
