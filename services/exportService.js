@@ -1,4 +1,9 @@
 const archiver = require('archiver');
+const path = require('path');
+const fs = require('fs');
+const ExcelJS = require('exceljs');
+const PDFDocument = require('pdfkit');
+const { Document, Packer, Paragraph, HeadingLevel, Table, TableCell, TableRow, TextRun } = require('docx');
 const donationService = require('./donationService');
 const withdrawalService = require('./withdrawalService');
 const volunteerService = require('./volunteerService');
@@ -357,10 +362,11 @@ function buildDatasets(selection) {
     .sort((a, b) => DATASET_ORDER.indexOf(a.key) - DATASET_ORDER.indexOf(b.key));
 }
 
-function toCsv(rows, columns) {
+function toCsv(rows, columns, options = {}) {
   const header = columns.map((column) => escapeCsvValue(column.label)).join(',');
   const lines = rows.map((row) => columns.map((column) => escapeCsvValue(row[column.key])).join(','));
-  return [header, ...lines].join('\n');
+  const csv = [header, ...lines].join('\n');
+  return options.withBom ? `\uFEFF${csv}` : csv;
 }
 
 function escapeCsvValue(value) {
@@ -397,20 +403,189 @@ function createArchive(datasets, options = {}) {
       meta: dataset.meta || {}
     };
     archive.append(JSON.stringify(jsonPayload, null, 2), { name: `${directory}/data.json` });
-    archive.append(toCsv(dataset.rows, dataset.columns), { name: `${directory}/data.csv` });
+    archive.append(toCsv(dataset.rows, dataset.columns, { withBom: true }), { name: `${directory}/data.csv` });
   });
 
   return archive;
 }
 
-function generateFilename(suffix = 'report') {
+function createCsvArchive(datasets, options = {}) {
+  const archive = archiver('zip', { zlib: { level: 9 } });
+  const generatedAt = new Date().toISOString();
+  archive.append(JSON.stringify({ generatedAt, datasets: datasets.map((d) => d.key) }, null, 2), {
+    name: options.prefix ? `${options.prefix}/summary.json` : 'summary.json'
+  });
+
+  datasets.forEach((dataset) => {
+    const directory = options.prefix ? `${options.prefix}/${dataset.key}` : dataset.key;
+    archive.append(toCsv(dataset.rows, dataset.columns, { withBom: true }), { name: `${directory}.csv` });
+  });
+
+  return archive;
+}
+
+async function generateExcelBuffer(datasets) {
+  const workbook = new ExcelJS.Workbook();
+  workbook.created = new Date();
+  workbook.modified = new Date();
+
+  datasets.forEach((dataset) => {
+    const worksheet = workbook.addWorksheet((dataset.label || dataset.key).substring(0, 31));
+    worksheet.addRow([dataset.label || dataset.key]);
+    worksheet.getRow(1).font = { bold: true, size: 14 };
+    if (dataset.description) {
+      worksheet.addRow([dataset.description]);
+    }
+    worksheet.addRow([]);
+    const headerRow = worksheet.addRow(dataset.columns.map((column) => column.label));
+    headerRow.font = { bold: true };
+
+    dataset.rows.forEach((row) => {
+      worksheet.addRow(dataset.columns.map((column) => normalizeCellValue(row[column.key])));
+    });
+
+    worksheet.columns.forEach((column, index) => {
+      const headerLength = dataset.columns[index] ? dataset.columns[index].label.length : 10;
+      column.width = Math.min(Math.max(headerLength + 4, 14), 40);
+    });
+    worksheet.autoFilter = `A${headerRow.number}:` + String.fromCharCode(64 + dataset.columns.length) + headerRow.number;
+  });
+
+  return workbook.xlsx.writeBuffer();
+}
+
+async function generateDocxBuffer(datasets) {
+  const sections = datasets.map((dataset) => ({
+    properties: {},
+    children: buildDocxSection(dataset)
+  }));
+
+  const doc = new Document({
+    creator: 'Volonterka Export',
+    title: 'Вивантаження даних фонду',
+    description: 'Згенеровано з адмін-панелі',
+    sections
+  });
+
+  return Packer.toBuffer(doc);
+}
+
+async function generatePdfBuffer(datasets) {
+  return new Promise((resolve, reject) => {
+    const buffers = [];
+    const doc = new PDFDocument({ size: 'A4', margin: 40 });
+
+    const fonts = registerPdfFonts(doc);
+    doc.font(fonts.regular);
+
+    doc.on('data', (chunk) => buffers.push(chunk));
+    doc.on('error', reject);
+    doc.on('end', () => resolve(Buffer.concat(buffers)));
+
+    doc.fontSize(18).text('Вивантаження даних фонду', { align: 'center' });
+    doc.moveDown();
+
+    datasets.forEach((dataset, index) => {
+      doc.addPage();
+      doc.font(fonts.bold);
+      doc.fontSize(14).text(dataset.label || dataset.key);
+      doc.moveDown(0.5);
+      doc.fontSize(10).font(fonts.regular).text(dataset.description || '', { align: 'left' });
+      doc.moveDown();
+
+      const headers = dataset.columns.map((column) => column.label).join(' | ');
+      doc.fontSize(11).font(fonts.bold).text(headers);
+      doc.moveDown(0.25);
+      doc.fontSize(10).font(fonts.regular);
+      dataset.rows.forEach((row) => {
+        const line = dataset.columns.map((column) => normalizeCellValue(row[column.key])).join(' | ');
+        doc.text(line);
+      });
+
+      if (index < datasets.length - 1) {
+        doc.moveDown(1.5);
+      }
+    });
+
+    doc.end();
+  });
+}
+
+function normalizeCellValue(value) {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'boolean') return value ? 'так' : 'ні';
+  if (value instanceof Date) return value.toISOString();
+  return String(value);
+}
+
+function registerPdfFonts(doc) {
+  const fontsDir = path.join(__dirname, '..', 'public', 'fonts');
+  const regularPath = path.join(fontsDir, 'Montserrat-Regular.ttf');
+  const semiboldPath = path.join(fontsDir, 'Montserrat-SemiBold.ttf');
+
+  const fonts = {
+    regular: 'Helvetica',
+    bold: 'Helvetica-Bold'
+  };
+
+  if (fs.existsSync(regularPath)) {
+    doc.registerFont('volonterka-regular', regularPath);
+    fonts.regular = 'volonterka-regular';
+  }
+
+  if (fs.existsSync(semiboldPath)) {
+    doc.registerFont('volonterka-bold', semiboldPath);
+    fonts.bold = 'volonterka-bold';
+  }
+
+  return fonts;
+}
+
+function buildDocxSection(dataset) {
+  const title = new Paragraph({
+    text: dataset.label || dataset.key,
+    heading: HeadingLevel.HEADING_2
+  });
+
+  const description = dataset.description
+    ? new Paragraph({ text: dataset.description })
+    : null;
+
+  const headerRow = new TableRow({
+    children: dataset.columns.map((column) =>
+      new TableCell({
+        children: [new Paragraph({ children: [new TextRun({ text: column.label, bold: true })] })]
+      })
+    )
+  });
+
+  const dataRows = dataset.rows.map((row) =>
+    new TableRow({
+      children: dataset.columns.map((column) =>
+        new TableCell({
+          children: [new Paragraph({ text: normalizeCellValue(row[column.key]) })]
+        })
+      )
+    })
+  );
+
+  const table = new Table({ rows: [headerRow, ...dataRows] });
+
+  return description ? [title, description, table] : [title, table];
+}
+
+function generateFilename(suffix = 'report', extension = 'zip') {
   const stamp = new Date().toISOString().replace(/[:T]/g, '-').split('.')[0];
-  return `volonterka-${suffix}-${stamp}.zip`;
+  return `volonterka-${suffix}-${stamp}.${extension}`;
 }
 
 module.exports = {
   buildDatasets,
   createArchive,
+  createCsvArchive,
+  generateDocxBuffer,
+  generateExcelBuffer,
+  generatePdfBuffer,
   generateFilename,
   normalizeSelection,
   datasets: DATASET_ORDER,
