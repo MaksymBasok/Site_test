@@ -1,5 +1,8 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
+const fs = require('fs');
+const path = require('path');
+const multer = require('multer');
 const donationService = require('../services/donationService');
 const volunteerService = require('../services/volunteerService');
 const withdrawalService = require('../services/withdrawalService');
@@ -59,11 +62,36 @@ const pendingActionsService = require('../services/pendingActionsService');
 
 const router = express.Router();
 
+const uploadsDir = path.join(__dirname, '..', 'public', 'uploads', 'vehicles');
+const vehicleUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+      cb(null, uploadsDir);
+    },
+    filename: (req, file, cb) => {
+      const unique = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
+      cb(null, `${unique}${path.extname(file.originalname)}`);
+    }
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 }
+});
+
 const goalValidators = [
   body('title').trim().isLength({ min: 3 }).withMessage('Вкажіть назву цілі').escape(),
   body('target_amount').isInt({ min: 1000 }).withMessage('Некоректна сума збору'),
   body('status').isIn(['draft', 'active', 'archived']).withMessage('Некоректний статус')
 ];
+
+const VEHICLE_STATUS_OPTIONS = [
+  { value: 'needs_funding', label: 'Потребує фінансування' },
+  { value: 'in_progress', label: 'В процесі закупівлі/ремонту' },
+  { value: 'ready', label: 'Готове до передачі' },
+  { value: 'delivered', label: 'Передано військовим' },
+  { value: 'maintenance', label: 'На сервісі' }
+];
+
+const isCheckboxOn = (value) => value === true || value === 'on' || value === 1 || value === '1';
 
 const articleValidators = [
   body('title').trim().isLength({ min: 5 }).withMessage('Заголовок закороткий').escape(),
@@ -154,7 +182,11 @@ router.get('/dashboard', requireAdmin, (req, res) => {
   const goals = listGoals();
   const vehicles = listVehicles();
   const reviews = reviewService.listAll();
-  const feedback = feedbackService.listRecent(10);
+  const feedbackStatus = req.query.feedbackStatus || 'all';
+  const feedbackPage = Math.max(Number(req.query.feedbackPage) || 1, 1);
+  const FEEDBACK_PAGE_SIZE = 10;
+  const feedbackPaginated = feedbackService.listPaginated({ status: feedbackStatus, page: feedbackPage, pageSize: FEEDBACK_PAGE_SIZE });
+  const feedback = feedbackPaginated.items;
   const contentBlocks = listContentBlocks();
   const media = listMedia();
   const articles = listArticles();
@@ -188,6 +220,9 @@ router.get('/dashboard', requireAdmin, (req, res) => {
     vehicles,
     reviews,
     feedback,
+    feedbackStatus,
+    feedbackStatuses: feedbackService.FEEDBACK_STATUSES,
+    feedbackPagination: feedbackPaginated,
     contentBlocks,
     media,
     articles,
@@ -201,6 +236,7 @@ router.get('/dashboard', requireAdmin, (req, res) => {
       status: requestStatus,
       type: requestType
     },
+    vehicleStatusOptions: VEHICLE_STATUS_OPTIONS,
     STATUSES,
     exportDatasets: exportService.datasets,
     exportMeta: exportService.meta,
@@ -216,7 +252,7 @@ router.post('/donations', requireAdmin, donationService.donationValidators, (req
       amount: Number(req.body.amount),
       currency: req.body.currency || 'UAH',
       message: req.body.message,
-      public: req.body.public === 'on'
+      public: isCheckboxOn(req.body.public)
     });
     req.flash('success', 'Донат додано.');
     res.redirect('/admin/dashboard#finance');
@@ -240,7 +276,7 @@ router.post('/donations/:id/update', requireAdmin, donationService.donationValid
       amount: Number(req.body.amount),
       currency: req.body.currency || 'UAH',
       message: req.body.message,
-      public: req.body.public === 'on'
+      public: isCheckboxOn(req.body.public)
     });
     req.flash('success', 'Донат оновлено.');
     res.redirect('/admin/dashboard#finance');
@@ -256,8 +292,25 @@ router.post('/donations/:id/update', requireAdmin, donationService.donationValid
 
 router.post('/donations/:id/delete', requireAdmin, (req, res, next) => {
   try {
+    const donation = donationService.findDonation(Number(req.params.id));
+    if (!donation) {
+      req.flash('error', 'Донат не знайдено.');
+      return res.redirect('/admin/dashboard#finance');
+    }
+
+    pendingActionsService.recordResolution({
+      entityType: 'donation',
+      entityId: donation.id,
+      action: 'delete',
+      status: 'rejected',
+      processedBy: req.session.user.id,
+      payload: donation,
+      source: 'admin:donations',
+      notes: 'Видалено адміністратором'
+    });
+
     donationService.deleteDonation(Number(req.params.id));
-    req.flash('success', 'Донат видалено.');
+    req.flash('success', 'Донат видалено та зафіксовано в журналі.');
     res.redirect('/admin/dashboard#finance');
   } catch (error) {
     return next(error);
@@ -494,14 +547,15 @@ router.post('/goals/:id', requireAdmin, goalValidators, (req, res, next) => {
   }
 });
 
-router.post('/vehicles', requireAdmin, vehicleValidators, (req, res, next) => {
+router.post('/vehicles', requireAdmin, vehicleUpload.single('image_file'), vehicleValidators, (req, res, next) => {
   try {
     validateVehicles(req);
+    const uploadedPath = req.file ? path.posix.join('uploads', 'vehicles', req.file.filename) : null;
     createVehicle({
       name: req.body.name,
       description: req.body.description,
       status: req.body.status,
-      image_path: req.body.image_path,
+      image_path: uploadedPath || req.body.image_path,
       category: req.body.category
     });
     req.flash('success', 'Авто додано.');
@@ -517,14 +571,15 @@ router.post('/vehicles', requireAdmin, vehicleValidators, (req, res, next) => {
   }
 });
 
-router.post('/vehicles/:id', requireAdmin, vehicleValidators, (req, res, next) => {
+router.post('/vehicles/:id', requireAdmin, vehicleUpload.single('image_file'), vehicleValidators, (req, res, next) => {
   try {
     validateVehicles(req);
+    const uploadedPath = req.file ? path.posix.join('uploads', 'vehicles', req.file.filename) : null;
     updateVehicle(Number(req.params.id), {
       name: req.body.name,
       description: req.body.description,
       status: req.body.status,
-      image_path: req.body.image_path,
+      image_path: uploadedPath || req.body.image_path,
       category: req.body.category
     });
     req.flash('success', 'Авто оновлено.');
@@ -818,6 +873,21 @@ router.post('/pending-actions/:id/revert', requireAdmin, (req, res, next) => {
     if (error.status) {
       req.flash('error', error.message);
       return res.redirect('/admin/dashboard#requests');
+    }
+    return next(error);
+  }
+});
+
+router.post('/feedback/:id/status', requireAdmin, (req, res, next) => {
+  const redirectUrl = req.body.redirect || '/admin/dashboard#requests';
+  try {
+    feedbackService.updateStatus(Number(req.params.id), req.body.status, req.session.user.id, req.body.notes);
+    req.flash('success', 'Статус звернення оновлено.');
+    res.redirect(redirectUrl);
+  } catch (error) {
+    if (error.status) {
+      req.flash('error', error.message);
+      return res.redirect(redirectUrl);
     }
     return next(error);
   }

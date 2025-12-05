@@ -42,6 +42,28 @@ function queueAction({ userId = null, entityType, action, payload = {}, source =
   return info.lastInsertRowid;
 }
 
+function recordResolution({
+  userId = null,
+  entityType,
+  entityId = null,
+  action,
+  status = 'rejected',
+  payload = {},
+  source = null,
+  notes = null,
+  processedBy = null
+}) {
+  const stmt = db.prepare(
+    `INSERT INTO pending_actions (user_id, entity_type, entity_id, action, status, payload, source, processed_at, processed_by, processed_entity_id, resolution_notes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?)`
+  );
+
+  const payloadJson = typeof payload === 'string' ? payload : JSON.stringify(payload);
+
+  const info = stmt.run(userId, entityType, entityId, action, status, payloadJson, source, processedBy || null, entityId || null, notes || null);
+  return info.lastInsertRowid;
+}
+
 function listAll() {
   return db
     .prepare(
@@ -231,6 +253,7 @@ function revertAction(id) {
 
 module.exports = {
   queueAction,
+  recordResolution,
   listAll,
   listFiltered,
   summarize,
