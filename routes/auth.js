@@ -9,7 +9,8 @@ const { registerUser, authenticate } = require('../services/userService');
 
 const router = express.Router();
 
-const uploadDir = path.join(__dirname, '..', 'public', 'uploads', 'proofs');
+const uploadRoot = process.env.UPLOAD_ROOT || path.join(__dirname, '..', 'public');
+const uploadDir = path.join(uploadRoot, 'uploads', 'proofs');
 fs.mkdirSync(uploadDir, { recursive: true });
 
 const storage = multer.diskStorage({

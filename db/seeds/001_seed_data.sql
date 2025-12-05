@@ -12,6 +12,7 @@ DELETE FROM fundraising_goals;
 DELETE FROM content_blocks;
 DELETE FROM site_articles;
 
+-- Production-friendly seed: keep core content, remove test donors/feedback/financial logs
 INSERT INTO fundraising_goals (title, description, target_amount, status)
 VALUES (
   'Позашляховик для фронту',
@@ -36,20 +37,6 @@ VALUES
     '12345678',
     'Добровільний внесок на статутну діяльність'
   );
-
-INSERT INTO donations (donor_name, amount, currency, message, public, created_at)
-VALUES
-  ('Анонімний герой', 15000, 'UAH', 'Разом до перемоги!', 1, datetime('now','-2 day')),
-  ('Марія П.', 5000, 'UAH', 'На ремонт машин', 1, datetime('now','-1 day')),
-  ('Команда ІТ', 32000, 'UAH', 'Підтримка від компанії', 1, datetime('now','-6 hours')),
-  ('Андрій К.', 2200, 'UAH', 'Нехай авто швидше виїжджає до хлопців', 1, datetime('now','-3 hours')),
-  ('Олена С.', 7800, 'UAH', 'Для закупівлі гумових комплектів', 1, datetime('now','-90 minutes'));
-
-INSERT INTO withdrawals (amount, description)
-VALUES
-  (12000, 'Оплата ремонту ходової'),
-  (8000, 'Заправка та витратні матеріали'),
-  (16500, 'Поставка шин та масел для пікапів');
 
 INSERT INTO vehicles (name, description, status, image_path, category)
 VALUES
@@ -108,16 +95,6 @@ VALUES
   ('live_stream_info', 'Прямий ефір', 'Доступ до трансляції відкривається після підтвердження донату адміністратором. Слідкуйте за розкладом у чаті донаторів.'),
   ('volunteer_contacts', 'Координація волонтерів', 'Напишіть координатору у Telegram: @volonterka_help або телефонуйте +380931234567. Ми підкажемо, чим допомогти найближчим часом.'),
   ('home_reviews_intro', 'Голоси донорів', 'Кожне добре слово мотивує команду працювати ще більше. Ось кілька відгуків, які надихають щодня.');
-
-INSERT INTO donor_reviews (author_name, rating, message, public)
-VALUES
-  ('Ірина Л.', 5, 'Все прозоро, отримала звіт після переказу. Рекомендую підтримувати хлопців!', 1),
-  ('Олексій М.', 4, 'Передача авто пройшла швидко. Дякую за вашу працю.', 1);
-
-INSERT INTO volunteer_feedback (sender_name, contact, message, channel)
-VALUES
-  ('Олена, логістика', '@olena_logistics', 'Потрібні додаткові водії на наступний тиждень. Пишіть у Telegram.', 'telegram'),
-  ('Тарас, механік', '+380501112233', 'Шукаємо донорів на ремкомплекти для Nissan Patrol. Телефонуйте або пишіть у Viber.', 'phone');
 
 INSERT INTO site_articles (title, excerpt, body, cover_image, published_at)
 VALUES
