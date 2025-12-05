@@ -57,6 +57,75 @@ function listAll() {
     .map(mapAction);
 }
 
+function listFiltered({ entityType = 'all', status = 'pending', page = 1, pageSize = 10 } = {}) {
+  const filters = [];
+  const params = [];
+
+  if (entityType && entityType !== 'all') {
+    filters.push('pa.entity_type = ?');
+    params.push(entityType);
+  }
+
+  if (status && status !== 'all') {
+    filters.push('pa.status = ?');
+    params.push(status);
+  }
+
+  const whereClause = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
+  const limit = Math.max(Number(pageSize) || 10, 1);
+  const offset = Math.max(Number(page) - 1, 0) * limit;
+
+  const total = db
+    .prepare(`SELECT COUNT(*) as total FROM pending_actions pa ${whereClause}`)
+    .get(...params).total;
+
+  const items = db
+    .prepare(
+      `SELECT pa.*, datetime(pa.created_at) AS created_at, datetime(pa.processed_at) AS processed_at,
+              submitter.full_name AS submitted_by_name, submitter.email AS submitted_by_email,
+              processor.full_name AS processed_by_name, processor.email AS processed_by_email
+       FROM pending_actions pa
+       LEFT JOIN users submitter ON submitter.id = pa.user_id
+       LEFT JOIN users processor ON processor.id = pa.processed_by
+       ${whereClause}
+       ORDER BY datetime(pa.created_at) DESC
+       LIMIT ? OFFSET ?`
+    )
+    .all(...params, limit, offset)
+    .map(mapAction);
+
+  return {
+    items,
+    total,
+    page: Number(page) || 1,
+    pageSize: limit,
+    totalPages: Math.max(Math.ceil(total / limit), 1)
+  };
+}
+
+function summarize() {
+  const stats = db.prepare(`
+    SELECT entity_type, status, COUNT(*) as count
+    FROM pending_actions
+    GROUP BY entity_type, status
+  `).all();
+
+  return stats.reduce(
+    (acc, row) => {
+      acc.statuses[row.status] = (acc.statuses[row.status] || 0) + row.count;
+      const typeKey = row.entity_type || 'unknown';
+      if (!acc.byType[typeKey]) {
+        acc.byType[typeKey] = { pending: 0, approved: 0, rejected: 0, total: 0 };
+      }
+      acc.byType[typeKey][row.status] = (acc.byType[typeKey][row.status] || 0) + row.count;
+      acc.byType[typeKey].total += row.count;
+      acc.statuses.total += row.count;
+      return acc;
+    },
+    { statuses: { total: 0 }, byType: {} }
+  );
+}
+
 function findById(id) {
   const row = db
     .prepare(
@@ -163,6 +232,8 @@ function revertAction(id) {
 module.exports = {
   queueAction,
   listAll,
+  listFiltered,
+  summarize,
   findById,
   approveAction,
   rejectAction,

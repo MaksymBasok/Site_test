@@ -39,7 +39,7 @@ function validate(req) {
 
 function listRecent(limit = 20) {
   return db.prepare(`
-    SELECT full_name, phone, email, region, skills, comment,
+    SELECT id, full_name, phone, email, region, skills, comment,
            datetime(created_at) AS created_at
     FROM volunteers
     ORDER BY datetime(created_at) DESC
@@ -56,6 +56,30 @@ function listAll() {
   `).all();
 }
 
+function findVolunteer(id) {
+  return db
+    .prepare(
+      `SELECT id, full_name, phone, email, region, skills, comment,
+              datetime(created_at) AS created_at
+       FROM volunteers
+       WHERE id = ?`
+    )
+    .get(id);
+}
+
+function updateVolunteer(id, data) {
+  const existing = findVolunteer(id);
+  if (!existing) {
+    throw createError(404, 'Волонтера не знайдено');
+  }
+
+  db.prepare(
+    `UPDATE volunteers
+     SET full_name = ?, email = ?, phone = ?, region = ?, skills = ?, comment = ?
+     WHERE id = ?`
+  ).run(data.full_name, data.email || null, data.phone, data.region || null, data.skills || null, data.comment || null, id);
+}
+
 function deleteVolunteer(id) {
   db.prepare('DELETE FROM volunteers WHERE id = ?').run(id);
 }
@@ -66,5 +90,7 @@ module.exports = {
   validate,
   listRecent,
   listAll,
+  findVolunteer,
+  updateVolunteer,
   deleteVolunteer
 };

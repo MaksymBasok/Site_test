@@ -39,6 +39,29 @@
     }
     return formatDetails(action.payload);
   };
+  const requestStatus = (pendingPagination && pendingPagination.status) || 'pending';
+  const requestType = (pendingPagination && pendingPagination.type) || 'all';
+  const requestStatusOptions = ['pending', 'approved', 'rejected', 'all'];
+  const requestTypeOptions = Array.from(new Set(['all'].concat(Object.keys((pendingSummary && pendingSummary.byType) || {}))));
+  const formatRequestType = (type = 'all') => {
+    if (type === 'donation') return 'Донати';
+    if (type === 'volunteer') return 'Волонтерство';
+    if (type === 'all') return 'Усі заявки';
+    return type;
+  };
+  const formatRequestStatus = (status = 'pending') => {
+    if (status === 'approved') return 'Підтверджені';
+    if (status === 'rejected') return 'Відхилені';
+    if (status === 'all') return 'Усі статуси';
+    return 'В очікуванні';
+  };
+  const statusBadgeClass = (status = 'pending') => {
+    if (status === 'approved') return 'badge bg-success-subtle text-success';
+    if (status === 'rejected') return 'badge bg-danger-subtle text-danger';
+    return 'badge bg-warning-subtle text-warning';
+  };
+  const buildRequestUrl = (type = 'all', status = 'pending', page = 1) =>
+    `/admin/dashboard?requestType=${encodeURIComponent(type)}&requestStatus=${encodeURIComponent(status)}&requestPage=${page}#requests`;
 %>
 <!-- Продовжуємо використання синьо-жовтого градієнта з першого коміту -->
 <section class="page-header page-header--admin" data-reveal>
@@ -199,6 +222,7 @@
                     <th scope="col">Сума</th>
                     <th scope="col">Дата</th>
                     <th scope="col">Публічний</th>
+                    <th scope="col" class="text-end">Дії</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -214,11 +238,20 @@
                           <span class="badge bg-warning-subtle text-warning"><i class="fa-solid fa-eye-slash me-1"></i>Ні</span>
                         <% } %>
                       </td>
+                      <td class="text-end">
+                        <div class="btn-group" role="group" aria-label="Керування донатом">
+                          <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#modalEditDonation-<%= donation.id %>"><i class="fa-solid fa-pen me-1"></i>Редагувати</button>
+                          <form method="POST" action="/admin/donations/<%= donation.id %>/delete" class="d-inline" onsubmit="return confirm('Видалити донат?');">
+                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                            <button class="btn btn-sm btn-outline-danger" type="submit"><i class="fa-solid fa-trash me-1"></i>Видалити</button>
+                          </form>
+                        </div>
+                      </td>
                     </tr>
                   <% }) %>
                   <% if (donations.length === 0) { %>
                     <tr data-table-empty>
-                      <td colspan="4" class="text-center text-muted">Ще немає даних для відображення.</td>
+                      <td colspan="5" class="text-center text-muted">Ще немає даних для відображення.</td>
                     </tr>
                   <% } %>
                 </tbody>
@@ -478,31 +511,53 @@
         </div>
       </div>
       <div class="card shadow-soft">
-        <div class="card-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
-          <div>
-            <h3 class="h5 mb-1">Черга модерації</h3>
-            <p class="small text-muted mb-0">Приймайте, відхиляйте або повертайте заявки. Після підтвердження дані застосовуються до сайту.</p>
-          </div>
-          <span class="badge bg-warning-subtle text-warning">
-            <i class="fa-solid fa-clock me-1"></i>
-            В роботі: <%= pendingActions.filter((item) => item.status === 'pending').length %>
-          </span>
+      <div class="card-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+        <div>
+          <h3 class="h5 mb-1">Черга модерації</h3>
+          <p class="small text-muted mb-0">Приймайте, відхиляйте або повертайте заявки. Після підтвердження дані застосовуються до сайту.</p>
         </div>
-        <div class="table-responsive">
-          <table class="table align-middle admin-table">
-            <thead>
-              <tr>
-                <th scope="col">Тип</th>
+        <span class="badge bg-warning-subtle text-warning">
+          <i class="fa-solid fa-clock me-1"></i>
+          В роботі: <%= (pendingSummary?.statuses?.pending || 0) %>
+        </span>
+      </div>
+      <div class="card-body border-bottom">
+        <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+          <div class="d-flex flex-wrap gap-2" role="tablist" aria-label="Фільтр за типом">
+            <% requestTypeOptions.forEach(function(type) { %>
+              <a class="btn btn-sm <%= requestType === type ? 'btn-primary' : 'btn-outline-primary' %>" href="<%= buildRequestUrl(type, requestStatus, 1) %>">
+                <%= formatRequestType(type) %>
+                <% const typeTotals = (pendingSummary?.byType && pendingSummary.byType[type]) || {}; %>
+                <span class="badge bg-light text-dark ms-2"><%= typeTotals.total || 0 %></span>
+              </a>
+            <% }) %>
+          </div>
+          <div class="d-flex flex-wrap gap-2" role="tablist" aria-label="Фільтр за статусом">
+            <% requestStatusOptions.forEach(function(status) { %>
+              <a class="btn btn-sm <%= requestStatus === status ? 'btn-primary' : 'btn-outline-primary' %>" href="<%= buildRequestUrl(requestType, status, 1) %>">
+                <%= formatRequestStatus(status) %>
+                <% const count = status === 'all' ? (pendingSummary?.statuses?.total || 0) : (pendingSummary?.statuses?.[status] || 0); %>
+                <span class="badge bg-light text-dark ms-2"><%= count %></span>
+              </a>
+            <% }) %>
+          </div>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle admin-table">
+          <thead>
+            <tr>
+              <th scope="col">Тип</th>
                 <th scope="col">Дані</th>
                 <th scope="col">Статус</th>
                 <th scope="col" class="text-end">Дії</th>
               </tr>
             </thead>
-            <tbody>
-              <% pendingActions.forEach(function(action) { %>
-                <tr>
-                  <td>
-                    <span class="badge bg-light text-dark text-uppercase"><%= action.entity_type %></span>
+          <tbody>
+            <% pendingActions.forEach(function(action) { %>
+              <tr>
+                <td>
+                  <span class="badge bg-light text-dark text-uppercase"><%= action.entity_type %></span>
                     <div class="small text-muted"><%= action.source || '—' %></div>
                   </td>
                   <td>
@@ -517,19 +572,13 @@
                     <% if (action.resolution_notes) { %>
                       <div class="small text-muted"><i class="fa-solid fa-note-sticky me-1"></i><%= action.resolution_notes %></div>
                     <% } %>
-                  </td>
-                  <td>
-                    <% if (action.status === 'pending') { %>
-                      <span class="badge bg-warning-subtle text-warning">В очікуванні</span>
-                    <% } else if (action.status === 'approved') { %>
-                      <span class="badge bg-success-subtle text-success">Підтверджено</span>
-                    <% } else { %>
-                      <span class="badge bg-danger-subtle text-danger">Відхилено</span>
-                    <% } %>
-                  </td>
-                  <td class="text-end">
-                    <% if (action.status === 'pending') { %>
-                      <form method="POST" action="/admin/pending-actions/<%= action.id %>/approve" class="d-inline">
+                </td>
+                <td>
+                  <span class="<%= statusBadgeClass(action.status) %>"><%= formatRequestStatus(action.status) %></span>
+                </td>
+                <td class="text-end">
+                  <% if (action.status === 'pending') { %>
+                    <form method="POST" action="/admin/pending-actions/<%= action.id %>/approve" class="d-inline">
                         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                         <button class="btn btn-sm btn-success" type="submit"><i class="fa-solid fa-check me-1"></i>Прийняти</button>
                       </form>
@@ -547,14 +596,30 @@
                   </td>
                 </tr>
               <% }) %>
-              <% if (pendingActions.length === 0) { %>
-                <tr><td colspan="4" class="text-center text-muted">Активних заявок немає.</td></tr>
-              <% } %>
-            </tbody>
-          </table>
-        </div>
+            <% if (pendingActions.length === 0) { %>
+                <tr><td colspan="4" class="text-center text-muted">Активних заявок за обраними фільтрами немає.</td></tr>
+            <% } %>
+          </tbody>
+        </table>
       </div>
-    </section>
+      <div class="card-footer d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+        <div class="text-muted small">Знайдено: <%= pendingPagination.total %> · Сторінка <%= pendingPagination.page %> з <%= pendingPagination.totalPages %></div>
+        <nav aria-label="Навігація по заявках">
+          <ul class="pagination pagination-sm mb-0">
+            <li class="page-item <%= pendingPagination.page <= 1 ? 'disabled' : '' %>">
+              <a class="page-link" href="<%= buildRequestUrl(requestType, requestStatus, Math.max(pendingPagination.page - 1, 1)) %>">Попередня</a>
+            </li>
+            <% for (let i = 1; i <= pendingPagination.totalPages; i += 1) { %>
+              <li class="page-item <%= pendingPagination.page === i ? 'active' : '' %>"><a class="page-link" href="<%= buildRequestUrl(requestType, requestStatus, i) %>"><%= i %></a></li>
+            <% } %>
+            <li class="page-item <%= pendingPagination.page >= pendingPagination.totalPages ? 'disabled' : '' %>">
+              <a class="page-link" href="<%= buildRequestUrl(requestType, requestStatus, Math.min(pendingPagination.page + 1, pendingPagination.totalPages)) %>">Наступна</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </section>
 
     <section id="users" class="admin-section" data-admin-section>
       <div class="admin-section__header">
@@ -1328,6 +1393,13 @@
                     <% if (volunteer.skills) { %>
                       <p class="small text-muted mb-0"><i class="fa-solid fa-toolbox me-1"></i><%= volunteer.skills %></p>
                     <% } %>
+                    <div class="d-flex gap-2 mt-3">
+                      <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#modalEditVolunteer-<%= volunteer.id %>"><i class="fa-solid fa-pen me-1"></i>Редагувати</button>
+                      <form method="POST" action="/admin/volunteers/<%= volunteer.id %>/delete" class="d-inline" onsubmit="return confirm('Видалити волонтера?');">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button class="btn btn-sm btn-outline-danger" type="submit"><i class="fa-solid fa-trash me-1"></i>Видалити</button>
+                      </form>
+                    </div>
                   </div>
                 <% }) %>
                 <% if (volunteers.length === 0) { %>
@@ -1341,6 +1413,127 @@
     </section>
   </div>
 </div>
+
+<% donations.forEach(function(donation) { const formId = `donation:${donation.id}`; %>
+  <div class="modal fade" id="modalEditDonation-<%= donation.id %>" tabindex="-1" aria-labelledby="modalEditDonationLabel-<%= donation.id %>" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title fs-5" id="modalEditDonationLabel-<%= donation.id %>">Редагувати донат</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити"></button>
+        </div>
+        <form method="POST" action="/admin/donations/<%= donation.id %>/update" class="admin-form" novalidate>
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <input type="hidden" name="_formId" value="<%= formId %>">
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Ім'я донатора</label>
+                <input class="form-control<%= isInvalid(formId, 'donor_name') ? ' is-invalid' : '' %>" type="text" name="donor_name" value="<%= getFormValue(formId, 'donor_name', donation.donor_name) %>" required>
+                <% if (isInvalid(formId, 'donor_name')) { %>
+                  <div class="invalid-feedback"><%= fieldError(formId, 'donor_name') || 'Вкажіть імʼя' %></div>
+                <% } %>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Сума</label>
+                <div class="input-group">
+                  <input class="form-control<%= isInvalid(formId, 'amount') ? ' is-invalid' : '' %>" type="number" name="amount" min="10" value="<%= getFormValue(formId, 'amount', donation.amount) %>" required>
+                  <select class="form-select" name="currency">
+                    <option value="UAH" <%= (getFormValue(formId, 'currency', donation.currency) === 'UAH') ? 'selected' : '' %>>UAH</option>
+                    <option value="USD" <%= (getFormValue(formId, 'currency', donation.currency) === 'USD') ? 'selected' : '' %>>USD</option>
+                    <option value="EUR" <%= (getFormValue(formId, 'currency', donation.currency) === 'EUR') ? 'selected' : '' %>>EUR</option>
+                  </select>
+                  <% if (isInvalid(formId, 'amount')) { %>
+                    <div class="invalid-feedback d-block"><%= fieldError(formId, 'amount') || 'Вкажіть коректну суму' %></div>
+                  <% } %>
+                </div>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Повідомлення</label>
+                <textarea class="form-control<%= isInvalid(formId, 'message') ? ' is-invalid' : '' %>" name="message" rows="2"><%= getFormValue(formId, 'message', donation.message || '') %></textarea>
+                <% if (isInvalid(formId, 'message')) { %>
+                  <div class="invalid-feedback"><%= fieldError(formId, 'message') %></div>
+                <% } %>
+              </div>
+              <div class="col-12">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="public" id="public-<%= donation.id %>" <%= getFormValue(formId, 'public', donation.public ? 'on' : '') === 'on' ? 'checked' : '' %>>
+                  <label class="form-check-label" for="public-<%= donation.id %>">Показувати на сайті</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Скасувати</button>
+            <button type="submit" class="btn btn-primary">Зберегти</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+<% }) %>
+
+<% volunteers.forEach(function(volunteer) { const formId = `volunteer:${volunteer.id}`; %>
+  <div class="modal fade" id="modalEditVolunteer-<%= volunteer.id %>" tabindex="-1" aria-labelledby="modalEditVolunteerLabel-<%= volunteer.id %>" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title fs-5" id="modalEditVolunteerLabel-<%= volunteer.id %>">Редагувати волонтера</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити"></button>
+        </div>
+        <form method="POST" action="/admin/volunteers/<%= volunteer.id %>/update" class="admin-form" novalidate>
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <input type="hidden" name="_formId" value="<%= formId %>">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">ПІБ</label>
+              <input class="form-control<%= isInvalid(formId, 'full_name') ? ' is-invalid' : '' %>" type="text" name="full_name" value="<%= getFormValue(formId, 'full_name', volunteer.full_name) %>" required>
+              <% if (isInvalid(formId, 'full_name')) { %>
+                <div class="invalid-feedback"><%= fieldError(formId, 'full_name') || 'Вкажіть ПІБ' %></div>
+              <% } %>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Телефон</label>
+              <input class="form-control<%= isInvalid(formId, 'phone') ? ' is-invalid' : '' %>" type="tel" name="phone" value="<%= getFormValue(formId, 'phone', volunteer.phone) %>" required>
+              <% if (isInvalid(formId, 'phone')) { %>
+                <div class="invalid-feedback"><%= fieldError(formId, 'phone') || 'Вкажіть номер' %></div>
+              <% } %>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <input class="form-control<%= isInvalid(formId, 'email') ? ' is-invalid' : '' %>" type="email" name="email" value="<%= getFormValue(formId, 'email', volunteer.email || '') %>">
+              <% if (isInvalid(formId, 'email')) { %>
+                <div class="invalid-feedback"><%= fieldError(formId, 'email') %></div>
+              <% } %>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Регіон</label>
+              <input class="form-control" type="text" name="region" value="<%= getFormValue(formId, 'region', volunteer.region || '') %>">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Навички</label>
+              <input class="form-control<%= isInvalid(formId, 'skills') ? ' is-invalid' : '' %>" type="text" name="skills" value="<%= getFormValue(formId, 'skills', volunteer.skills || '') %>">
+              <% if (isInvalid(formId, 'skills')) { %>
+                <div class="invalid-feedback"><%= fieldError(formId, 'skills') %></div>
+              <% } %>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Коментар</label>
+              <textarea class="form-control<%= isInvalid(formId, 'comment') ? ' is-invalid' : '' %>" name="comment" rows="2"><%= getFormValue(formId, 'comment', volunteer.comment || '') %></textarea>
+              <% if (isInvalid(formId, 'comment')) { %>
+                <div class="invalid-feedback"><%= fieldError(formId, 'comment') %></div>
+              <% } %>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Скасувати</button>
+            <button type="submit" class="btn btn-primary">Зберегти</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+<% }) %>
 
 <!-- Модалки для швидкого додавання -->
 <div class="modal fade" id="modalAddDonation" tabindex="-1" aria-labelledby="modalAddDonationLabel" aria-hidden="true">
